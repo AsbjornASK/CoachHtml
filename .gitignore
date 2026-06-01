@@ -1,0 +1,13 @@
+# Visual Studio
+.vs/
+*.suo
+*.user
+
+# Local dev / scratch
+.claude/
+Code/logs/
+Code/.netlify/
+Code/reference-images/
+
+# Third-party clones (kept locally, not deployed)
+intervals-mcp-server/

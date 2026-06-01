@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Morgenstatus · 1. juni 2026</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+      background: #f2f2f7;
+      color: #1c1c1e;
+      max-width: 430px;
+      margin: 0 auto;
+      padding: 0 0 32px;
+    }
+
+    .header {
+      text-align: center;
+      padding: 24px 16px 12px;
+    }
+    .date-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #8e8e93;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+    .verdict-line {
+      font-size: 28px;
+      font-weight: 800;
+      color: #30d158;
+      letter-spacing: -0.5px;
+    }
+    .update-label {
+      font-size: 11px;
+      color: #aeaeb2;
+      margin-top: 4px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      margin: 0 12px 12px;
+      padding: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .card-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #8e8e93;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      margin-bottom: 14px;
+    }
+
+    .rings {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+    }
+    .ring-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .ring-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #8e8e93;
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px 12px;
+    }
+    .metric-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: #8e8e93;
+      margin-bottom: 2px;
+    }
+    .metric-value {
+      font-size: 22px;
+      font-weight: 700;
+      line-height: 1.1;
+    }
+    .metric-value.green  { color: #30d158; }
+    .metric-value.neutral { color: #1c1c1e; }
+    .metric-sub {
+      font-size: 11px;
+      color: #aeaeb2;
+      margin-top: 1px;
+    }
+
+    .fitness-numbers {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .fitness-num-item { text-align: center; flex: 1; }
+    .fnum-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: #8e8e93;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    .fnum-value {
+      font-size: 24px;
+      font-weight: 700;
+    }
+    .ramp-badge {
+      display: inline-block;
+      background: #e8f8ee;
+      color: #30d158;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 20px;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+
+    .graph-legend {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 8px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      color: #8e8e93;
+    }
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .workout-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 11px 0;
+      border-bottom: 1px solid #f2f2f7;
+    }
+    .workout-row:last-child { border-bottom: none; }
+    .workout-title {
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .workout-time {
+      font-size: 13px;
+      color: #8e8e93;
+    }
+
+    .rec-text {
+      font-size: 15px;
+      line-height: 1.55;
+    }
+    .rec-bold { font-weight: 700; }
+    .motivating {
+      font-size: 13px;
+      line-height: 1.5;
+      color: #48484a;
+      font-style: italic;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid #f2f2f7;
+    }
+
+    .warning-box {
+      background: #fff8e7;
+      border-radius: 10px;
+      padding: 9px 12px;
+      margin-top: 8px;
+      font-size: 13px;
+      color: #7d6100;
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+    }
+    .warning-box:first-child { margin-top: 0; }
+
+    .upcoming-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 11px 0;
+      border-bottom: 1px solid #f2f2f7;
+    }
+    .upcoming-row:last-child { border-bottom: none; }
+    .upcoming-date {
+      width: 44px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .udate-day {
+      font-size: 10px;
+      font-weight: 700;
+      color: #8e8e93;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    .udate-num {
+      font-size: 22px;
+      font-weight: 800;
+      line-height: 1.1;
+    }
+    .upcoming-info { flex: 1; }
+    .upcoming-title {
+      font-size: 15px;
+      font-weight: 600;
+    }
+    .upcoming-time {
+      font-size: 12px;
+      color: #8e8e93;
+      margin-top: 1px;
+    }
+
+    .footer {
+      text-align: center;
+      font-size: 11px;
+      color: #aeaeb2;
+      margin-top: 8px;
+      padding: 0 16px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="date-label">Mandag 1. juni 2026</div>
+    <div class="verdict-line">Grøn · Klar (80)</div>
+    <div class="update-label">Opdateret mandag morgen</div>
+  </div>
+
+  <!-- Score Rings -->
+  <div class="card">
+    <div class="card-title">Scorer</div>
+    <div class="rings">
+
+      <!-- Readiness 80 % – circumference 2π×38=238.76, offset=(1-0.80)*238.76=47.75 -->
+      <div class="ring-wrap">
+        <svg width="96" height="96" viewBox="0 0 96 96">
+          <circle cx="48" cy="48" r="38" fill="none" stroke="#e5e5ea" stroke-width="10"/>
+          <circle cx="48" cy="48" r="38" fill="none" stroke="#30d158" stroke-width="10"
+            stroke-dasharray="238.76" stroke-dashoffset="47.75"
+            stroke-linecap="round" transform="rotate(-90 48 48)"/>
+          <text x="48" y="44" text-anchor="middle" font-size="20" font-weight="800" fill="#1c1c1e">80</text>
+          <text x="48" y="58" text-anchor="middle" font-size="10" fill="#8e8e93">%</text>
+        </svg>
+        <div class="ring-label">Readiness</div>
+      </div>
+
+      <!-- Recovery 76 % – offset=(1-0.76)*238.76=57.30 -->
+      <div class="ring-wrap">
+        <svg width="96" height="96" viewBox="0 0 96 96">
+          <circle cx="48" cy="48" r="38" fill="none" stroke="#e5e5ea" stroke-width="10"/>
+          <circle cx="48" cy="48" r="38" fill="none" stroke="#30d158" stroke-width="10"
+            stroke-dasharray="238.76" stroke-dashoffset="57.30"
+            stroke-linecap="round" transform="rotate(-90 48 48)"/>
+          <text x="48" y="44" text-anchor="middle" font-size="20" font-weight="800" fill="#1c1c1e">76</text>
+          <text x="48" y="58" text-anchor="middle" font-size="10" fill="#8e8e93">%</text>
+        </svg>
+        <div class="ring-label">Recovery</div>
+      </div>
+
+      <!-- Sleep 83 % – offset=(1-0.83)*238.76=40.59 -->
+      <div class="ring-wrap">
+        <svg width="96" height="96" viewBox="0 0 96 96">
+          <circle cx="48" cy="48" r="38" fill="none" stroke="#e5e5ea" stroke-width="10"/>
+          <circle cx="48" cy="48" r="38" fill="none" stroke="#30d158" stroke-width="10"
+            stroke-dasharray="238.76" stroke-dashoffset="40.59"
+            stroke-linecap="round" transform="rotate(-90 48 48)"/>
+          <text x="48" y="44" text-anchor="middle" font-size="20" font-weight="800" fill="#1c1c1e">83</text>
+          <text x="48" y="58" text-anchor="middle" font-size="10" fill="#8e8e93">%</text>
+        </svg>
+        <div class="ring-label">Søvn</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Health Metrics -->
+  <div class="card">
+    <div class="card-title">Fysiologi · 1. juni</div>
+    <div class="metrics-grid">
+      <div>
+        <div class="metric-label">HRV (rMSSD)</div>
+        <div class="metric-value green">103 ms ↑</div>
+        <div class="metric-sub">baseline 74,6 ms</div>
+      </div>
+      <div>
+        <div class="metric-label">Hvilepuls</div>
+        <div class="metric-value green">41 bpm</div>
+        <div class="metric-sub">stærk (≤55)</div>
+      </div>
+      <div>
+        <div class="metric-label">Søvn</div>
+        <div class="metric-value green">8,3 t</div>
+        <div class="metric-sub">søvnscore 96</div>
+      </div>
+      <div>
+        <div class="metric-label">TSB / Form</div>
+        <div class="metric-value neutral">+0,3</div>
+        <div class="metric-sub">CTL 7,2 · ATL 7,0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fitness / CTL-ATL-TSB graf -->
+  <div class="card">
+    <div class="card-title">Fitness <span class="ramp-badge">Stabil +0,13</span></div>
+    <div class="fitness-numbers">
+      <div class="fitness-num-item">
+        <div class="fnum-label">Form (CTL)</div>
+        <div class="fnum-value">7,2</div>
+      </div>
+      <div class="fitness-num-item">
+        <div class="fnum-label">Træthed (ATL)</div>
+        <div class="fnum-value">7,0</div>
+      </div>
+      <div class="fitness-num-item">
+        <div class="fnum-label">TSB</div>
+        <div class="fnum-value" style="color:#30d158">+0,3</div>
+      </div>
+    </div>
+
+    <div class="graph-legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#007aff"></div>CTL</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ff9f0a"></div>ATL</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#30d158"></div>TSB</div>
+    </div>
+
+    <!--
+      14 dage: 18/5–1/6 (15 punkter, i=0..14)
+      CTL/ATL skala: y = 5 + (14 - v) / 12 * 90  (range 2–14)
+      TSB skala: y = 5 + (4 - v) / 10 * 90  (range -6..+4)
+      x = 10 + i * (280/14) = 10 + i*20
+    -->
+    <svg viewBox="0 0 300 108" width="100%" height="108">
+      <!-- Grid -->
+      <line x1="0" y1="26" x2="300" y2="26" stroke="#f2f2f7" stroke-width="1"/>
+      <line x1="0" y1="53" x2="300" y2="53" stroke="#f2f2f7" stroke-width="1"/>
+      <line x1="0" y1="80" x2="300" y2="80" stroke="#f2f2f7" stroke-width="1"/>
+      <!-- TSB zero (v=0 → y=5+4/10*90=41) -->
+      <line x1="0" y1="41" x2="300" y2="41" stroke="#30d158" stroke-width="0.5" opacity="0.4" stroke-dasharray="3,3"/>
+
+      <!-- CTL (blue) – 8.01,7.89,7.73,7.62,7.56,7.38,7.21,7.08,7.67,7.96,7.94,7.75,7.57,7.39,7.22 -->
+      <polyline fill="none" stroke="#007aff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
+        points="10,42.6 30,43.6 50,44.8 70,45.7 90,46.2 110,47.6 130,48.9 150,49.8 170,44.9 190,43.0 210,43.2 230,44.7 250,46.2 270,47.6 290,48.9"/>
+
+      <!-- ATL (orange) – 9.11,10.82,9.52,8.65,8.16,7.08,6.13,5.58,9.10,10.55,12.34,10.70,9.27,8.04,6.97 -->
+      <polyline fill="none" stroke="#ff9f0a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
+        points="10,35.8 30,23.9 50,33.1 70,38.9 90,42.2 110,49.8 130,55.9 150,59.7 170,35.8 190,26.3 210,13.6 230,25.3 250,34.5 270,42.3 290,49.3"/>
+
+      <!-- TSB (green dashed) – -1.10,-2.93,-1.79,-1.03,-0.60,0.30,1.08,1.50,-1.43,-2.59,-4.40,-2.95,-1.70,-0.65,0.25 -->
+      <polyline fill="none" stroke="#30d158" stroke-width="1.5" stroke-dasharray="4,3" stroke-linecap="round" stroke-linejoin="round"
+        points="10,50.9 30,67.4 50,57.1 70,50.3 90,46.4 110,38.3 130,31.3 150,27.5 170,53.9 190,64.3 210,80.6 230,67.5 250,56.3 270,46.9 290,38.8"/>
+
+      <!-- Date axis -->
+      <text x="10"  y="103" font-size="8" fill="#aeaeb2" text-anchor="middle">18/5</text>
+      <text x="90"  y="103" font-size="8" fill="#aeaeb2" text-anchor="middle">22/5</text>
+      <text x="170" y="103" font-size="8" fill="#aeaeb2" text-anchor="middle">26/5</text>
+      <text x="250" y="103" font-size="8" fill="#aeaeb2" text-anchor="middle">30/5</text>
+      <text x="290" y="103" font-size="8" fill="#aeaeb2" text-anchor="middle">1/6</text>
+    </svg>
+  </div>
+
+  <!-- Dagens pas -->
+  <div class="card">
+    <div class="card-title">Dagens pas · Fysisk helbred</div>
+    <div class="workout-row">
+      <span class="workout-title">Løberlab</span>
+      <span class="workout-time">08:00–09:00</span>
+    </div>
+    <div class="workout-row">
+      <span class="workout-title">Intervals</span>
+      <span class="workout-time">16:00–17:00</span>
+    </div>
+    <div class="workout-row">
+      <span class="workout-title">Mobilitet</span>
+      <span class="workout-time">17:00–18:00</span>
+    </div>
+  </div>
+
+  <!-- Anbefaling -->
+  <div class="card">
+    <div class="card-title">Anbefaling</div>
+    <div class="rec-text">
+      <span class="rec-bold">Grøn dag – gennemfør alle tre pas fuldt ud.</span>
+      HRV 103 ms er markant over baseline og hvilepuls 41 bpm er exceptionel.
+      TSB er positiv – kroppen er hvilt og klar. Kør Intervals som planlagt,
+      og afslut med Mobilitet som et genopretningsritual.
+    </div>
+    <div class="motivating">
+      En dag som i dag er grunden til, at man møder op de andre dage. Udnyt det fuldt ud.
+    </div>
+  </div>
+
+  <!-- Kalenderflag -->
+  <div class="card">
+    <div class="card-title">Kalenderflag</div>
+    <div class="warning-box">
+      <span>⚠️</span>
+      <span>Løberlab (08:00–09:00) overlapper med Work (07:00–16:00).</span>
+    </div>
+    <div class="warning-box">
+      <span>⚠️</span>
+      <span>Intervals (16:00) starter præcis ved Work-slut (16:00) – nul buffer.</span>
+    </div>
+  </div>
+
+  <!-- Kommende pas -->
+  <div class="card">
+    <div class="card-title">Kommende pas</div>
+    <div class="upcoming-row">
+      <div class="upcoming-date">
+        <div class="udate-day">Ons</div>
+        <div class="udate-num">3/6</div>
+      </div>
+      <div class="upcoming-info">
+        <div class="upcoming-title">Strength 2</div>
+        <div class="upcoming-time">16:00–17:30</div>
+      </div>
+    </div>
+    <div class="upcoming-row">
+      <div class="upcoming-date">
+        <div class="udate-day">Søn</div>
+        <div class="udate-num">7/6</div>
+      </div>
+      <div class="upcoming-info">
+        <div class="upcoming-title">Running</div>
+        <div class="upcoming-time">10:00–11:00</div>
+      </div>
+    </div>
+    <div class="upcoming-row">
+      <div class="upcoming-date">
+        <div class="udate-day">Tirs</div>
+        <div class="udate-num">9/6</div>
+      </div>
+      <div class="upcoming-info">
+        <div class="upcoming-title">Intervals</div>
+        <div class="upcoming-time">15:30–16:30</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    coachhealth.netlify.app · 1. juni 2026
+  </div>
+
+</body>
+</html>
