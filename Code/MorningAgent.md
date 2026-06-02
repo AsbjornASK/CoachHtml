@@ -193,8 +193,8 @@ Formål: kalenderbegivenheden skal indeholde et link, som åbner dagens readines
 
 ### Krav til siden
 
-- Fil: `index.html`.
-- Layout: mobil-first til iPhone, inspireret af Bevel/HealthFit: lyse kort, store runde score-ringe, kompakte health cards, fitness/CTL/ATL/TSB-sektion, dagens pas og kalenderflag.
+- Fil: `index.html` i `Code/`-mappen.
+- **LAYOUT BEVARES: Læs den eksisterende `Code/index.html` FØR du genererer ny HTML. Kopier `<style>`-blokken UÆNDRET fra den eksisterende fil. Kopier check-in sektionen (mellem `CHECKIN_FORM_START` og `CHECKIN_FORM_END`) og JavaScript-blokken (mellem `CHECKIN_SCRIPT_START` og `CHECKIN_SCRIPT_END`) UÆNDRET. Kun data-indhold i de øvrige sektioner må opdateres.**
 - Siden skal vise de faktiske data hentet i dette run, ikke demo-data.
 - Siden skal kunne åbnes som en statisk HTML-fil uden server-side kode.
 - Ingen tokens, API-nøgler, interne kalender-ID'er eller rådata må vises på siden.

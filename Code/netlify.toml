@@ -2,5 +2,8 @@
   publish = "."
   command = ""
 
+[functions]
+  directory = "netlify/functions"
+
 [context.production.environment]
   MORNING_STATUS_URL = "https://coachhealth.netlify.app/"
