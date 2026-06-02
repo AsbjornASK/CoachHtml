@@ -31,8 +31,9 @@ export default async () => {
   const rawWellness = await wellnessRes.json();
   const rawEvents   = eventsRes.ok ? await eventsRes.json() : [];
 
-  const days = Object.entries(rawWellness)
-    .map(([date, v]) => ({ date, ...v }))
+  // API returns an array of objects with an `id` field for the date
+  const days = (Array.isArray(rawWellness) ? rawWellness : Object.entries(rawWellness).map(([k, v]) => ({ id: k, ...v })))
+    .map(d => ({ ...d, date: d.id ?? d.date }))
     .sort((a, b) => a.date.localeCompare(b.date));
 
   const latest = findLatest(days, d => d.restingHR && d.restingHR < 65);
@@ -92,7 +93,6 @@ export default async () => {
       steps:  yesterdayEntry.steps  ?? null,
       spo2:   round1(yesterdayEntry.spO2   ?? yesterdayEntry.spo2   ?? null),
       vo2max: round1(yesterdayEntry.vo2max ?? yesterdayEntry.vo2Max  ?? null),
-      _debug: Object.keys(yesterdayEntry),
     },
     events: rawEvents,
   });

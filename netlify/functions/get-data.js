@@ -29,9 +29,9 @@ export default async () => {
   const rawWellness = await wellnessRes.json();
   const rawEvents   = eventsRes.ok ? await eventsRes.json() : [];
 
-  // Sorter dage ældst → nyest
-  const days = Object.entries(rawWellness)
-    .map(([date, v]) => ({ date, ...v }))
+  // API returns an array of objects with an `id` field for the date
+  const days = (Array.isArray(rawWellness) ? rawWellness : Object.entries(rawWellness).map(([k, v]) => ({ id: k, ...v })))
+    .map(d => ({ ...d, date: d.id ?? d.date }))
     .sort((a, b) => a.date.localeCompare(b.date));
 
   // Find seneste valide dag for nøgle-metrics (ignorer RHR >= 65)
