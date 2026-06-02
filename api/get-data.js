@@ -85,13 +85,17 @@ export default async () => {
       fatigue:      todayEntry.fatigue      ?? null,
       motivation:   todayEntry.motivation   ?? null,
     },
-    inBody: bodyCompEntry ? {
-      date:    bodyCompEntry.date,
-      weight:  round1(bodyCompEntry.weight),
-      fatMass: round1(bodyCompEntry.fatMass ?? null),
-      fatPct:  round1(bodyCompEntry.bodyFat ?? (bodyCompEntry.fatMass && bodyCompEntry.weight ? bodyCompEntry.fatMass / bodyCompEntry.weight * 100 : null)),
-      bmi:     round1(bodyCompEntry.weight / (HEIGHT * HEIGHT)),
-    } : null,
+    inBody: bodyCompEntry ? (() => {
+      const w = bodyCompEntry.weight;
+      const fp = bodyCompEntry.bodyFat ?? null;
+      return {
+        date:    bodyCompEntry.date,
+        weight:  round1(w),
+        fatPct:  round1(fp),
+        fatMass: (w && fp) ? round1(w * fp / 100) : null,
+        bmi:     round1(w / (HEIGHT * HEIGHT)),
+      };
+    })() : null,
     healthMarkers: {
       date:   yesterday,
       sdnn:   round1(yesterdayEntry.sdnn   ?? yesterdayEntry.hrvSDNN ?? null),

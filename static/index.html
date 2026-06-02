@@ -460,7 +460,7 @@ function render(data,cal){
     if(!ib)return;const btn=document.getElementById('inbody-save-btn'),st=document.getElementById('inbody-save-status');
     btn.disabled=true;st.textContent='Saving…';st.className='form-status';
     const d=ib;
-    try{const r=await fetch('/api/update-wellness',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:d.date,weight:d.weight,fatMass:d.fatMass})});
+    try{const r=await fetch('/api/update-wellness',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:d.date,weight:d.weight,bodyFat:d.fatPct})});
     if(r.ok){st.textContent='Saved to Intervals';st.className='form-status ok';}
     else{const e=await r.json().catch(()=>({}));st.textContent='Error: '+(e.error||r.status)+(e.details?' — '+e.details:'');st.className='form-status err';}}
     catch(err){st.textContent='Network error: '+err.message;st.className='form-status err';}
