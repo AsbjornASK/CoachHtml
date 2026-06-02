@@ -271,7 +271,7 @@ function fitnessGraph(hist){
     ${labs}</svg>`;
 }
 
-let _lastData=null,_lastCal=null,_checkinSaved=false;
+let _lastData=null,_lastCal=null,_checkinSaved=false,_inbodySaved=false;
 
 function render(data,cal){
   _lastData=data;_lastCal=cal;
@@ -377,12 +377,13 @@ function render(data,cal){
     ${upcoming.length?`<div class="card"><div class="card-title">Upcoming sessions</div>${uHTML}</div>`:''}
   `;
 
-  ['app','inbody-card','footer'].forEach(id=>{document.getElementById(id).style.display='';});
+  ['app','footer'].forEach(id=>{document.getElementById(id).style.display='';});
   document.getElementById('loading').style.display='none';
   document.getElementById('footer').textContent=`coachhealth.netlify.app — ${todayStr}`;
-  // Hide check-in form if already saved this session or data already present
   if(_checkinSaved||hasSubj){document.getElementById('checkin-card').style.display='none';}
   else{document.getElementById('checkin-card').style.display='';}
+  if(_inbodySaved){document.getElementById('inbody-card').style.display='none';}
+  else{document.getElementById('inbody-card').style.display='';}
 }
 
 (async()=>{
@@ -461,7 +462,7 @@ function render(data,cal){
     btn.disabled=true;st.textContent='Saving…';st.className='form-status';
     const d=ib;
     try{const r=await fetch('/api/update-wellness',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:d.date,weight:d.weight,bodyFat:d.fatPct})});
-    if(r.ok){st.textContent='Saved to Intervals';st.className='form-status ok';}
+    if(r.ok){_inbodySaved=true;if(_lastData){_lastData.inBody={date:d.date,weight:d.weight,fatPct:d.fatPct,fatMass:d.fatMass,bmi:d.bmi};render(_lastData,_lastCal);}}
     else{const e=await r.json().catch(()=>({}));st.textContent='Error: '+(e.error||r.status)+(e.details?' — '+e.details:'');st.className='form-status err';}}
     catch(err){st.textContent='Network error: '+err.message;st.className='form-status err';}
     finally{btn.disabled=false;}
