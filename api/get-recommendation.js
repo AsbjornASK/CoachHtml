@@ -33,10 +33,11 @@ ${lines}
 
 Rules:
 - Start with the verdict in bold using <b>…</b> (e.g. "<b>Green day — execute all sessions in full.</b>")
-- Follow with 1-2 sentences of personalized advice based on the numbers above
-- Reference at least one specific metric (HRV, TSB, sleep, etc.)
-- Total length: 2-3 sentences maximum
-- Tone: direct, supportive, no filler phrases
+- Follow with a short paragraph (3-5 sentences) of personalized advice based on the numbers above
+- Reference specific metrics (HRV, TSB, sleep, soreness, today's sessions, etc.)
+- Explain the reasoning behind the advice — why these numbers lead to this recommendation
+- If there are sessions planned, comment on how to approach them given the current state
+- Tone: direct, supportive, like a knowledgeable coach — no filler phrases
 - Output plain text with only the <b> tag allowed`;
 
   const res = await fetch(
@@ -46,7 +47,7 @@ Rules:
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { maxOutputTokens: 200, temperature: 0.7 },
+        generationConfig: { maxOutputTokens: 400, temperature: 0.7 },
       }),
     }
   );
