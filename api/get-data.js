@@ -92,6 +92,7 @@ export default async () => {
       steps:  yesterdayEntry.steps  ?? null,
       spo2:   round1(yesterdayEntry.spO2   ?? yesterdayEntry.spo2   ?? null),
       vo2max: round1(yesterdayEntry.vo2max ?? yesterdayEntry.vo2Max  ?? null),
+      _debug: Object.keys(yesterdayEntry),
     },
     events: rawEvents,
   });
