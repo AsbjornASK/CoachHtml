@@ -165,6 +165,7 @@ const MOCK = {
       fitnessHistory: Array.from({length:28},(_, i)=>({date:`2026-05-${String(i+1).padStart(2,'0')}`,ctl:52+i*0.4,atl:48+Math.sin(i/3)*6})),
       subjective: { date:'2026-06-01', sleepQuality:1, soreness:1, fatigue:1, motivation:2 },
       inBody: { date:'2026-05-28', weight:82.4, fatPct:14.2, muscle:68.1, fatMass:11.7, bmi:23.8 },
+      healthMarkers: { date:'2026-06-01', sdnn:62, steps:11400, spo2:97.2, vo2max:58.1 },
     },
     cal: {
       today: [{ title:'Threshold intervals 5×8 min', timeStart:'06:30', timeEnd:'07:45' }],
@@ -187,6 +188,7 @@ const MOCK = {
       fitnessHistory: Array.from({length:28},(_, i)=>({date:`2026-05-${String(i+1).padStart(2,'0')}`,ctl:50+i*0.35,atl:48+i*0.65})),
       subjective: { date:'2026-06-01', sleepQuality:3, soreness:2, fatigue:3, motivation:3 },
       inBody: null,
+      healthMarkers: { date:'2026-06-01', sdnn:41, steps:6800, spo2:95.8, vo2max:51.0 },
     },
     cal: {
       today: [{ title:'Steady state run 75 min', timeStart:'07:00', timeEnd:'08:15' }],
@@ -208,6 +210,7 @@ const MOCK = {
       fitnessHistory: Array.from({length:28},(_, i)=>({date:`2026-05-${String(i+1).padStart(2,'0')}`,ctl:52+i*0.4,atl:48+Math.sin(i/3)*6})),
       subjective: { date:null, sleepQuality:null, soreness:null, fatigue:null, motivation:null },
       inBody: null,
+      healthMarkers: { date:'2026-06-01', sdnn:58, steps:9200, spo2:96.5, vo2max:56.0 },
     },
     cal: {
       today: [{ title:'Threshold intervals 5×8 min', timeStart:'06:30', timeEnd:'07:45' }],
@@ -226,6 +229,7 @@ const MOCK = {
       fitnessHistory: Array.from({length:28},(_, i)=>({date:`2026-05-${String(i+1).padStart(2,'0')}`,ctl:48+i*0.3,atl:44+i*1.2})),
       subjective: { date:'2026-06-01', sleepQuality:4, soreness:3, fatigue:4, motivation:4 },
       inBody: null,
+      healthMarkers: { date:'2026-06-01', sdnn:28, steps:3100, spo2:93.5, vo2max:44.0 },
     },
     cal: {
       today: [],
@@ -358,7 +362,7 @@ function fitnessGraph(hist){
 }
 
 function _innerRender(data,cal){
-  const {latest,trends,sleep8,fitnessHistory,subjective,inBody}=data;
+  const {latest,trends,sleep8,fitnessHistory,subjective,inBody,healthMarkers}=data;
   const rec=calcRecovery(latest.hrv,latest.restingHR,latest.sleepHours,latest.tsb);
   const slp=calcSleep(latest.sleepHours,latest.sleepScore,sleep8);
   const ready=calcReadiness(rec,slp);
@@ -399,6 +403,26 @@ function _innerRender(data,cal){
       : `<div style="color:#aeaeb2;font-size:14px;text-align:center;padding:8px 0">No check-in data yet — fill in below ↓</div>`
   }</div>`;
 
+  function hmColor(field,val){
+    if(val==null)return'neutral';
+    if(field==='sdnn')  return val>=75?'green':val>=60?'yellow':'red';
+    if(field==='spo2')  return val>=97?'green':val>=95?'yellow':'red';
+    if(field==='vo2max')return val>=56?'green':val>=53?'yellow':'red';
+    return'neutral';
+  }
+  function stepsColor(s){return s==null?'neutral':s>=8000?'green':s>=5000?'yellow':'red';}
+  function fmtSteps(s){if(s==null)return'-';return s>=1000?(s/1000).toFixed(1).replace('.',',')+' k':String(s);}
+
+  const hm=healthMarkers??{};
+  const hmDate=hm.date??(()=>{const d=new Date();d.setDate(d.getDate()-1);return d.toISOString().slice(0,10);})();
+  const hmDateFmt=(()=>{const d=new Date(hmDate+'T12:00:00');return`${EN_DAYS[d.getDay()]} ${d.getDate()} ${EN_MONTHS[d.getMonth()]}`;})();
+  const hmHTML=`<div class="card"><div class="card-title">Health markers — ${hmDateFmt}</div><div class="metrics-grid">
+    <div><div class="metric-label">HRV (SDNN)</div><div class="metric-value ${hmColor('sdnn',hm.sdnn)}">${fmtN(hm.sdnn)}<span style="font-size:13px;font-weight:500;color:#8e8e93"> ms</span></div><div class="metric-sub">Heart rate variability</div></div>
+    <div><div class="metric-label">Steps</div><div class="metric-value ${stepsColor(hm.steps)}">${fmtSteps(hm.steps)}</div><div class="metric-sub">${hm.steps!=null?(hm.steps>=8000?'Above avg':'Below avg'):'No data'}</div></div>
+    <div><div class="metric-label">SpO₂</div><div class="metric-value ${hmColor('spo2',hm.spo2)}">${fmtN(hm.spo2)}<span style="font-size:13px;font-weight:500;color:#8e8e93"> %</span></div><div class="metric-sub">Blood oxygen</div></div>
+    <div><div class="metric-label">VO₂ max</div><div class="metric-value ${hmColor('vo2max',hm.vo2max)}">${fmtN(hm.vo2max)}<span style="font-size:13px;font-weight:500;color:#8e8e93"> ml/kg</span></div><div class="metric-sub">Aerobic capacity</div></div>
+  </div></div>`;
+
   const ibHTML=inBody?`<div class="card"><div class="card-title">Body composition — ${inBody.date??''}</div><div class="inbody-grid"><div><div class="inbody-item-label">Weight</div><div class="inbody-item-value">${fmtN(inBody.weight)} kg</div></div><div><div class="inbody-item-label">Body fat %</div><div class="inbody-item-value">${fmtN(inBody.fatPct)} %</div></div><div><div class="inbody-item-label">Muscle mass</div><div class="inbody-item-value">${fmtN(inBody.muscle)} kg</div></div><div><div class="inbody-item-label">Fat mass</div><div class="inbody-item-value">${fmtN(inBody.fatMass)} kg</div></div><div><div class="inbody-item-label">BMI</div><div class="inbody-item-value">${fmtN(inBody.bmi)}</div></div><div><div class="inbody-item-label">Measured</div><div class="inbody-item-value" style="font-size:13px;color:#8e8e93">${inBody.date??'-'}</div></div></div></div>`:'';
 
   const readyHistSVG=readinessHistGraph(trends.hrv,trends.rhr,trends.sleep);
@@ -433,6 +457,7 @@ function _innerRender(data,cal){
       </div>
       <div style="margin-top:12px"><div class="graph-legend"><div class="legend-item"><div class="legend-dot" style="background:#007aff"></div>CTL</div><div class="legend-item"><div class="legend-dot" style="background:#ff9f0a"></div>ATL</div></div>${fitnessGraph(fitnessHistory)}</div>
     </div>
+    ${hmHTML}
     ${subjHTML}${ibHTML}
     <div class="card"><div class="card-title">Today's sessions</div>${wHTML}</div>
     <div class="card"><div class="card-title">Recommendation</div><div class="rec-text">${recText[vc]}</div></div>

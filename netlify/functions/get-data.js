@@ -9,9 +9,10 @@ export default async () => {
     return json({ error: 'Intervals API ikke konfigureret' }, 500);
   }
 
-  const today = new Date();
-  const end   = fmt(today);
-  const start = fmt(new Date(today - 14 * 86_400_000));
+  const today     = new Date();
+  const end       = fmt(today);
+  const yesterday = fmt(new Date(today - 86_400_000));
+  const start     = fmt(new Date(today - 14 * 86_400_000));
 
   const auth    = 'Basic ' + btoa('API_KEY:' + apiKey);
   const baseUrl = `https://intervals.icu/api/v1/athlete/${athleteId}`;
@@ -46,6 +47,9 @@ export default async () => {
     atl:  round1(d.atl  ?? null),
     tsb:  d.ctl != null && d.atl != null ? round1(d.ctl - d.atl) : null,
   }));
+
+  // Yesterday's health markers
+  const yesterdayEntry = days.find(d => d.date === yesterday) ?? {};
 
   // Subjektive felter fra i dag (det brugeren har logget via morgen check-in)
   const todayEntry = days.find(d => d.date === end) ?? {};
@@ -88,6 +92,13 @@ export default async () => {
       motivation:   todayEntry.motivation   ?? null,
     },
     inBody: inBodyEntry?.notes ? parseInBodyNote(inBodyEntry.notes, inBodyEntry.date) : null,
+    healthMarkers: {
+      date:    yesterday,
+      sdnn:    round1(yesterdayEntry.hrvSDNN ?? null),
+      steps:   yesterdayEntry.steps  ?? null,
+      spo2:    round1(yesterdayEntry.spO2   ?? null),
+      vo2max:  round1(yesterdayEntry.vo2max ?? null),
+    },
     events: rawEvents,
   });
 };
