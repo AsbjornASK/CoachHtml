@@ -104,10 +104,9 @@
       <div class="inbody-grid">
         <div><div class="inbody-item-label">Weight</div><div class="inbody-item-value" id="ib-weight">-</div></div>
         <div><div class="inbody-item-label">Body fat %</div><div class="inbody-item-value" id="ib-fatpct">-</div></div>
-        <div><div class="inbody-item-label">Muscle mass</div><div class="inbody-item-value" id="ib-muscle">-</div></div>
         <div><div class="inbody-item-label">Fat mass</div><div class="inbody-item-value" id="ib-fat">-</div></div>
         <div><div class="inbody-item-label">BMI</div><div class="inbody-item-value" id="ib-bmi">-</div></div>
-        <div><div class="inbody-item-label">Height</div><div class="inbody-item-value" id="ib-height">-</div></div>
+        <div><div class="inbody-item-label">Height</div><div class="inbody-item-value">175,5 cm</div></div>
       </div>
       <button class="submit-btn" id="inbody-save-btn" style="background:#30d158;margin-top:14px">Save weight to Intervals</button>
       <div class="form-status" id="inbody-save-status"></div>
@@ -337,7 +336,7 @@ function render(data,cal){
     <div><div class="metric-label">VO₂ max</div><div class="metric-value ${hmColor('vo2max',hm.vo2max)}">${fmtN(hm.vo2max)}<span style="font-size:13px;font-weight:500;color:#8e8e93"> ml/kg</span></div><div class="metric-sub">Aerobic capacity</div></div>
   </div></div>`;
 
-  const ibHTML=inBody?`<div class="card"><div class="card-title">Body composition — ${inBody.date??''}</div><div class="inbody-grid"><div><div class="inbody-item-label">Weight</div><div class="inbody-item-value">${fmtN(inBody.weight)} kg</div></div><div><div class="inbody-item-label">Body fat %</div><div class="inbody-item-value">${fmtN(inBody.fatPct)} %</div></div><div><div class="inbody-item-label">Muscle mass</div><div class="inbody-item-value">${fmtN(inBody.muscle)} kg</div></div><div><div class="inbody-item-label">Fat mass</div><div class="inbody-item-value">${fmtN(inBody.fatMass)} kg</div></div><div><div class="inbody-item-label">BMI</div><div class="inbody-item-value">${fmtN(inBody.bmi)}</div></div><div><div class="inbody-item-label">Measured</div><div class="inbody-item-value" style="font-size:13px;color:#8e8e93">${inBody.date??'-'}</div></div></div></div>`:'';
+  const ibHTML=inBody?`<div class="card"><div class="card-title">Body composition — ${inBody.date??''}</div><div class="inbody-grid"><div><div class="inbody-item-label">Weight</div><div class="inbody-item-value">${fmtN(inBody.weight)} kg</div></div><div><div class="inbody-item-label">Body fat %</div><div class="inbody-item-value">${fmtN(inBody.fatPct)} %</div></div><div><div class="inbody-item-label">Fat mass</div><div class="inbody-item-value">${fmtN(inBody.fatMass)} kg</div></div><div><div class="inbody-item-label">BMI</div><div class="inbody-item-value">${fmtN(inBody.bmi)}</div></div><div><div class="inbody-item-label">Height</div><div class="inbody-item-value">175,5 cm</div></div><div><div class="inbody-item-label">Measured</div><div class="inbody-item-value" style="font-size:13px;color:#8e8e93">${inBody.date??'-'}</div></div></div></div>`:'';
 
   const readyHistSVG=readinessHistGraph(trends.hrv,trends.rhr,trends.sleep);
   const readyHistHTML=readyHistSVG?`<div class="readiness-hist"><div class="readiness-hist-label">Readiness history</div>${readyHistSVG}</div>`:'';
@@ -431,15 +430,16 @@ function render(data,cal){
   let ib=null;
   const EN_DAYS_IB=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   const EN_MONTHS_IB=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const HEIGHT_CM=175.5;
   function parseIB(url){
     const m=url.match(/[?&]IBData=([^&\s]+)/);if(!m)throw new Error('No IBData found');
     const raw=decodeURIComponent(m[1]);const segs=raw.split('!');
     const main=segs.find(s=>/^\d{8}[MF]\d{8}/.test(s));if(!main)throw new Error('No measurement data');
-    const h=parseInt(main.substring(0,4))/10,ds=main.substring(9,17),ts=main.substring(17,21);
-    const fat=parseInt(main.substring(47,51))/10,mus=parseInt(main.substring(91,95))/10,w=parseInt(main.substring(115,119))/10;
-    const bmi=Math.round(w/Math.pow(h/100,2)*10)/10,fp=Math.round(fat/w*1000)/10;
+    const ds=main.substring(9,17),ts=main.substring(17,21);
+    const fat=parseInt(main.substring(47,51))/10,w=parseInt(main.substring(115,119))/10;
+    const bmi=Math.round(w/Math.pow(HEIGHT_CM/100,2)*10)/10,fp=Math.round(fat/w*1000)/10;
     const date=`${ds.slice(0,4)}-${ds.slice(4,6)}-${ds.slice(6,8)}`,time=`${ts.slice(0,2)}:${ts.slice(2,4)}`;
-    return{date,time,height:h,weight:w,muscle:mus,fatMass:fat,bmi,fatPct:fp};
+    return{date,time,height:HEIGHT_CM,weight:w,fatMass:fat,bmi,fatPct:fp};
   }
   function da(n){return String(n).replace('.',',');}
   document.getElementById('inbody-parse-btn').addEventListener('click',()=>{
@@ -451,10 +451,8 @@ function render(data,cal){
       document.getElementById('inbody-date-line').textContent=`${EN_DAYS_IB[dt.getDay()]} ${dt.getDate()} ${EN_MONTHS_IB[dt.getMonth()]} ${dt.getFullYear()} — ${d.time}`;
       document.getElementById('ib-weight').textContent=da(d.weight)+' kg';
       document.getElementById('ib-fatpct').textContent=da(d.fatPct)+' %';
-      document.getElementById('ib-muscle').textContent=da(d.muscle)+' kg';
       document.getElementById('ib-fat').textContent=da(d.fatMass)+' kg';
       document.getElementById('ib-bmi').textContent=da(d.bmi);
-      document.getElementById('ib-height').textContent=da(d.height)+' cm';
       document.getElementById('inbody-results').style.display='block';
     }catch(e){st.textContent='Error: '+e.message;st.className='form-status err';document.getElementById('inbody-results').style.display='none';}
   });
@@ -462,7 +460,7 @@ function render(data,cal){
     if(!ib)return;const btn=document.getElementById('inbody-save-btn'),st=document.getElementById('inbody-save-status');
     btn.disabled=true;st.textContent='Saving…';st.className='form-status';
     const d=ib;
-    try{const r=await fetch('/api/update-wellness',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:d.date,weight:d.weight})});
+    try{const r=await fetch('/api/update-wellness',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:d.date,weight:d.weight,fatMass:d.fatMass})});
     if(r.ok){st.textContent='Saved to Intervals';st.className='form-status ok';}
     else{const e=await r.json().catch(()=>({}));st.textContent='Error: '+(e.error||r.status)+(e.details?' — '+e.details:'');st.className='form-status err';}}
     catch(err){st.textContent='Network error: '+err.message;st.className='form-status err';}

@@ -50,9 +50,8 @@ export default async () => {
   const todayEntry     = days.find(d => d.date === end)       ?? {};
   const yesterdayEntry = days.find(d => d.date === yesterday) ?? {};
 
-  const inBodyEntry = [...days].reverse().find(d =>
-    d.notes && d.notes.includes('InBody')
-  );
+  const bodyCompEntry = [...days].reverse().find(d => d.weight && (d.fatMass || d.bodyFat));
+  const HEIGHT = 1.755;
 
   return json({
     today: end,
@@ -86,7 +85,13 @@ export default async () => {
       fatigue:      todayEntry.fatigue      ?? null,
       motivation:   todayEntry.motivation   ?? null,
     },
-    inBody: inBodyEntry?.notes ? parseInBodyNote(inBodyEntry.notes, inBodyEntry.date) : null,
+    inBody: bodyCompEntry ? {
+      date:    bodyCompEntry.date,
+      weight:  round1(bodyCompEntry.weight),
+      fatMass: round1(bodyCompEntry.fatMass ?? null),
+      fatPct:  round1(bodyCompEntry.bodyFat ?? (bodyCompEntry.fatMass && bodyCompEntry.weight ? bodyCompEntry.fatMass / bodyCompEntry.weight * 100 : null)),
+      bmi:     round1(bodyCompEntry.weight / (HEIGHT * HEIGHT)),
+    } : null,
     healthMarkers: {
       date:   yesterday,
       sdnn:   round1(yesterdayEntry.sdnn   ?? yesterdayEntry.hrvSDNN ?? null),
@@ -124,14 +129,3 @@ function findLatest(days, pred) {
   return days[days.length - 1] ?? null;
 }
 
-function parseInBodyNote(notes, date) {
-  const num = s => parseFloat(s.replace(',', '.'));
-  return {
-    date,
-    weight:   num((notes.match(/Vægt ([\d,]+)/)        ?? [])[1]),
-    muscle:   num((notes.match(/Muskelmasse ([\d,]+)/) ?? [])[1]),
-    fatMass:  num((notes.match(/Fedtmasse ([\d,]+)/)   ?? [])[1]),
-    fatPct:   num((notes.match(/Fedtprocent ([\d,]+)/) ?? [])[1]),
-    bmi:      num((notes.match(/BMI ([\d,]+)/)         ?? [])[1]),
-  };
-}
