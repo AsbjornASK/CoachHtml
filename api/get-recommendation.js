@@ -2,8 +2,8 @@ export const config = { runtime: 'edge' };
 
 export default async (req) => {
   try {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return json({ error: 'GEMINI_API_KEY not set' }, 500);
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) return json({ error: 'OPENAI_API_KEY not set' }, 500);
 
   let body;
   try { body = await req.json(); } catch { return json({ error: 'Invalid JSON' }, 400); }
@@ -42,25 +42,27 @@ Rules:
 - Tone: direct, supportive, like a knowledgeable coach — no filler phrases
 - Output plain text with only the <b> tag allowed`;
 
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${apiKey}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { maxOutputTokens: 400, temperature: 0.7 },
-      }),
-    }
-  );
+  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o-mini',
+      max_tokens: 400,
+      temperature: 0.7,
+      messages: [{ role: 'user', content: prompt }],
+    }),
+  });
 
   if (!res.ok) {
     const err = await res.text();
-    return json({ error: 'Gemini API error', detail: err }, 502);
+    return json({ error: 'OpenAI API error', detail: err }, 502);
   }
 
   const data = await res.json();
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+  const text = data.choices?.[0]?.message?.content ?? '';
   return json({ recommendation: text });
   } catch(e) {
     return json({ error: 'Unhandled error', detail: e?.message ?? String(e) }, 502);
