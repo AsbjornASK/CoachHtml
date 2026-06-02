@@ -93,11 +93,11 @@ export default async () => {
     },
     inBody: inBodyEntry?.notes ? parseInBodyNote(inBodyEntry.notes, inBodyEntry.date) : null,
     healthMarkers: {
-      date:    yesterday,
-      sdnn:    round1(yesterdayEntry.hrvSDNN ?? null),
-      steps:   yesterdayEntry.steps  ?? null,
-      spo2:    round1(yesterdayEntry.spO2   ?? null),
-      vo2max:  round1(yesterdayEntry.vo2max ?? null),
+      date:   yesterday,
+      sdnn:   round1(yesterdayEntry.sdnn   ?? yesterdayEntry.hrvSDNN ?? null),
+      steps:  yesterdayEntry.steps  ?? null,
+      spo2:   round1(yesterdayEntry.spO2   ?? yesterdayEntry.spo2   ?? null),
+      vo2max: round1(yesterdayEntry.vo2max ?? yesterdayEntry.vo2Max  ?? null),
     },
     events: rawEvents,
   });
