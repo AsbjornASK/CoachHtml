@@ -382,7 +382,7 @@ function render(data,cal){
   document.getElementById('footer').textContent=`coachhealth.netlify.app — ${todayStr}`;
   if(_checkinSaved||hasSubj){document.getElementById('checkin-card').style.display='none';}
   else{document.getElementById('checkin-card').style.display='';}
-  if(_inbodySaved){document.getElementById('inbody-card').style.display='none';}
+  if(_inbodySaved||inBody){document.getElementById('inbody-card').style.display='none';}
   else{document.getElementById('inbody-card').style.display='';}
 }
 
