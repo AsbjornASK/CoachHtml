@@ -98,6 +98,7 @@
     <div class="card-title">InBody Import</div>
     <textarea class="inbody-paste" id="inbody-paste" rows="3" placeholder="Paste InBody link here…"></textarea>
     <button class="inbody-parse-btn" id="inbody-parse-btn">Analyse</button>
+    <div class="form-status" id="inbody-status"></div>
     <div class="inbody-results" id="inbody-results">
       <div class="inbody-date-line" id="inbody-date-line"></div>
       <div class="inbody-grid">
@@ -109,7 +110,7 @@
         <div><div class="inbody-item-label">Height</div><div class="inbody-item-value" id="ib-height">-</div></div>
       </div>
       <button class="submit-btn" id="inbody-save-btn" style="background:#30d158;margin-top:14px">Save weight to Intervals</button>
-      <div class="form-status" id="inbody-status"></div>
+      <div class="form-status" id="inbody-save-status"></div>
     </div>
   </div>
 
@@ -454,11 +455,11 @@ function render(data,cal){
       document.getElementById('ib-fat').textContent=da(d.fatMass)+' kg';
       document.getElementById('ib-bmi').textContent=da(d.bmi);
       document.getElementById('ib-height').textContent=da(d.height)+' cm';
-      document.getElementById('inbody-results').style.display='';
-    }catch(e){st.textContent='Error: '+e.message;st.className='form-status err';}
+      document.getElementById('inbody-results').style.display='block';
+    }catch(e){st.textContent='Error: '+e.message;st.className='form-status err';document.getElementById('inbody-results').style.display='none';}
   });
   document.getElementById('inbody-save-btn').addEventListener('click',async()=>{
-    if(!ib)return;const btn=document.getElementById('inbody-save-btn'),st=document.getElementById('inbody-status');
+    if(!ib)return;const btn=document.getElementById('inbody-save-btn'),st=document.getElementById('inbody-save-status');
     btn.disabled=true;st.textContent='Saving…';st.className='form-status';
     const d=ib;const note=`InBody 270 — ${d.date} ${d.time}: Weight ${da(d.weight)} kg — Muscle ${da(d.muscle)} kg — Fat ${da(d.fatMass)} kg — Body fat ${da(d.fatPct)}% — BMI ${da(d.bmi)}`;
     try{const r=await fetch('/api/update-wellness',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:d.date,weight:d.weight,notes:note})});

@@ -539,7 +539,7 @@ document.getElementById('checkin-submit').addEventListener('click',()=>{
       document.getElementById('ib-fat').textContent=da(d.fatMass)+' kg';
       document.getElementById('ib-bmi').textContent=da(d.bmi);
       document.getElementById('ib-height').textContent=da(d.height)+' cm';
-      document.getElementById('inbody-results').style.display='';
+      document.getElementById('inbody-results').style.display='block';
     }catch(e){st.textContent='Error: '+e.message;st.className='form-status err';}
   });
   document.getElementById('inbody-save-btn').addEventListener('click',()=>{
