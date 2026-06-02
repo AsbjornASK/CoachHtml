@@ -464,8 +464,8 @@ function render(data,cal){
     const d=ib;const note=`InBody 270 — ${d.date} ${d.time}: Weight ${da(d.weight)} kg — Muscle ${da(d.muscle)} kg — Fat ${da(d.fatMass)} kg — Body fat ${da(d.fatPct)}% — BMI ${da(d.bmi)}`;
     try{const r=await fetch('/api/update-wellness',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:d.date,weight:d.weight,notes:note})});
     if(r.ok){st.textContent='Saved to Intervals';st.className='form-status ok';}
-    else{const e=await r.json().catch(()=>({}));st.textContent='Error: '+(e.error||r.status);st.className='form-status err';}}
-    catch{st.textContent='Network error';st.className='form-status err';}
+    else{const e=await r.json().catch(()=>({}));st.textContent='Error: '+(e.error||r.status)+(e.details?' — '+e.details:'');st.className='form-status err';}}
+    catch(err){st.textContent='Network error: '+err.message;st.className='form-status err';}
     finally{btn.disabled=false;}
   });
 })();
