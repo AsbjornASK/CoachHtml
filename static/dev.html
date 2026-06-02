@@ -3,10 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>Coach Health</title>
+  <title>Coach Health — Dev</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif; background: #f2f2f7; color: #1c1c1e; max-width: 430px; margin: 0 auto; padding: 0 0 40px; }
+    .dev-banner { background: #ff9f0a; color: #fff; font-size: 11px; font-weight: 700; text-align: center; padding: 5px; letter-spacing: 0.5px; text-transform: uppercase; }
     .header { text-align: center; padding: 24px 16px 12px; }
     .date-label { font-size: 12px; font-weight: 600; color: #8e8e93; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
     .verdict-line { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; }
@@ -73,28 +74,28 @@
     .inbody-parse-btn { width: 100%; margin-top: 10px; padding: 11px; background: #f2f2f7; color: #007aff; font-size: 15px; font-weight: 700; border: none; border-radius: 12px; cursor: pointer; }
     .inbody-results { display: none; margin-top: 14px; border-top: 1px solid #f2f2f7; padding-top: 12px; }
     .inbody-date-line { font-size: 12px; color: #aeaeb2; margin-bottom: 12px; }
-    .skeleton { animation: pulse 1.4s ease-in-out infinite; background: #e5e5ea; border-radius: 16px; }
-    @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.4} }
-    .skel-header { height: 80px; margin: 24px 12px 12px; }
-    .skel-card { height: 140px; margin: 0 12px 12px; }
-    .error-card { background: #ffe5e5; border-radius: 16px; margin: 12px; padding: 16px; color: #c0392b; font-size: 14px; }
     .footer { text-align: center; font-size: 11px; color: #aeaeb2; margin-top: 8px; padding: 0 16px; }
-    .ptr-indicator { display: flex; justify-content: center; align-items: center; height: 0; overflow: hidden; transition: height 0.2s; }
-    .ptr-spinner { width: 22px; height: 22px; border: 2.5px solid #e5e5ea; border-top-color: #007aff; border-radius: 50%; animation: ptr-spin 0.7s linear infinite; }
-    @keyframes ptr-spin { to { transform: rotate(360deg); } }
+    /* dev scenario switcher */
+    .dev-controls { background: #1c1c1e; color: #fff; padding: 10px 12px; margin-bottom: 0; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .dev-controls label { font-size: 11px; font-weight: 600; color: #aeaeb2; text-transform: uppercase; letter-spacing: 0.5px; }
+    .dev-controls select { font-size: 13px; font-weight: 600; background: #2c2c2e; color: #fff; border: 1px solid #3a3a3c; border-radius: 8px; padding: 4px 8px; cursor: pointer; }
   </style>
 </head>
 <body>
-  <div id="ptr-indicator" class="ptr-indicator"><div class="ptr-spinner"></div></div>
-  <div id="loading">
-    <div class="skel-header skeleton"></div>
-    <div class="skel-card skeleton"></div>
-    <div class="skel-card skeleton"></div>
-    <div class="skel-card skeleton"></div>
+  <div class="dev-banner">⚠ Dev mode — mock data</div>
+  <div class="dev-controls">
+    <label>Scenario</label>
+    <select id="scenario-picker">
+      <option value="green">Green — Ready (HRV high)</option>
+      <option value="yellow">Yellow — Ease off (moderate fatigue)</option>
+      <option value="red">Red — Rest up (low HRV, high ATL)</option>
+      <option value="no-checkin">Green — No check-in yet</option>
+    </select>
   </div>
-  <div id="app" style="display:none"></div>
 
-  <div class="card" id="inbody-card" style="display:none">
+  <div id="app"></div>
+
+  <div class="card" id="inbody-card">
     <div class="card-title">InBody Import</div>
     <textarea class="inbody-paste" id="inbody-paste" rows="3" placeholder="Paste InBody link here…"></textarea>
     <button class="inbody-parse-btn" id="inbody-parse-btn">Analyse</button>
@@ -109,11 +110,11 @@
         <div><div class="inbody-item-label">Height</div><div class="inbody-item-value" id="ib-height">-</div></div>
       </div>
       <button class="submit-btn" id="inbody-save-btn" style="background:#30d158;margin-top:14px">Save weight to Intervals</button>
-      <div class="form-status" id="inbody-status"></div>
+      <div class="form-status" id="inbody-status">— dev mode: save disabled —</div>
     </div>
   </div>
 
-  <div class="card" id="checkin-card" style="display:none">
+  <div class="card" id="checkin-card">
     <div class="card-title">Morning Check-in <span id="checkin-done-badge" class="checkin-done-badge" style="display:none">Saved</span></div>
     <div class="checkin-row">
       <div class="checkin-label">Sleep quality</div>
@@ -140,16 +141,103 @@
       </div>
     </div>
     <button class="submit-btn" id="checkin-submit" style="background:#007aff">Save to Intervals</button>
-    <div class="form-status" id="checkin-status"></div>
+    <div class="form-status" id="checkin-status">— dev mode: save disabled —</div>
   </div>
 
-  <div class="footer" id="footer" style="display:none"></div>
+  <div class="footer" id="footer"></div>
 
 <script>
 const EN_DAYS   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 const EN_DAYS_S = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const EN_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
+// ── Mock data scenarios ───────────────────────────────────────────────────
+const MOCK = {
+  green: {
+    data: {
+      latest: { date:'2026-06-02', hrv:88, restingHR:49, sleepHours:8.1, sleepScore:84, tsb:3.2, ctl:62, atl:58, rampRate:0.8, weight:82.4 },
+      trends: {
+        hrv:  [70,72,75,71,78,80,82,85,83,87,88,88,90,88],
+        rhr:  [53,52,51,54,52,51,50,50,49,50,49,48,49,49],
+        sleep:[7.2,7.5,6.9,7.8,8.0,7.6,8.2,7.9,8.0,8.3,8.1,7.8,8.2,8.1],
+      },
+      sleep8: [8.1,7.9,8.0,8.3,8.1,7.8,8.2,8.1],
+      fitnessHistory: Array.from({length:28},(_, i)=>({date:`2026-05-${String(i+1).padStart(2,'0')}`,ctl:52+i*0.4,atl:48+Math.sin(i/3)*6})),
+      subjective: { date:'2026-06-01', sleepQuality:1, soreness:1, fatigue:1, motivation:2 },
+      inBody: { date:'2026-05-28', weight:82.4, fatPct:14.2, muscle:68.1, fatMass:11.7, bmi:23.8 },
+    },
+    cal: {
+      today: [{ title:'Threshold intervals 5×8 min', timeStart:'06:30', timeEnd:'07:45' }],
+      upcoming: [
+        { date:'2026-06-03', title:'Easy run 60 min', timeStart:'07:00' },
+        { date:'2026-06-04', title:'Rest day' },
+        { date:'2026-06-05', title:'Long run 90 min', timeStart:'07:00', timeEnd:'08:30' },
+      ],
+    },
+  },
+  yellow: {
+    data: {
+      latest: { date:'2026-06-02', hrv:71, restingHR:54, sleepHours:6.8, sleepScore:68, tsb:-6.1, ctl:58, atl:65, rampRate:2.1, weight:83.1 },
+      trends: {
+        hrv:  [80,78,76,74,73,72,74,73,71,70,72,71,70,71],
+        rhr:  [50,51,51,52,53,53,54,53,55,54,54,55,54,54],
+        sleep:[8.0,7.8,7.5,7.2,7.0,6.9,7.1,6.8,7.0,6.9,6.8,7.0,6.7,6.8],
+      },
+      sleep8: [7.0,6.9,6.8,7.0,6.7,6.8,6.9,6.8],
+      fitnessHistory: Array.from({length:28},(_, i)=>({date:`2026-05-${String(i+1).padStart(2,'0')}`,ctl:50+i*0.35,atl:48+i*0.65})),
+      subjective: { date:'2026-06-01', sleepQuality:3, soreness:2, fatigue:3, motivation:3 },
+      inBody: null,
+    },
+    cal: {
+      today: [{ title:'Steady state run 75 min', timeStart:'07:00', timeEnd:'08:15' }],
+      upcoming: [
+        { date:'2026-06-03', title:'Strength session', timeStart:'17:30', timeEnd:'18:30' },
+        { date:'2026-06-04', title:'Easy run 45 min', timeStart:'06:45' },
+      ],
+    },
+  },
+  'no-checkin': {
+    data: {
+      latest: { date:'2026-06-02', hrv:85, restingHR:50, sleepHours:7.8, sleepScore:80, tsb:2.1, ctl:60, atl:57, rampRate:0.6, weight:82.4 },
+      trends: {
+        hrv:  [70,72,75,71,78,80,82,85,83,87,88,88,90,85],
+        rhr:  [53,52,51,54,52,51,50,50,49,50,49,48,49,50],
+        sleep:[7.2,7.5,6.9,7.8,8.0,7.6,8.2,7.9,8.0,8.3,8.1,7.8,8.2,7.8],
+      },
+      sleep8: [8.1,7.9,8.0,8.3,8.1,7.8,8.2,7.8],
+      fitnessHistory: Array.from({length:28},(_, i)=>({date:`2026-05-${String(i+1).padStart(2,'0')}`,ctl:52+i*0.4,atl:48+Math.sin(i/3)*6})),
+      subjective: { date:null, sleepQuality:null, soreness:null, fatigue:null, motivation:null },
+      inBody: null,
+    },
+    cal: {
+      today: [{ title:'Threshold intervals 5×8 min', timeStart:'06:30', timeEnd:'07:45' }],
+      upcoming: [{ date:'2026-06-03', title:'Easy run 60 min', timeStart:'07:00' }],
+    },
+  },
+  red: {
+    data: {
+      latest: { date:'2026-06-02', hrv:55, restingHR:60, sleepHours:5.9, sleepScore:52, tsb:-14.0, ctl:55, atl:72, rampRate:3.8, weight:83.8 },
+      trends: {
+        hrv:  [78,74,70,68,65,63,60,58,56,55,57,55,54,55],
+        rhr:  [51,52,54,55,57,58,59,60,61,60,61,60,61,60],
+        sleep:[8.0,7.5,7.0,6.8,6.5,6.2,6.0,5.8,6.1,5.9,5.8,6.0,5.9,5.9],
+      },
+      sleep8: [6.1,5.9,5.8,6.0,5.9,5.9,5.8,5.9],
+      fitnessHistory: Array.from({length:28},(_, i)=>({date:`2026-05-${String(i+1).padStart(2,'0')}`,ctl:48+i*0.3,atl:44+i*1.2})),
+      subjective: { date:'2026-06-01', sleepQuality:4, soreness:3, fatigue:4, motivation:4 },
+      inBody: null,
+    },
+    cal: {
+      today: [],
+      upcoming: [
+        { date:'2026-06-03', title:'Easy run 30 min', timeStart:'07:00' },
+        { date:'2026-06-04', title:'Mobility & recovery', timeStart:'08:00', timeEnd:'08:30' },
+      ],
+    },
+  },
+};
+
+// ── Shared logic (copy of index.html) ────────────────────────────────────
 const BL = {
   hrv:  {mean:74.56,std:16.26,w:0.45},
   rhr:  {mean:52.46,std:4.55, w:0.25},
@@ -177,7 +265,6 @@ function calcSleep(hrs,score,s8){
 }
 
 function calcReadiness(r,s){return(r==null||s==null)?null:Math.min(100,Math.max(1,Math.round(r*0.5+s*0.5)));}
-
 function verdictColor(r){return r>=65?'green':r>=45?'yellow':'red';}
 function verdictText(r){return r>=65?'Green — Ready':r>=45?'Yellow — Ease off':'Red — Rest up';}
 const HEX={green:'#30d158',yellow:'#ff9f0a',red:'#ff3b30'};
@@ -237,8 +324,7 @@ function readinessHistGraph(hrvArr,rhrArr,sleepArr){
   const segments=[];
   for(let i=0;i<pts.length-1;i++){
     const a=pts[i],b=pts[i+1];
-    const midV=(a.v+b.v)/2;
-    segments.push(`<line x1="${px(a.x).toFixed(1)}" y1="${py(a.v).toFixed(1)}" x2="${px(b.x).toFixed(1)}" y2="${py(b.v).toFixed(1)}" stroke="${colorForV(midV)}" stroke-width="2" stroke-linecap="round"/>`);
+    segments.push(`<line x1="${px(a.x).toFixed(1)}" y1="${py(a.v).toFixed(1)}" x2="${px(b.x).toFixed(1)}" y2="${py(b.v).toFixed(1)}" stroke="${colorForV((a.v+b.v)/2)}" stroke-width="2" stroke-linecap="round"/>`);
   }
   const dots=pts.map(p=>`<circle cx="${px(p.x).toFixed(1)}" cy="${py(p.v).toFixed(1)}" r="2.5" fill="${colorForV(p.v)}"/>`).join('');
   const idxs=[0,Math.floor(pts.length*0.33),Math.floor(pts.length*0.66),pts.length-1];
@@ -271,10 +357,7 @@ function fitnessGraph(hist){
     ${labs}</svg>`;
 }
 
-let _lastData=null,_lastCal=null,_checkinSaved=false;
-
-function render(data,cal){
-  _lastData=data;_lastCal=cal;
+function _innerRender(data,cal){
   const {latest,trends,sleep8,fitnessHistory,subjective,inBody}=data;
   const rec=calcRecovery(latest.hrv,latest.restingHR,latest.sleepHours,latest.tsb);
   const slp=calcSleep(latest.sleepHours,latest.sleepScore,sleep8);
@@ -356,59 +439,57 @@ function render(data,cal){
     ${upcoming.length?`<div class="card"><div class="card-title">Upcoming sessions</div>${uHTML}</div>`:''}
   `;
 
-  ['app','inbody-card','footer'].forEach(id=>{document.getElementById(id).style.display='';});
-  document.getElementById('loading').style.display='none';
-  document.getElementById('footer').textContent=`coachhealth.netlify.app — ${todayStr}`;
-  // Hide check-in form if already saved this session or data already present
+  document.getElementById('footer').textContent=`coachhealth.netlify.app — ${todayStr} (dev)`;
   if(_checkinSaved||hasSubj){document.getElementById('checkin-card').style.display='none';}
   else{document.getElementById('checkin-card').style.display='';}
 }
 
-(async()=>{
-  try{
-    const[dR,cR]=await Promise.all([fetch('/api/get-data'),fetch('/api/get-calendar').catch(()=>null)]);
-    if(!dR.ok)throw new Error('Data error: '+dR.status);
-    const data=await dR.json();
-    const cal=cR?.ok?await cR.json():null;
-    render(data,cal);
-  }catch(e){
-    document.getElementById('loading').style.display='none';
-    document.getElementById('app').innerHTML=`<div class="error-card">Could not load data: ${e.message}</div>`;
-    ['app','inbody-card','checkin-card'].forEach(id=>document.getElementById(id).style.display='');
-  }
-})();
+// ── Boot & scenario switching ────────────────────────────────────────────
+let _lastData=null,_lastCal=null,_checkinSaved=false;
 
-(function(){
-  const TODAY=new Date().toISOString().slice(0,10);
-  const LS=('checkin_'+TODAY);
-  document.querySelectorAll('.btn-group').forEach(g=>{g.querySelectorAll('button').forEach(b=>{b.addEventListener('click',()=>{g.querySelectorAll('button').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');});});});
-  const sv=JSON.parse(localStorage.getItem(LS)||'null');
-  if(sv){document.getElementById('checkin-done-badge').style.display='';Object.entries(sv).forEach(([f,v])=>{const g=document.querySelector(`.btn-group[data-field="${f}"]`);if(g)g.querySelectorAll('button').forEach(b=>b.classList.toggle('selected',+b.dataset.val===v));});}
-  document.getElementById('checkin-submit').addEventListener('click',async()=>{
-    const btn=document.getElementById('checkin-submit'),st=document.getElementById('checkin-status');
-    const p={date:TODAY};
-    document.querySelectorAll('.btn-group').forEach(g=>{const s=g.querySelector('button.selected');if(s)p[g.dataset.field]=+s.dataset.val;});
-    btn.disabled=true;st.textContent='Saving…';st.className='form-status';
-    try{const r=await fetch('/api/update-wellness',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
-    if(r.ok){
-      localStorage.setItem(LS,JSON.stringify(p));
-      // Update the dashboard subjective card and hide this form
-      if(_lastData){
-        _lastData.subjective={date:TODAY,...p};
-        _checkinSaved=true;
-        render(_lastData,_lastCal);
-      }
-    }
-    else{const e=await r.json().catch(()=>({}));st.textContent='Error: '+(e.error||r.status);st.className='form-status err';btn.disabled=false;}}
-    catch{st.textContent='Network error';st.className='form-status err';btn.disabled=false;}
-    // btn re-enabled above in error paths; success path hides the form entirely
+function render(data,cal){
+  _lastData=data;_lastCal=cal;
+  _innerRender(data,cal);
+}
+
+function loadScenario(key){
+  _checkinSaved=false;
+  const {data,cal}=MOCK[key];
+  // deep clone so scenario reloads are clean
+  render(JSON.parse(JSON.stringify(data)),cal);
+}
+
+document.getElementById('scenario-picker').addEventListener('change',e=>loadScenario(e.target.value));
+loadScenario('green');
+
+// ── Check-in buttons (UI only, no save) ──────────────────────────────────
+document.querySelectorAll('.btn-group').forEach(g=>{
+  g.querySelectorAll('button').forEach(b=>{
+    b.addEventListener('click',()=>{
+      g.querySelectorAll('button').forEach(x=>x.classList.remove('selected'));
+      b.classList.add('selected');
+    });
   });
-})();
+});
+document.getElementById('checkin-submit').addEventListener('click',()=>{
+  // Collect values
+  const p={};
+  document.querySelectorAll('.btn-group').forEach(g=>{const s=g.querySelector('button.selected');if(s)p[g.dataset.field]=+s.dataset.val;});
+  if(!p.sleepQuality&&!p.soreness&&!p.fatigue&&!p.motivation){
+    const st=document.getElementById('checkin-status');st.textContent='Select at least one value';st.className='form-status err';return;
+  }
+  // Simulate save: update subjective and re-render
+  if(_lastData){
+    const TODAY=new Date().toISOString().slice(0,10);
+    _lastData.subjective={date:TODAY,...p};
+    _checkinSaved=true;
+    render(_lastData,_lastCal);
+  }
+});
 
+// ── InBody parser (UI only, no save) ─────────────────────────────────────
 (function(){
   let ib=null;
-  const EN_DAYS_IB=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-  const EN_MONTHS_IB=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   function parseIB(url){
     const m=url.match(/[?&]IBData=([^&\s]+)/);if(!m)throw new Error('No IBData found');
     const raw=decodeURIComponent(m[1]);const segs=raw.split('!');
@@ -426,7 +507,7 @@ function render(data,cal){
     try{
       ib=parseIB(url);const d=ib;
       const dt=new Date(d.date+'T12:00:00');
-      document.getElementById('inbody-date-line').textContent=`${EN_DAYS_IB[dt.getDay()]} ${dt.getDate()} ${EN_MONTHS_IB[dt.getMonth()]} ${dt.getFullYear()} — ${d.time}`;
+      document.getElementById('inbody-date-line').textContent=`${EN_DAYS[dt.getDay()]} ${dt.getDate()} ${EN_MONTHS[dt.getMonth()]} ${dt.getFullYear()} — ${d.time}`;
       document.getElementById('ib-weight').textContent=da(d.weight)+' kg';
       document.getElementById('ib-fatpct').textContent=da(d.fatPct)+' %';
       document.getElementById('ib-muscle').textContent=da(d.muscle)+' kg';
@@ -436,59 +517,9 @@ function render(data,cal){
       document.getElementById('inbody-results').style.display='';
     }catch(e){st.textContent='Error: '+e.message;st.className='form-status err';}
   });
-  document.getElementById('inbody-save-btn').addEventListener('click',async()=>{
-    if(!ib)return;const btn=document.getElementById('inbody-save-btn'),st=document.getElementById('inbody-status');
-    btn.disabled=true;st.textContent='Saving…';st.className='form-status';
-    const d=ib;const note=`InBody 270 — ${d.date} ${d.time}: Weight ${da(d.weight)} kg — Muscle ${da(d.muscle)} kg — Fat ${da(d.fatMass)} kg — Body fat ${da(d.fatPct)}% — BMI ${da(d.bmi)}`;
-    try{const r=await fetch('/api/update-wellness',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:d.date,weight:d.weight,notes:note})});
-    if(r.ok){st.textContent='Saved to Intervals';st.className='form-status ok';}
-    else{const e=await r.json().catch(()=>({}));st.textContent='Error: '+(e.error||r.status);st.className='form-status err';}}
-    catch{st.textContent='Network error';st.className='form-status err';}
-    finally{btn.disabled=false;}
-  });
-})();
-
-(function(){
-  const ptr=document.getElementById('ptr-indicator');
-  let startY=0,pulling=false,refreshing=false;
-  const THRESHOLD=64;
-
-  document.addEventListener('touchstart',e=>{
-    if(window.scrollY===0)startY=e.touches[0].clientY;
-  },{passive:true});
-
-  document.addEventListener('touchmove',e=>{
-    if(refreshing||window.scrollY>0)return;
-    const dy=e.touches[0].clientY-startY;
-    if(dy>0){
-      pulling=true;
-      const h=Math.min(dy*0.4,THRESHOLD);
-      ptr.style.height=h+'px';
-    }
-  },{passive:true});
-
-  document.addEventListener('touchend',async()=>{
-    if(!pulling)return;
-    pulling=false;
-    const h=parseFloat(ptr.style.height||0);
-    if(h>=THRESHOLD*0.6){
-      refreshing=true;
-      ptr.style.height='48px';
-      try{
-        const[dR,cR]=await Promise.all([fetch('/api/get-data'),fetch('/api/get-calendar').catch(()=>null)]);
-        if(!dR.ok)throw new Error('Data error: '+dR.status);
-        const data=await dR.json();
-        const cal=cR?.ok?await cR.json():null;
-        render(data,cal);
-      }catch(e){
-        document.getElementById('app').innerHTML=`<div class="error-card">Could not load data: ${e.message}</div>`;
-      }finally{
-        refreshing=false;
-      }
-    }
-    ptr.style.transition='height 0.25s';
-    ptr.style.height='0';
-    setTimeout(()=>ptr.style.transition='',260);
+  document.getElementById('inbody-save-btn').addEventListener('click',()=>{
+    const st=document.getElementById('inbody-status');
+    st.textContent='— dev mode: save disabled —';st.className='form-status';
   });
 })();
 </script>

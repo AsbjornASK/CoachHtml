@@ -47,9 +47,8 @@ export default async () => {
     tsb:  d.ctl != null && d.atl != null ? round1(d.ctl - d.atl) : null,
   }));
 
-  // Subjektive felter fra gårsdagen (det brugeren har logget via check-in)
-  const yesterday = fmt(new Date(today - 86_400_000));
-  const yesterdayEntry = days.find(d => d.date === yesterday) ?? {};
+  // Subjektive felter fra i dag (det brugeren har logget via morgen check-in)
+  const todayEntry = days.find(d => d.date === end) ?? {};
 
   // InBody fra notes (seneste 14 dage)
   const inBodyEntry = [...days].reverse().find(d =>
@@ -82,11 +81,11 @@ export default async () => {
     sleep8: days.slice(-8).map(d => d.sleepSecs ? round1(d.sleepSecs / 3600) : null),
     fitnessHistory,
     subjective: {
-      date:        yesterdayEntry.date ?? null,
-      sleepQuality: yesterdayEntry.sleepQuality ?? null,
-      soreness:    yesterdayEntry.soreness    ?? null,
-      fatigue:     yesterdayEntry.fatigue     ?? null,
-      motivation:  yesterdayEntry.motivation  ?? null,
+      date:         todayEntry.date         ?? null,
+      sleepQuality: todayEntry.sleepQuality ?? null,
+      soreness:     todayEntry.soreness     ?? null,
+      fatigue:      todayEntry.fatigue      ?? null,
+      motivation:   todayEntry.motivation   ?? null,
     },
     inBody: inBodyEntry?.notes ? parseInBodyNote(inBodyEntry.notes, inBodyEntry.date) : null,
     events: rawEvents,
