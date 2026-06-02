@@ -302,11 +302,6 @@ function render(data,cal){
   const upcoming=(cal?.upcoming??[]);
   const uHTML=upcoming.length?upcoming.map(e=>{const d=new Date(e.date+'T12:00:00');return`<div class="upcoming-row"><div class="upcoming-date"><div class="udate-day">${EN_DAYS_S[d.getDay()]}</div><div class="udate-num">${d.getDate()}/${d.getMonth()+1}</div></div><div class="upcoming-info"><div class="upcoming-title">${e.title}</div><div class="upcoming-time">${e.timeStart??''}${e.timeEnd?'–'+e.timeEnd:''}</div></div></div>`;}).join(''):'';
 
-  const recText={
-    green:`<span class="rec-bold">Green day — execute all sessions in full.</span> HRV ${fmtN(latest.hrv)} ms and resting HR ${fmtN(latest.restingHR)} bpm — body is ready.`,
-    yellow:`<span class="rec-bold">Yellow day — train at the easier end.</span> Fewer intervals or lower intensity. TSB ${fmtN(latest.tsb)} — drawing on reserves.`,
-    red:`<span class="rec-bold">Red day — back off or rest.</span> Swap a hard session for easy running or mobility. Backing off is not failing.`,
-  };
 
   const SLBLS={sleepQuality:['Great','Good','Avg','Poor'],soreness:['Low','Avg','High','Extreme'],fatigue:['Low','Avg','High','Extreme'],motivation:['Extreme','High','Avg','Low']};
   const hasSubj=subjective&&(subjective.sleepQuality||subjective.soreness||subjective.fatigue||subjective.motivation);
@@ -373,7 +368,7 @@ function render(data,cal){
     ${hmHTML}
     ${subjHTML}${ibHTML}
     <div class="card"><div class="card-title">Today's sessions</div>${wHTML}</div>
-    <div class="card"><div class="card-title">Recommendation</div><div class="rec-text">${recText[vc]}</div></div>
+    <div class="card"><div class="card-title">Recommendation</div><div class="rec-text" id="rec-text"><span style="color:#aeaeb2">Generating…</span></div></div>
     ${upcoming.length?`<div class="card"><div class="card-title">Upcoming sessions</div>${uHTML}</div>`:''}
   `;
 
@@ -386,6 +381,26 @@ function render(data,cal){
   else{document.getElementById('inbody-card').style.display='';}
 }
 
+async function fetchRecommendation(data,cal){
+  const {latest,subjective}=data;
+  const rec=calcRecovery(latest.hrv,latest.restingHR,latest.sleepHours,latest.tsb);
+  const slp=calcSleep(latest.sleepHours,latest.sleepScore,data.sleep8);
+  const ready=calcReadiness(rec,slp);
+  const vc=verdictColor(ready??50);
+  const sessions=(cal?.today??[]).map(e=>e.title).filter(Boolean);
+  try{
+    const r=await fetch('/api/get-recommendation',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({vc,latest,subjective,sessions})});
+    if(!r.ok)throw new Error(r.status);
+    const {recommendation}=await r.json();
+    const el=document.getElementById('rec-text');
+    if(el&&recommendation)el.innerHTML=recommendation.replace(/<b>(.*?)<\/b>/g,'<span class="rec-bold">$1</span>');
+  }catch{
+    const el=document.getElementById('rec-text');
+    const fallback={green:`<span class="rec-bold">Green day — execute all sessions in full.</span> HRV ${fmtN(latest.hrv)} ms and resting HR ${fmtN(latest.restingHR)} bpm — body is ready.`,yellow:`<span class="rec-bold">Yellow day — train at the easier end.</span> Fewer intervals or lower intensity. TSB ${fmtN(latest.tsb)} — drawing on reserves.`,red:`<span class="rec-bold">Red day — back off or rest.</span> Swap a hard session for easy running or mobility. Backing off is not failing.`};
+    if(el)el.innerHTML=fallback[vc]??fallback.green;
+  }
+}
+
 (async()=>{
   try{
     const[dR,cR]=await Promise.all([fetch('/api/get-data'),fetch('/api/get-calendar').catch(()=>null)]);
@@ -393,6 +408,7 @@ function render(data,cal){
     const data=await dR.json();
     const cal=cR?.ok?await cR.json():null;
     render(data,cal);
+    fetchRecommendation(data,cal);
   }catch(e){
     document.getElementById('loading').style.display='none';
     document.getElementById('app').innerHTML=`<div class="error-card">Could not load data: ${e.message}</div>`;
