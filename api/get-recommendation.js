@@ -1,13 +1,15 @@
 export const config = { runtime: 'edge' };
 
 export default async (req) => {
+  try {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return json({ error: 'GEMINI_API_KEY not set' }, 500);
 
   let body;
   try { body = await req.json(); } catch { return json({ error: 'Invalid JSON' }, 400); }
 
-  const { vc, latest, subjective, sessions } = body;
+  const { vc, latest, subjective, sessions } = body ?? {};
+  if (!latest) return json({ error: 'Missing latest in request body' }, 400);
 
   const colorLabel = { green: 'Green', yellow: 'Yellow', red: 'Red' }[vc] ?? 'Unknown';
 
@@ -60,6 +62,9 @@ Rules:
   const data = await res.json();
   const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
   return json({ recommendation: text });
+  } catch(e) {
+    return json({ error: 'Unhandled error', detail: e?.message ?? String(e) }, 502);
+  }
 };
 
 function json(body, status = 200) {
