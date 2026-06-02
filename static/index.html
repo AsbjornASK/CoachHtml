@@ -93,6 +93,22 @@ body {
 .upcoming-title { font-size: 14px; font-weight: 600; }
 .upcoming-meta { font-size: 12px; color: #8e8e93; margin-top: 2px; }
 .upcoming-right { font-size: 12px; color: #8e8e93; text-align: right; }
+.checkin-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.checkin-cell {
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: #f2f2f7;
+}
+.checkin-label { font-size: 11px; color: #8e8e93; margin-bottom: 4px; }
+.checkin-val { font-size: 14px; font-weight: 700; }
+.ci-green { background: #d4f5dc; color: #1a7a35; }
+.ci-gray { background: #f2f2f7; color: #636366; }
+.ci-orange { background: #fff0d4; color: #a05a00; }
+.ci-red { background: #ffd4d4; color: #a01010; }
 </style>
 </head>
 <body>
@@ -134,10 +150,10 @@ body {
         <circle cx="41" cy="41" r="34" fill="none" stroke="#e5e5ea" stroke-width="8"/>
         <circle cx="41" cy="41" r="34" fill="none" stroke="#5856d6" stroke-width="8"
           stroke-linecap="round"
-          stroke-dasharray="213.6" stroke-dashoffset="38.4"
+          stroke-dasharray="213.6" stroke-dashoffset="36.3"
           transform="rotate(-90 41 41)"/>
       </svg>
-      <div class="ring-value" style="color:#5856d6">82</div>
+      <div class="ring-value" style="color:#5856d6">83</div>
       <div class="ring-label">Søvn</div>
     </div>
   </div>
@@ -147,30 +163,28 @@ body {
 <div class="card">
   <div class="card-title">Helbredsmålinger</div>
 
-  <!-- HRV -->
+  <!-- HRV: 6 pts May28–Jun2: 89,97,93,103,103,111 · min=89,max=111,range=22 -->
+  <!-- y = 22-(v-89)/22*22 -->
   <div class="metric-row">
     <div>
       <div class="metric-name">HRV (rMSSD)</div>
       <div class="metric-val">111 ms <span class="trend-up">↑</span></div>
     </div>
-    <!-- Sparkline: 89, 97, 93, 103, 103, 111 · min=89, max=111, range=22 -->
-    <!-- y = 22 - (v-89)/22*22 → proportional -->
     <svg width="64" height="28" viewBox="0 0 64 28" style="overflow:visible">
       <polyline
-        points="0,22 12.8,14.4 25.6,18 38.4,9.1 51.2,9.1 64,0"
+        points="0,22 12.8,14 25.6,18 38.4,8 51.2,8 64,0"
         fill="none" stroke="#34c759" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
       <circle cx="64" cy="0" r="2.5" fill="#34c759"/>
     </svg>
   </div>
 
-  <!-- RHR -->
+  <!-- RHR: 7 days May27–Jun2: 49,49,53,44,55,41,40 · min=40,max=55,range=15 -->
+  <!-- y = 22-(v-40)/15*22 (higher bpm=higher on screen=lower y) -->
   <div class="metric-row">
     <div>
       <div class="metric-name">Hvilepuls</div>
       <div class="metric-val">40 bpm <span class="trend-up">↑</span></div>
     </div>
-    <!-- RHR 7 days: 49,49,53,44,55,41,40 · min=40,max=55,range=15 -->
-    <!-- y = 22 - (v-40)/15*22 (higher bpm = higher on screen = lower y val) -->
     <svg width="64" height="28" viewBox="0 0 64 28" style="overflow:visible">
       <polyline
         points="0,8.8 10.7,8.8 21.3,2.9 32,16.1 42.7,0 53.3,20.5 64,22"
@@ -179,14 +193,13 @@ body {
     </svg>
   </div>
 
-  <!-- Sleep -->
+  <!-- Sleep: 7 days May27–Jun2: 6.67,8.37,7.32,4.97,9.15,8.30,7.47 · min=4.97,max=9.15,range=4.18 -->
+  <!-- y = 22-(v-4.97)/4.18*22 -->
   <div class="metric-row">
     <div>
       <div class="metric-name">Søvn</div>
       <div class="metric-val">7,5 t <span class="trend-up">↑</span></div>
     </div>
-    <!-- Sleep 7 days: 6.67,8.37,7.32,4.97,9.15,8.30,7.47 · min=4.97,max=9.15,range=4.18 -->
-    <!-- y = 22 - (v-4.97)/4.18*22 -->
     <svg width="64" height="28" viewBox="0 0 64 28" style="overflow:visible">
       <polyline
         points="0,13.1 10.7,4.0 21.3,9.6 32,22 42.7,0 53.3,4.5 64,8.8"
@@ -195,11 +208,17 @@ body {
     </svg>
   </div>
 
-  <!-- Sleep score -->
   <div class="metric-row">
     <div>
       <div class="metric-name">Søvnresultat (Garmin)</div>
       <div class="metric-val">87 / 100</div>
+    </div>
+  </div>
+
+  <div class="metric-row">
+    <div>
+      <div class="metric-name">Vægt (senest logget 24. maj)</div>
+      <div class="metric-val">76,3 kg</div>
     </div>
   </div>
 </div>
@@ -229,6 +248,29 @@ body {
   <canvas id="fc" height="110" style="margin-top:14px;"></canvas>
 </div>
 
+<!-- Subjektiv check-in (1. juni 2026) -->
+<div class="card">
+  <div class="card-title">Check-in · 1. juni 2026</div>
+  <div class="checkin-grid">
+    <div class="checkin-cell ci-green">
+      <div class="checkin-label">😴 Søvnkvalitet</div>
+      <div class="checkin-val">Stor</div>
+    </div>
+    <div class="checkin-cell ci-gray">
+      <div class="checkin-label">💪 Ømhed</div>
+      <div class="checkin-val" style="color:#8e8e93">—</div>
+    </div>
+    <div class="checkin-cell ci-gray">
+      <div class="checkin-label">🔋 Træthed</div>
+      <div class="checkin-val" style="color:#8e8e93">—</div>
+    </div>
+    <div class="checkin-cell ci-gray">
+      <div class="checkin-label">🔥 Motivation</div>
+      <div class="checkin-val" style="color:#8e8e93">—</div>
+    </div>
+  </div>
+</div>
+
 <!-- Dagens pas -->
 <div class="card">
   <div class="card-title">Dagens pas</div>
@@ -239,7 +281,7 @@ body {
 <div class="card">
   <div class="card-title">Anbefaling</div>
   <p class="rec-text">HRV i top og hvilepuls rekordlav — kroppen er i god form. Hviledag er den rigtige beslutning: lad adaptationen lande. En let gåtur er altid fint. Hvil ordentligt til Strength 2 i morgen.</p>
-  <p class="rec-text" style="margin-top:8px;color:#636366;font-size:13px;">ℹ️ Go-Kart IDANextGen 17:00–19:30 og Ida fra 19:30 giver en lang aften — sov tidligt hvis muligt.</p>
+  <p class="rec-text" style="margin-top:8px;color:#636366;font-size:13px;">ℹ️ Go-Kart IDANextGen 17:00–19:00 og Ida fra 19:00 — lang aften foran dig. Sov tidligt hvis muligt.</p>
 </div>
 
 <!-- Næste workouts -->
