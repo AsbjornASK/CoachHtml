@@ -3,558 +3,318 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Morgenstatus – 1. juni 2026</title>
+<title>Coach Health – 2. juni 2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-  :root {
-    --green: #34c759;
-    --yellow: #ff9f0a;
-    --red: #ff3b30;
-    --blue: #007aff;
-    --bg: #f2f2f7;
-    --card: #ffffff;
-    --text: #1c1c1e;
-    --muted: #8e8e93;
-    --border: #e5e5ea;
-    --up: #34c759;
-    --neutral: #8e8e93;
-    --down: #ff3b30;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    padding: 16px 16px 40px;
-    max-width: 430px;
-    margin: 0 auto;
-  }
-  .header {
-    text-align: center;
-    padding: 12px 0 8px;
-    color: var(--muted);
-    font-size: 13px;
-    letter-spacing: 0.02em;
-  }
-  .verdict-block {
-    text-align: center;
-    margin: 8px 0 20px;
-  }
-  .verdict-text {
-    font-size: 28px;
-    font-weight: 700;
-    color: var(--green);
-    letter-spacing: -0.5px;
-  }
-  .readiness-num {
-    font-size: 52px;
-    font-weight: 800;
-    color: var(--green);
-    line-height: 1;
-    letter-spacing: -2px;
-  }
-  .readiness-label {
-    font-size: 15px;
-    color: var(--muted);
-    margin-top: 2px;
-  }
-
-  /* RINGS */
-  .rings-row {
-    display: flex;
-    justify-content: space-around;
-    gap: 8px;
-    margin-bottom: 16px;
-  }
-  .ring-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    flex: 1;
-  }
-  .ring-label {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-  .ring-value {
-    font-size: 14px;
-    font-weight: 700;
-  }
-  svg.ring-svg { transform: rotate(-90deg); }
-  circle.ring-bg { fill: none; stroke: var(--border); stroke-width: 8; }
-  circle.ring-fill { fill: none; stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 0.8s ease; }
-
-  /* CARDS */
-  .card {
-    background: var(--card);
-    border-radius: 16px;
-    padding: 16px;
-    margin-bottom: 12px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-  }
-  .card-title {
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    margin-bottom: 12px;
-  }
-  .metrics-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-  }
-  .metric-item {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-  .metric-name {
-    font-size: 11px;
-    color: var(--muted);
-    font-weight: 500;
-  }
-  .metric-value-row {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .metric-value {
-    font-size: 22px;
-    font-weight: 700;
-    letter-spacing: -0.5px;
-  }
-  .metric-unit {
-    font-size: 12px;
-    color: var(--muted);
-  }
-  .trend-arrow {
-    font-size: 16px;
-    font-weight: 700;
-  }
-  .trend-up { color: var(--up); }
-  .trend-neutral { color: var(--neutral); }
-  .trend-down { color: var(--down); }
-
-  /* Sparkline */
-  .sparkline-wrap {
-    margin-top: 4px;
-  }
-  svg.sparkline {
-    display: block;
-    overflow: visible;
-  }
-  polyline.spark-line {
-    fill: none;
-    stroke-width: 1.5;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-  }
-
-  /* FITNESS CARD */
-  .fitness-nums {
-    display: flex;
-    gap: 16px;
-    margin-bottom: 12px;
-    flex-wrap: wrap;
-  }
-  .fitness-num-item {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-  .fitness-num-label {
-    font-size: 11px;
-    color: var(--muted);
-    font-weight: 500;
-  }
-  .fitness-num-value {
-    font-size: 20px;
-    font-weight: 700;
-    letter-spacing: -0.5px;
-  }
-  .tsb-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    background: #fff3e0;
-    color: #e65100;
-    border-radius: 8px;
-    padding: 4px 10px;
-    font-size: 12px;
-    font-weight: 600;
-    margin-bottom: 10px;
-  }
-  .ramp-text {
-    font-size: 12px;
-    color: var(--muted);
-    margin-bottom: 10px;
-  }
-  svg.fitness-chart {
-    width: 100%;
-    height: 80px;
-    display: block;
-    overflow: visible;
-  }
-  .chart-legend {
-    display: flex;
-    gap: 16px;
-    margin-top: 6px;
-  }
-  .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 11px;
-    color: var(--muted);
-  }
-  .legend-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-  }
-
-  /* WORKOUTS */
-  .workout-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 0;
-    border-bottom: 1px solid var(--border);
-  }
-  .workout-row:last-child { border-bottom: none; }
-  .workout-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    background: #e3f2fd;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    flex-shrink: 0;
-  }
-  .workout-info { flex: 1; }
-  .workout-name {
-    font-size: 15px;
-    font-weight: 600;
-  }
-  .workout-time {
-    font-size: 12px;
-    color: var(--muted);
-  }
-
-  /* ANBEFALING */
-  .recommend-text {
-    font-size: 15px;
-    line-height: 1.5;
-    color: var(--text);
-  }
-  .recommend-verdict {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: #e8f5e9;
-    color: #2e7d32;
-    border-radius: 8px;
-    padding: 4px 10px;
-    font-size: 13px;
-    font-weight: 600;
-    margin-bottom: 8px;
-  }
-
-  /* FLAG */
-  .flag-item {
-    font-size: 13px;
-    color: #b45309;
-    background: #fffbeb;
-    border-left: 3px solid var(--yellow);
-    padding: 8px 10px;
-    border-radius: 0 8px 8px 0;
-    margin-bottom: 8px;
-    line-height: 1.5;
-  }
-  .flag-item:last-child { margin-bottom: 0; }
-
-  /* UPCOMING */
-  .upcoming-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 0;
-    border-bottom: 1px solid var(--border);
-  }
-  .upcoming-row:last-child { border-bottom: none; }
-  .upcoming-date {
-    font-size: 11px;
-    color: var(--muted);
-    font-weight: 500;
-    min-width: 90px;
-  }
-  .upcoming-name {
-    font-size: 14px;
-    font-weight: 600;
-    flex: 1;
-  }
-  .upcoming-time {
-    font-size: 12px;
-    color: var(--muted);
-  }
-
-  .intervals-warn {
-    font-size: 12px;
-    color: var(--red);
-    margin-top: 8px;
-    padding: 6px 8px;
-    background: #fff0f0;
-    border-radius: 8px;
-  }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+  background: #f2f2f7;
+  color: #1c1c1e;
+  max-width: 430px;
+  margin: 0 auto;
+  padding: 16px 12px 48px;
+}
+.header { text-align: center; padding: 16px 0 8px; }
+.header .date { font-size: 14px; color: #8e8e93; font-weight: 500; }
+.header .updated { font-size: 12px; color: #aeaeb2; margin-top: 3px; }
+.header .verdict { font-size: 30px; font-weight: 800; margin-top: 6px; letter-spacing: -0.5px; }
+.card {
+  background: #fff;
+  border-radius: 18px;
+  padding: 16px;
+  margin-top: 12px;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.07);
+}
+.card-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #8e8e93;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 14px;
+}
+.rings-row { display: flex; justify-content: space-around; align-items: center; }
+.ring-wrap { text-align: center; }
+.ring-label { font-size: 11px; color: #8e8e93; margin-top: 5px; font-weight: 500; }
+.ring-value { font-size: 22px; font-weight: 800; margin-top: 2px; }
+.metric-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 0;
+  border-bottom: 1px solid #f2f2f7;
+}
+.metric-row:last-child { border-bottom: none; }
+.metric-name { font-size: 12px; color: #8e8e93; }
+.metric-val { font-size: 19px; font-weight: 700; display: flex; align-items: center; gap: 4px; }
+.trend-up { color: #34c759; font-size: 15px; }
+.trend-down { color: #ff3b30; font-size: 15px; }
+.trend-neutral { color: #8e8e93; font-size: 15px; }
+.fitness-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.fitness-cell { text-align: center; }
+.fitness-label { font-size: 11px; color: #8e8e93; margin-bottom: 2px; }
+.fitness-num { font-size: 20px; font-weight: 700; }
+.tsb-zone {
+  text-align: center;
+  margin-top: 8px;
+}
+.tsb-badge {
+  display: inline-block;
+  border-radius: 8px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.tsb-explain { font-size: 11px; color: #636366; margin-top: 4px; }
+.ramp-text { font-size: 12px; color: #8e8e93; margin-top: 6px; }
+.rest-box {
+  background: #f2f2f7;
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  font-size: 16px;
+  color: #636366;
+}
+.rec-text { font-size: 15px; line-height: 1.55; color: #1c1c1e; }
+.upcoming-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 9px 0;
+  border-bottom: 1px solid #f2f2f7;
+}
+.upcoming-row:last-child { border-bottom: none; }
+.upcoming-title { font-size: 14px; font-weight: 600; }
+.upcoming-meta { font-size: 12px; color: #8e8e93; margin-top: 2px; }
+.upcoming-right { font-size: 12px; color: #8e8e93; text-align: right; }
 </style>
 </head>
 <body>
 
-<div class="header">Mandag 1. juni 2026 · Opdateret 19:15</div>
-
-<div class="verdict-block">
-  <div class="readiness-num" style="color:var(--green)">78</div>
-  <div class="readiness-label">Readiness</div>
-  <div class="verdict-text">🟢 Klar</div>
+<div class="header">
+  <div class="date">Tirsdag, 2. juni 2026</div>
+  <div class="updated" id="upd">Opdateret –:–</div>
+  <div class="verdict">🟢 Klar (79)</div>
 </div>
 
-<!-- RINGS -->
-<div class="rings-row">
-  <!-- Readiness ring -->
-  <div class="ring-item">
-    <svg class="ring-svg" width="72" height="72" viewBox="0 0 72 72">
-      <circle class="ring-bg" cx="36" cy="36" r="30"/>
-      <circle class="ring-fill" cx="36" cy="36" r="30"
-        stroke="var(--green)"
-        stroke-dasharray="188.5"
-        stroke-dashoffset="41.47"/>
-    </svg>
-    <div class="ring-value" style="color:var(--green)">78%</div>
-    <div class="ring-label">Readiness</div>
-  </div>
-  <!-- Recovery ring -->
-  <div class="ring-item">
-    <svg class="ring-svg" width="72" height="72" viewBox="0 0 72 72">
-      <circle class="ring-bg" cx="36" cy="36" r="30"/>
-      <circle class="ring-fill" cx="36" cy="36" r="30"
-        stroke="var(--blue)"
-        stroke-dasharray="188.5"
-        stroke-dashoffset="41.47"/>
-    </svg>
-    <div class="ring-value" style="color:var(--blue)">73%</div>
-    <div class="ring-label">Recovery</div>
-  </div>
-  <!-- Sleep ring -->
-  <div class="ring-item">
-    <svg class="ring-svg" width="72" height="72" viewBox="0 0 72 72">
-      <circle class="ring-bg" cx="36" cy="36" r="30"/>
-      <circle class="ring-fill" cx="36" cy="36" r="30"
-        stroke="#5856d6"
-        stroke-dasharray="188.5"
-        stroke-dashoffset="32.045"/>
-    </svg>
-    <div class="ring-value" style="color:#5856d6">83%</div>
-    <div class="ring-label">Søvn</div>
-  </div>
-</div>
-
-<!-- HEALTH METRICS -->
+<!-- Score rings -->
 <div class="card">
-  <div class="card-title">Fysiologi</div>
-  <div class="metrics-grid">
+  <div class="card-title">Dagens scores</div>
+  <div class="rings-row">
+    <div class="ring-wrap">
+      <svg width="82" height="82" viewBox="0 0 82 82">
+        <circle cx="41" cy="41" r="34" fill="none" stroke="#e5e5ea" stroke-width="8"/>
+        <circle cx="41" cy="41" r="34" fill="none" stroke="#34c759" stroke-width="8"
+          stroke-linecap="round"
+          stroke-dasharray="213.6" stroke-dashoffset="44.9"
+          transform="rotate(-90 41 41)"/>
+      </svg>
+      <div class="ring-value" style="color:#34c759">79</div>
+      <div class="ring-label">Readiness</div>
+    </div>
+    <div class="ring-wrap">
+      <svg width="82" height="82" viewBox="0 0 82 82">
+        <circle cx="41" cy="41" r="34" fill="none" stroke="#e5e5ea" stroke-width="8"/>
+        <circle cx="41" cy="41" r="34" fill="none" stroke="#007aff" stroke-width="8"
+          stroke-linecap="round"
+          stroke-dasharray="213.6" stroke-dashoffset="53.4"
+          transform="rotate(-90 41 41)"/>
+      </svg>
+      <div class="ring-value" style="color:#007aff">75</div>
+      <div class="ring-label">Recovery</div>
+    </div>
+    <div class="ring-wrap">
+      <svg width="82" height="82" viewBox="0 0 82 82">
+        <circle cx="41" cy="41" r="34" fill="none" stroke="#e5e5ea" stroke-width="8"/>
+        <circle cx="41" cy="41" r="34" fill="none" stroke="#5856d6" stroke-width="8"
+          stroke-linecap="round"
+          stroke-dasharray="213.6" stroke-dashoffset="38.4"
+          transform="rotate(-90 41 41)"/>
+      </svg>
+      <div class="ring-value" style="color:#5856d6">82</div>
+      <div class="ring-label">Søvn</div>
+    </div>
+  </div>
+</div>
 
-    <!-- HRV -->
-    <div class="metric-item">
+<!-- Health metrics -->
+<div class="card">
+  <div class="card-title">Helbredsmålinger</div>
+
+  <!-- HRV -->
+  <div class="metric-row">
+    <div>
       <div class="metric-name">HRV (rMSSD)</div>
-      <div class="metric-value-row">
-        <span class="metric-value">103</span>
-        <span class="metric-unit">ms</span>
-        <span class="trend-arrow trend-up">↑</span>
-      </div>
-      <div class="sparkline-wrap">
-        <svg class="sparkline" width="60" height="24" viewBox="0 0 60 24">
-          <polyline class="spark-line" stroke="var(--up)"
-            points="0,18 10,18 20,12 30,8 40,10 50,3 60,3"/>
-          <circle cx="60" cy="3" r="2" fill="var(--up)"/>
-        </svg>
-      </div>
-      <div style="font-size:10px;color:var(--muted);margin-top:1px">71→103 ms (7d)</div>
+      <div class="metric-val">111 ms <span class="trend-up">↑</span></div>
     </div>
+    <!-- Sparkline: 89, 97, 93, 103, 103, 111 · min=89, max=111, range=22 -->
+    <!-- y = 22 - (v-89)/22*22 → proportional -->
+    <svg width="64" height="28" viewBox="0 0 64 28" style="overflow:visible">
+      <polyline
+        points="0,22 12.8,14.4 25.6,18 38.4,9.1 51.2,9.1 64,0"
+        fill="none" stroke="#34c759" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      <circle cx="64" cy="0" r="2.5" fill="#34c759"/>
+    </svg>
+  </div>
 
-    <!-- RHR -->
-    <div class="metric-item">
+  <!-- RHR -->
+  <div class="metric-row">
+    <div>
       <div class="metric-name">Hvilepuls</div>
-      <div class="metric-value-row">
-        <span class="metric-value">41</span>
-        <span class="metric-unit">bpm</span>
-        <span class="trend-arrow trend-up">↑</span>
-      </div>
-      <div class="sparkline-wrap">
-        <svg class="sparkline" width="60" height="24" viewBox="0 0 60 24">
-          <polyline class="spark-line" stroke="var(--up)"
-            points="0,8 10,9 20,9 30,14 40,3 50,19 60,0"/>
-          <circle cx="60" cy="0" r="2" fill="var(--up)"/>
-        </svg>
-      </div>
-      <div style="font-size:10px;color:var(--muted);margin-top:1px">48→41 bpm (7d)</div>
+      <div class="metric-val">40 bpm <span class="trend-up">↑</span></div>
     </div>
+    <!-- RHR 7 days: 49,49,53,44,55,41,40 · min=40,max=55,range=15 -->
+    <!-- y = 22 - (v-40)/15*22 (higher bpm = higher on screen = lower y val) -->
+    <svg width="64" height="28" viewBox="0 0 64 28" style="overflow:visible">
+      <polyline
+        points="0,8.8 10.7,8.8 21.3,2.9 32,16.1 42.7,0 53.3,20.5 64,22"
+        fill="none" stroke="#34c759" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      <circle cx="64" cy="22" r="2.5" fill="#34c759"/>
+    </svg>
+  </div>
 
-    <!-- Sleep -->
-    <div class="metric-item">
+  <!-- Sleep -->
+  <div class="metric-row">
+    <div>
       <div class="metric-name">Søvn</div>
-      <div class="metric-value-row">
-        <span class="metric-value">8,3</span>
-        <span class="metric-unit">t</span>
-        <span class="trend-arrow trend-neutral">→</span>
-      </div>
-      <div class="sparkline-wrap">
-        <svg class="sparkline" width="60" height="24" viewBox="0 0 60 24">
-          <polyline class="spark-line" stroke="var(--neutral)"
-            points="0,9 10,17 20,5 30,13 40,22 50,0 60,6"/>
-          <circle cx="60" cy="6" r="2" fill="var(--neutral)"/>
-        </svg>
-      </div>
-      <div style="font-size:10px;color:var(--muted);margin-top:1px">7,7→8,3 t (7d)</div>
+      <div class="metric-val">7,5 t <span class="trend-up">↑</span></div>
     </div>
+    <!-- Sleep 7 days: 6.67,8.37,7.32,4.97,9.15,8.30,7.47 · min=4.97,max=9.15,range=4.18 -->
+    <!-- y = 22 - (v-4.97)/4.18*22 -->
+    <svg width="64" height="28" viewBox="0 0 64 28" style="overflow:visible">
+      <polyline
+        points="0,13.1 10.7,4.0 21.3,9.6 32,22 42.7,0 53.3,4.5 64,8.8"
+        fill="none" stroke="#34c759" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      <circle cx="64" cy="8.8" r="2.5" fill="#34c759"/>
+    </svg>
+  </div>
 
-    <!-- Sleep Score -->
-    <div class="metric-item">
-      <div class="metric-name">Søvnscore</div>
-      <div class="metric-value-row">
-        <span class="metric-value">96</span>
-        <span class="metric-unit">/100</span>
-      </div>
-      <div style="font-size:10px;color:var(--muted);margin-top:6px">Søvnkvalitet: Fremragende</div>
+  <!-- Sleep score -->
+  <div class="metric-row">
+    <div>
+      <div class="metric-name">Søvnresultat (Garmin)</div>
+      <div class="metric-val">87 / 100</div>
     </div>
-
   </div>
 </div>
 
-<!-- FITNESS CARD -->
+<!-- Fitness -->
 <div class="card">
-  <div class="card-title">Form &amp; Træthed</div>
-  <div class="fitness-nums">
-    <div class="fitness-num-item">
-      <div class="fitness-num-label">CTL (Form)</div>
-      <div class="fitness-num-value">8,5</div>
+  <div class="card-title">Fitness</div>
+  <div class="fitness-grid">
+    <div class="fitness-cell">
+      <div class="fitness-label">Form (CTL)</div>
+      <div class="fitness-num">8,3</div>
     </div>
-    <div class="fitness-num-item">
-      <div class="fitness-num-label">ATL (Træthed)</div>
-      <div class="fitness-num-value">14,2</div>
+    <div class="fitness-cell">
+      <div class="fitness-label">Træthed (ATL)</div>
+      <div class="fitness-num">12,3</div>
     </div>
-    <div class="fitness-num-item">
-      <div class="fitness-num-label">TSB</div>
-      <div class="fitness-num-value" style="color:#e65100">−5,7</div>
+    <div class="fitness-cell">
+      <div class="fitness-label">TSB</div>
+      <div class="fitness-num" style="color:#ff9500">−4,0</div>
     </div>
   </div>
-  <div class="tsb-badge">📈 Opbygning · Produktiv træningsbelastning</div>
-  <div class="ramp-rate-text" style="font-size:12px;color:var(--muted);margin-bottom:10px">Ramp Rate: 1,40 — <strong>stigende</strong> · belastning øges</div>
-
-  <!-- 14-day fitness chart -->
-  <svg class="fitness-chart" viewBox="0 0 340 80" preserveAspectRatio="none">
-    <!-- CTL line (blue) - values normalized to 80px height, range ~5.5-16 -->
-    <!-- ATL values: 10.82,9.52,8.65,8.16,7.08,6.13,5.58,9.10,10.55,12.34,10.70,9.27,8.04,14.16 -->
-    <!-- CTL values: 7.89,7.73,7.62,7.56,7.38,7.21,7.08,7.67,7.96,7.94,7.75,7.57,7.39,8.49 -->
-    <!-- Range: min=5.58, max=14.16, span=8.58 -->
-    <!-- y = 76 - ((v-5.58)/8.58)*68 -->
-    <!-- CTL points: -->
-    <!-- 7.89→50.8, 7.73→52.1, 7.62→53.0, 7.56→53.5, 7.38→54.9, 7.21→56.3, 7.08→57.3, 7.67→52.6, 7.96→50.3, 7.94→50.5, 7.75→52.0, 7.57→53.5, 7.39→54.8, 8.49→44.8 -->
-    <polyline fill="none" stroke="#007aff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-      points="0,51 24.6,52 49.2,53 73.8,54 98.4,55 123,56 147.6,57 172.2,53 196.8,50 221.4,51 246,52 270.6,54 295.2,55 340,45"/>
-    <!-- ATL points: 10.82→51.0, 9.52→61.4, 8.65→68.4, 8.16→72.3, 7.08→81→76(cap), 6.13→76, 5.58→76, 9.10→64.5, 10.55→53.3, 12.34→39.0, 10.70→54.5, 9.27→63.2, 8.04→73.3, 14.16→21.7 -->
-    <polyline fill="none" stroke="#ff6b6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-      points="0,51 24.6,61 49.2,68 73.8,72 98.4,76 123,76 147.6,76 172.2,65 196.8,53 221.4,39 246,55 270.6,63 295.2,73 340,22"/>
-    <!-- dots at end -->
-    <circle cx="340" cy="45" r="3" fill="#007aff"/>
-    <circle cx="340" cy="22" r="3" fill="#ff6b6b"/>
-  </svg>
-  <div class="chart-legend">
-    <div class="legend-item"><div class="legend-dot" style="background:#007aff"></div>CTL (Form)</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#ff6b6b"></div>ATL (Træthed)</div>
-    <div style="font-size:10px;color:var(--muted);margin-left:auto">19. maj – 1. jun</div>
+  <div class="tsb-zone">
+    <span class="tsb-badge" style="background:#e3f2fd;color:#1565c0">🔄 Vedligehold</span>
+    <div class="tsb-explain">TSB −5 til +5 · Balanceret — god zone til struktureret træning</div>
+    <div class="ramp-text">Ramp Rate +0,62 · stabil</div>
   </div>
+  <canvas id="fc" height="110" style="margin-top:14px;"></canvas>
 </div>
 
-<!-- TODAY'S WORKOUTS -->
+<!-- Dagens pas -->
 <div class="card">
   <div class="card-title">Dagens pas</div>
-
-  <div class="workout-row">
-    <div class="workout-icon">🔬</div>
-    <div class="workout-info">
-      <div class="workout-name">Løberlab</div>
-      <div class="workout-time">08:00 – 09:00</div>
-    </div>
-  </div>
-
-  <div class="workout-row">
-    <div class="workout-icon">🏃</div>
-    <div class="workout-info">
-      <div class="workout-name">Intervals</div>
-      <div class="workout-time">16:00 – 17:00</div>
-    </div>
-  </div>
-
-  <div class="workout-row">
-    <div class="workout-icon">🧘</div>
-    <div class="workout-info">
-      <div class="workout-name">Mobilitet</div>
-      <div class="workout-time">17:00 – 18:00</div>
-    </div>
-  </div>
-
-  <div class="intervals-warn">⚠️ Intervals.icu har "Løb @ Z2 – 3x10min./30s." som ikke matcher nogen Google Calendar-session direkte</div>
+  <div class="rest-box">😴 Hviledag — ingen træning planlagt</div>
 </div>
 
-<!-- ANBEFALING -->
+<!-- Anbefaling -->
 <div class="card">
   <div class="card-title">Anbefaling</div>
-  <div class="recommend-verdict">🟢 Gennemfør fuldt ud</div>
-  <div class="recommend-text">
-    HRV 103 ms og hvilepuls 41 bpm er markant over baseline. TSB er i opbygningszonen — kroppen kan absorbere belastningen. Gennemfør alle tre pas som planlagt. Undskyldningen holder ikke på en dag som i dag.
-  </div>
+  <p class="rec-text">HRV i top og hvilepuls rekordlav — kroppen er i god form. Hviledag er den rigtige beslutning: lad adaptationen lande. En let gåtur er altid fint. Hvil ordentligt til Strength 2 i morgen.</p>
+  <p class="rec-text" style="margin-top:8px;color:#636366;font-size:13px;">ℹ️ Go-Kart IDANextGen 17:00–19:30 og Ida fra 19:30 giver en lang aften — sov tidligt hvis muligt.</p>
 </div>
 
-<!-- CALENDAR FLAGS -->
+<!-- Næste workouts -->
 <div class="card">
-  <div class="card-title">Kalenderflag</div>
-  <div class="flag-item">⚠️ <strong>Løberlab</strong> (08:00–09:00) overlapper med <strong>Work</strong> (07:00–16:00)</div>
-  <div class="flag-item">⚠️ <strong>Intervals</strong> (16:00) starter præcis ved Work-slut — nul buffer</div>
-</div>
-
-<!-- UPCOMING WORKOUTS -->
-<div class="card">
-  <div class="card-title">Kommende pas</div>
-
+  <div class="card-title">Kommende workouts</div>
   <div class="upcoming-row">
-    <div class="upcoming-date">Ons 3. jun</div>
-    <div class="upcoming-name">Strength 2</div>
-    <div class="upcoming-time">16:00</div>
+    <div>
+      <div class="upcoming-title">Strength 2</div>
+      <div class="upcoming-meta">Onsdag 3. juni · 16:00</div>
+    </div>
   </div>
-
   <div class="upcoming-row">
-    <div class="upcoming-date">Søn 7. jun</div>
-    <div class="upcoming-name">Running</div>
-    <div class="upcoming-time">10:00</div>
+    <div>
+      <div class="upcoming-title">Running</div>
+      <div class="upcoming-meta">Søndag 7. juni · 10:00</div>
+    </div>
   </div>
-
   <div class="upcoming-row">
-    <div class="upcoming-date">Tirs 9. jun</div>
-    <div class="upcoming-name">Intervals</div>
-    <div class="upcoming-time">15:30</div>
+    <div>
+      <div class="upcoming-title">Intervals</div>
+      <div class="upcoming-meta">Tirsdag 9. juni · 15:30</div>
+    </div>
   </div>
 </div>
 
-<div style="text-align:center;font-size:11px;color:var(--muted);margin-top:8px;padding-bottom:20px">
-  coachhealth.netlify.app · Recovery 73 % · Søvn 83 % · Readiness 78 %
-</div>
+<script>
+// Timestamp
+const n = new Date();
+document.getElementById('upd').textContent =
+  'Opdateret ' + String(n.getHours()).padStart(2,'0') + ':' + String(n.getMinutes()).padStart(2,'0');
 
+// Fitness chart
+const ctx = document.getElementById('fc').getContext('2d');
+new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: ['19/5','20/5','21/5','22/5','23/5','24/5','25/5','26/5','27/5','28/5','29/5','30/5','31/5','1/6','2/6'],
+    datasets: [
+      {
+        label: 'CTL',
+        data: [7.9,7.7,7.6,7.6,7.4,7.2,7.1,7.7,8.0,7.9,7.8,7.6,7.4,8.5,8.3],
+        borderColor: '#007aff',
+        backgroundColor: 'rgba(0,122,255,0.07)',
+        fill: true,
+        tension: 0.35,
+        pointRadius: 2,
+        borderWidth: 2,
+      },
+      {
+        label: 'ATL',
+        data: [10.8,9.5,8.6,8.2,7.1,6.1,5.6,9.1,10.6,12.3,10.7,9.3,8.0,14.2,12.3],
+        borderColor: '#ff9500',
+        backgroundColor: 'rgba(255,149,0,0.05)',
+        fill: true,
+        tension: 0.35,
+        pointRadius: 2,
+        borderWidth: 2,
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: {
+        display: true,
+        position: 'bottom',
+        labels: { boxWidth: 10, font: { size: 11 }, padding: 8 }
+      }
+    },
+    scales: {
+      x: { ticks: { font: { size: 9 }, maxRotation: 45, color: '#8e8e93' }, grid: { display: false } },
+      y: { ticks: { font: { size: 10 }, color: '#8e8e93' }, grid: { color: '#f2f2f7' } }
+    }
+  }
+});
+</script>
 </body>
 </html>
