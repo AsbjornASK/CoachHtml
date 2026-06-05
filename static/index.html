@@ -350,7 +350,7 @@ function render(data,cal){
       ${readyHistHTML}
     </div>
     <div class="card">
-      <div class="card-title">Physiology — ${latest.date??''}</div>
+      <div class="card-title">Physiology</div>
       <div class="metrics-grid">
         <div><div class="metric-label">HRV (rMSSD)</div><div class="metric-value ${vc}">${fmtN(latest.hrv)} ms <span class="${hrv_t.c}">${hrv_t.a==='up'?'↑':hrv_t.a==='down'?'↓':'→'}</span></div>${sparkSVG(trends.hrv,tC(hrv_t.c))}</div>
         <div><div class="metric-label">Resting HR</div><div class="metric-value ${vc}">${fmtN(latest.restingHR)} bpm <span class="${rhr_t.c}">${rhr_t.a==='up'?'↑':rhr_t.a==='down'?'↓':'→'}</span></div>${sparkSVG(trends.rhr,tC(rhr_t.c))}</div>
