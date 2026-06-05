@@ -116,9 +116,9 @@
   <div class="card" id="checkin-card" style="display:none">
     <div class="card-title">Morning Check-in <span id="checkin-done-badge" class="checkin-done-badge" style="display:none">Saved</span></div>
     <div class="checkin-row">
-      <div class="checkin-label">Sleep quality</div>
-      <div class="btn-group" data-field="sleepQuality">
-        <button data-val="1">GREAT</button><button data-val="2">GOOD</button><button data-val="3">AVG</button><button data-val="4">POOR</button>
+      <div class="checkin-label">Humør</div>
+      <div class="btn-group" data-field="mood">
+        <button data-val="1">GREAT</button><button data-val="2">GOOD</button><button data-val="3">AVG</button><button data-val="4">LOW</button>
       </div>
     </div>
     <div class="checkin-row">
@@ -305,11 +305,11 @@ function render(data,cal){
   const uHTML=upcoming.length?upcoming.map(e=>{const d=new Date(e.date+'T12:00:00');return`<div class="upcoming-row"><div class="upcoming-date"><div class="udate-day">${EN_DAYS_S[d.getDay()]}</div><div class="udate-num">${d.getDate()}/${d.getMonth()+1}</div></div><div class="upcoming-info"><div class="upcoming-title">${e.title}</div><div class="upcoming-time">${e.timeStart??''}${e.timeEnd?'–'+e.timeEnd:''}</div></div></div>`;}).join(''):'';
 
 
-  const SLBLS={sleepQuality:['Great','Good','Avg','Poor'],soreness:['Low','Avg','High','Extreme'],fatigue:['Low','Avg','High','Extreme'],motivation:['Extreme','High','Avg','Low']};
-  const hasSubj=subjective&&(subjective.sleepQuality||subjective.soreness||subjective.fatigue||subjective.motivation);
+  const SLBLS={mood:['Great','Good','Avg','Low'],soreness:['Low','Avg','High','Extreme'],fatigue:['Low','Avg','High','Extreme'],motivation:['Extreme','High','Avg','Low']};
+  const hasSubj=subjective&&(subjective.mood||subjective.soreness||subjective.fatigue||subjective.motivation);
   const subjHTML=`<div class="card" id="subj-card"><div class="card-title">Today's check-in</div>${
     hasSubj
-      ? `<div class="subjective-grid">${['sleepQuality','soreness','fatigue','motivation'].map(f=>{const v=subjective[f];const lbl={sleepQuality:'Sleep quality',soreness:'Soreness',fatigue:'Fatigue',motivation:'Motivation'}[f];return`<div class="subj-item s${v??2}"><div class="subj-label">${lbl}</div><div class="subj-value">${v?SLBLS[f][v-1]:'-'}</div></div>`;}).join('')}</div>`
+      ? `<div class="subjective-grid">${['mood','soreness','fatigue','motivation'].map(f=>{const v=subjective[f];const lbl={mood:'Humør',soreness:'Soreness',fatigue:'Fatigue',motivation:'Motivation'}[f];return`<div class="subj-item s${v??2}"><div class="subj-label">${lbl}</div><div class="subj-value">${v?SLBLS[f][v-1]:'-'}</div></div>`;}).join('')}</div>`
       : `<div style="color:#aeaeb2;font-size:14px;text-align:center;padding:8px 0">No check-in data yet — fill in below ↓</div>`
   }</div>`;
 
