@@ -88,6 +88,7 @@ export default async () => {
       soreness:     todayEntry.soreness     ?? null,
       fatigue:      todayEntry.fatigue      ?? null,
       motivation:   todayEntry.motivation   ?? null,
+      note:         todayEntry.note         ?? null,
     },
     inBody: bodyCompEntry ? (() => {
       const w = bodyCompEntry.weight;

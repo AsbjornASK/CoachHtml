@@ -53,6 +53,11 @@
     .subj-item.s1 { background: #e8f8ee; color: #1a7a33; } .subj-item.s2 { background: #fff8e1; color: #b86e00; } .subj-item.s3 { background: #ffe5e5; color: #c0392b; } .subj-item.s4 { background: #f3e8ff; color: #7a1fa2; }
     .subj-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; opacity: 0.7; }
     .subj-value { font-size: 14px; font-weight: 700; margin-top: 2px; }
+    .note-area { width: 100%; margin-top: 12px; padding-top: 12px; border-top: 1px solid #f2f2f7; box-sizing: border-box; }
+    .note-textarea { width: 100%; font-size: 13px; border: 1.5px solid #e5e5ea; border-radius: 10px; padding: 10px 12px; color: #1c1c1e; background: #f9f9fb; resize: none; outline: none; font-family: inherit; box-sizing: border-box; min-height: 72px; }
+    .note-textarea:focus { border-color: #007aff; background: #fff; }
+    .note-status { font-size: 11px; color: #aeaeb2; margin-top: 4px; min-height: 14px; text-align: right; }
+    .note-status.ok { color: #30d158; } .note-status.err { color: #ff3b30; }
     .inbody-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .inbody-item-label { font-size: 11px; font-weight: 500; color: #8e8e93; margin-bottom: 2px; }
     .inbody-item-value { font-size: 20px; font-weight: 700; }
@@ -313,7 +318,7 @@ function render(data,cal){
   const hasSubj=subjective&&(subjective.mood||subjective.soreness||subjective.fatigue||subjective.motivation);
   const subjHTML=`<div class="card" id="subj-card"><div class="card-title">Today's check-in</div>${
     hasSubj
-      ? `<div class="subjective-grid">${['mood','soreness','fatigue','motivation'].map(f=>{const v=subjective[f];const lbl={mood:'Humør',soreness:'Soreness',fatigue:'Fatigue',motivation:'Motivation'}[f];return`<div class="subj-item s${v??2}"><div class="subj-label">${lbl}</div><div class="subj-value">${v?SLBLS[f][v-1]:'-'}</div></div>`;}).join('')}</div>`
+      ? `<div class="subjective-grid">${['mood','soreness','fatigue','motivation'].map(f=>{const v=subjective[f];const lbl={mood:'Humør',soreness:'Soreness',fatigue:'Fatigue',motivation:'Motivation'}[f];return`<div class="subj-item s${v??2}"><div class="subj-label">${lbl}</div><div class="subj-value">${v?SLBLS[f][v-1]:'-'}</div></div>`;}).join('')}</div><div class="note-area"><textarea class="note-textarea" id="subj-note" placeholder="Tilføj en note til i dag…">${subjective.note??''}</textarea><div class="note-status" id="subj-note-status"></div></div>`
       : `<div style="color:#aeaeb2;font-size:14px;text-align:center;padding:8px 0">No check-in data yet — fill in below ↓</div>`
   }</div>`;
 
@@ -467,6 +472,23 @@ function render(data,cal){
     else{const e=await r.json().catch(()=>({}));st.textContent='Error: '+(e.error||r.status)+(e.details?' — '+e.details:'');st.className='form-status err';}}
     catch(err){st.textContent='Network error: '+err.message;st.className='form-status err';}
     finally{btn.disabled=false;}
+  });
+
+  let _noteTimer=null;
+  document.addEventListener('input',e=>{
+    if(e.target.id!=='subj-note')return;
+    const st=document.getElementById('subj-note-status');
+    if(st)st.textContent='';
+    clearTimeout(_noteTimer);
+    _noteTimer=setTimeout(async()=>{
+      const val=e.target.value;
+      if(st)st.textContent='Gemmer…';
+      try{
+        const r=await fetch('/api/update-wellness',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:TODAY,note:val})});
+        if(r.ok){if(st){st.textContent='Gemt';st.className='note-status ok';setTimeout(()=>{if(st)st.textContent='';},2000);}}
+        else{if(st){st.textContent='Fejl ved gemning';st.className='note-status err';}}
+      }catch{if(st){st.textContent='Netværksfejl';st.className='note-status err';}}
+    },1500);
   });
 })();
 
