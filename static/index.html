@@ -281,6 +281,8 @@ function render(data,cal){
   const ready=calcReadiness(rec,slp);
   const vc=verdictColor(ready??50);
   const rColor=HEX[vc];
+  const recColor=HEX[verdictColor(rec??50)];
+  const slpColor=HEX[verdictColor(slp??50)];
   const today=new Date();
   const todayStr=`${EN_DAYS[today.getDay()]} ${today.getDate()} ${EN_MONTHS[today.getMonth()]} ${today.getFullYear()}`;
   const timeStr=today.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Copenhagen'});
@@ -344,7 +346,7 @@ function render(data,cal){
     </div>
     <div class="card">
       <div class="card-title">Scores</div>
-      <div class="rings">${ring(ready??0,rColor,'Readiness')}${ring(rec??0,'#30d158','Recovery')}${ring(slp??0,'#30d158','Sleep')}</div>
+      <div class="rings">${ring(ready??0,rColor,'Readiness')}${ring(rec??0,recColor,'Recovery')}${ring(slp??0,slpColor,'Sleep')}</div>
       ${readyHistHTML}
     </div>
     <div class="card">
