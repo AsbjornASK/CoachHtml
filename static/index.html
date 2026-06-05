@@ -431,6 +431,23 @@ function render(data,cal){
     catch{st.textContent='Network error';st.className='form-status err';btn.disabled=false;}
     // btn re-enabled above in error paths; success path hides the form entirely
   });
+
+  let _noteTimer=null;
+  document.addEventListener('input',e=>{
+    if(e.target.id!=='subj-note')return;
+    const st=document.getElementById('subj-note-status');
+    if(st)st.textContent='';
+    clearTimeout(_noteTimer);
+    _noteTimer=setTimeout(async()=>{
+      const val=e.target.value;
+      if(st)st.textContent='Gemmer…';
+      try{
+        const r=await fetch('/api/update-wellness',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:TODAY,note:val})});
+        if(r.ok){if(st){st.textContent='Gemt';st.className='note-status ok';setTimeout(()=>{if(st)st.textContent='';},2000);}}
+        else{if(st){st.textContent='Fejl ved gemning';st.className='note-status err';}}
+      }catch(err){if(st){st.textContent='Netværksfejl';st.className='note-status err';}}
+    },1500);
+  });
 })();
 
 (function(){
@@ -472,23 +489,6 @@ function render(data,cal){
     else{const e=await r.json().catch(()=>({}));st.textContent='Error: '+(e.error||r.status)+(e.details?' — '+e.details:'');st.className='form-status err';}}
     catch(err){st.textContent='Network error: '+err.message;st.className='form-status err';}
     finally{btn.disabled=false;}
-  });
-
-  let _noteTimer=null;
-  document.addEventListener('input',e=>{
-    if(e.target.id!=='subj-note')return;
-    const st=document.getElementById('subj-note-status');
-    if(st)st.textContent='';
-    clearTimeout(_noteTimer);
-    _noteTimer=setTimeout(async()=>{
-      const val=e.target.value;
-      if(st)st.textContent='Gemmer…';
-      try{
-        const r=await fetch('\api\update-wellness',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:TODAY,note:val})});
-        if(r.ok){if(st){st.textContent='Gemt';st.className='note-status ok';setTimeout(()=>{if(st)st.textContent='';},2000);}}
-        else{if(st){st.textContent='Fejl ved gemning';st.className='note-status err';}}
-      }catch{if(st){st.textContent='Netværksfejl';st.className='note-status err';}}
-    },1500);
   });
 })();
 
