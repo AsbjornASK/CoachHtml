@@ -484,7 +484,7 @@ function render(data,cal){
       const val=e.target.value;
       if(st)st.textContent='Gemmer…';
       try{
-        const r=await fetch('/api/update-wellness',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:TODAY,note:val})});
+        const r=await fetch('\api\update-wellness',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:TODAY,note:val})});
         if(r.ok){if(st){st.textContent='Gemt';st.className='note-status ok';setTimeout(()=>{if(st)st.textContent='';},2000);}}
         else{if(st){st.textContent='Fejl ved gemning';st.className='note-status err';}}
       }catch{if(st){st.textContent='Netværksfejl';st.className='note-status err';}}
