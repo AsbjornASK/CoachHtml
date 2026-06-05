@@ -80,7 +80,7 @@ export default async () => {
     fitnessHistory,
     subjective: {
       date:         todayEntry.date         ?? null,
-      sleepQuality: todayEntry.sleepQuality ?? null,
+      mood:         todayEntry.mood         ?? null,
       soreness:     todayEntry.soreness     ?? null,
       fatigue:      todayEntry.fatigue      ?? null,
       motivation:   todayEntry.motivation   ?? null,
