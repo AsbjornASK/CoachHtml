@@ -140,7 +140,7 @@
     <div class="checkin-row">
       <div class="checkin-label">Motivation</div>
       <div class="btn-group" data-field="motivation">
-        <button data-val="1" data-color="c-green">EXTREME</button><button data-val="2" data-color="c-yellow">HIGH</button><button data-val="3" data-color="c-red">AVG</button><button data-val="4" data-color="c-purple">LOW</button>
+        <button data-val="1" data-color="c-green">EXTREME</button><button data-val="2" data-color="c-yellow">HIGH</button><button data-val="3" data-color="c-red">MIDDEL</button><button data-val="4" data-color="c-purple">LOW</button>
       </div>
     </div>
     <button class="submit-btn" id="checkin-submit" style="background:#007aff">Save to Intervals</button>
@@ -309,7 +309,7 @@ function render(data,cal){
   const uHTML=upcoming.length?upcoming.map(e=>{const d=new Date(e.date+'T12:00:00');return`<div class="upcoming-row"><div class="upcoming-date"><div class="udate-day">${EN_DAYS_S[d.getDay()]}</div><div class="udate-num">${d.getDate()}/${d.getMonth()+1}</div></div><div class="upcoming-info"><div class="upcoming-title">${e.title}</div><div class="upcoming-time">${e.timeStart??''}${e.timeEnd?'–'+e.timeEnd:''}</div></div></div>`;}).join(''):'';
 
 
-  const SLBLS={mood:['Great','Good','Avg','Low'],soreness:['Low','Avg','High','Extreme'],fatigue:['Low','Avg','High','Extreme'],motivation:['Extreme','High','Avg','Low']};
+  const SLBLS={mood:['Great','Good','Avg','Low'],soreness:['Low','Avg','High','Extreme'],fatigue:['Low','Avg','High','Extreme'],motivation:['Extreme','High','Middel','Low']};
   const hasSubj=subjective&&(subjective.mood||subjective.soreness||subjective.fatigue||subjective.motivation);
   const subjHTML=`<div class="card" id="subj-card"><div class="card-title">Today's check-in</div>${
     hasSubj
