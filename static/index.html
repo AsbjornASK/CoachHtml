@@ -66,6 +66,7 @@
     .btn-group button.selected.c-green { background: #30d158; border-color: #30d158; }
     .btn-group button.selected.c-yellow { background: #ff9f0a; border-color: #ff9f0a; }
     .btn-group button.selected.c-red { background: #ff3b30; border-color: #ff3b30; }
+    .btn-group button.selected.c-purple { background: #bf5af2; border-color: #bf5af2; }
     .submit-btn { width: 100%; margin-top: 14px; padding: 13px; color: #fff; font-size: 16px; font-weight: 700; border: none; border-radius: 12px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
     .submit-btn:disabled { background: #aeaeb2 !important; cursor: default; }
     .checkin-done-badge { display: inline-block; background: #e8f8ee; color: #30d158; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; margin-left: 6px; vertical-align: middle; }
@@ -121,25 +122,25 @@
     <div class="checkin-row">
       <div class="checkin-label">Humør</div>
       <div class="btn-group" data-field="mood">
-        <button data-val="1" data-color="c-green">GREAT</button><button data-val="2" data-color="c-green">GOOD</button><button data-val="3" data-color="c-yellow">AVG</button><button data-val="4" data-color="c-red">LOW</button>
+        <button data-val="1" data-color="c-green">GREAT</button><button data-val="2" data-color="c-yellow">GOOD</button><button data-val="3" data-color="c-red">AVG</button><button data-val="4" data-color="c-purple">LOW</button>
       </div>
     </div>
     <div class="checkin-row">
       <div class="checkin-label">Soreness<small>Pre-workout</small></div>
       <div class="btn-group" data-field="soreness">
-        <button data-val="1" data-color="c-green">LOW</button><button data-val="2" data-color="c-yellow">AVG</button><button data-val="3" data-color="c-red">HIGH</button><button data-val="4" data-color="c-red">EXTREME</button>
+        <button data-val="1" data-color="c-green">LOW</button><button data-val="2" data-color="c-yellow">AVG</button><button data-val="3" data-color="c-red">HIGH</button><button data-val="4" data-color="c-purple">EXTREME</button>
       </div>
     </div>
     <div class="checkin-row">
       <div class="checkin-label">Fatigue<small>Pre-workout</small></div>
       <div class="btn-group" data-field="fatigue">
-        <button data-val="1" data-color="c-green">LOW</button><button data-val="2" data-color="c-yellow">AVG</button><button data-val="3" data-color="c-red">HIGH</button><button data-val="4" data-color="c-red">EXTREME</button>
+        <button data-val="1" data-color="c-green">LOW</button><button data-val="2" data-color="c-yellow">AVG</button><button data-val="3" data-color="c-red">HIGH</button><button data-val="4" data-color="c-purple">EXTREME</button>
       </div>
     </div>
     <div class="checkin-row">
       <div class="checkin-label">Motivation</div>
       <div class="btn-group" data-field="motivation">
-        <button data-val="1" data-color="c-green">EXTREME</button><button data-val="2" data-color="c-green">HIGH</button><button data-val="3" data-color="c-yellow">AVG</button><button data-val="4" data-color="c-red">LOW</button>
+        <button data-val="1" data-color="c-green">EXTREME</button><button data-val="2" data-color="c-yellow">HIGH</button><button data-val="3" data-color="c-red">AVG</button><button data-val="4" data-color="c-purple">LOW</button>
       </div>
     </div>
     <button class="submit-btn" id="checkin-submit" style="background:#007aff">Save to Intervals</button>
