@@ -373,9 +373,8 @@ function render(data,cal){
     ${upcoming.length?`<div class="card"><div class="card-title">Upcoming sessions</div>${uHTML}</div>`:''}
   `;
 
-  ['app','footer'].forEach(id=>{document.getElementById(id).style.display='';});
+  document.getElementById('app').style.display='';
   document.getElementById('loading').style.display='none';
-  document.getElementById('footer').textContent=`coachhealth.netlify.app — ${todayStr}`;
   if(_checkinSaved||hasSubj){document.getElementById('checkin-card').style.display='none';}
   else{document.getElementById('checkin-card').style.display='';}
   if(_inbodySaved||inBody){document.getElementById('inbody-card').style.display='none';}
