@@ -302,7 +302,7 @@ function render(data,cal){
   const wHTML=workouts.length?workouts.map(e=>`<div class="workout-row"><span class="workout-title">${e.title}</span><span class="workout-time">${e.timeStart??''}${e.timeEnd?'–'+e.timeEnd:''}</span></div>`).join(''):`<div class="workout-row"><span class="workout-title" style="color:#aeaeb2">Rest day</span></div>`;
 
   const upcoming=(cal?.upcoming??[]);
-  const uHTML=upcoming.length?upcoming.map(e=>{return`<div class="upcoming-row"><div class="upcoming-info"><div class="upcoming-title">${e.title}</div><div class="upcoming-time">${e.timeStart??''}${e.timeEnd?'–'+e.timeEnd:''}</div></div></div>`;}).join(''):'';
+  const uHTML=upcoming.length?upcoming.map(e=>{const d=new Date(e.date+'T12:00:00');return`<div class="upcoming-row"><div class="upcoming-date"><div class="udate-day">${EN_DAYS_S[d.getDay()]}</div><div class="udate-num">${d.getDate()}/${d.getMonth()+1}</div></div><div class="upcoming-info"><div class="upcoming-title">${e.title}</div><div class="upcoming-time">${e.timeStart??''}${e.timeEnd?'–'+e.timeEnd:''}</div></div></div>`;}).join(''):'';
 
 
   const SLBLS={mood:['Great','Good','Avg','Low'],soreness:['Low','Avg','High','Extreme'],fatigue:['Low','Avg','High','Extreme'],motivation:['Extreme','High','Avg','Low']};
