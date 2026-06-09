@@ -148,43 +148,58 @@ function fitnessCheckinChart(series) {
   const days = series.filter(d => d.ctl != null || d.atl != null);
   if (days.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Ikke nok data</p>';
 
-  const W = 900, H = 200, axH = 22, PD = 12, PDY = 6;
+  const W = 900, H = 220, axH = 22, PDL = 38, PDR = 38, PDY = 8;
+  const plotW = W - PDL - PDR;
   const allVals = [...days.map(d => d.ctl), ...days.map(d => d.atl)].filter(v => v != null);
-  const mn = Math.min(...allVals), mx = Math.max(...allVals), rng = mx - mn || 1;
+  const rawMn = Math.min(...allVals), rawMx = Math.max(...allVals);
+  // Nice round bounds
+  const mn = Math.floor(rawMn / 5) * 5, mx = Math.ceil(rawMx / 5) * 5, rng = mx - mn || 1;
 
-  const px = i => PD + i * (W - 2 * PD) / Math.max(days.length - 1, 1);
+  const px = i => PDL + i * plotW / Math.max(days.length - 1, 1);
   const py = v => PDY + (1 - (v - mn) / rng) * (H - 2 * PDY);
 
-  // TSB band (light fill between 0 line)
-  const zeroY = py(mn + rng * ((0 - mn) / rng));
-  const clampedZeroY = Math.max(PDY, Math.min(H - PDY, py(0)));
-
-  // CTL line
   const ctlPts = days.map((d, i) => d.ctl != null ? `${px(i).toFixed(1)},${py(d.ctl).toFixed(1)}` : null).filter(Boolean).join(' ');
-  // ATL line
   const atlPts = days.map((d, i) => d.atl != null ? `${px(i).toFixed(1)},${py(d.atl).toFixed(1)}` : null).filter(Boolean).join(' ');
 
-  // TSB line (secondary axis — map to same chart for visual reference)
-  const tsbVals = days.map(d => d.tsb);
-  const tsbValid = tsbVals.filter(v => v != null);
-  const tsbMn = Math.min(...tsbValid, -15), tsbMx = Math.max(...tsbValid, 15), tsbRng = tsbMx - tsbMn || 1;
+  // TSB secondary axis (right)
+  const tsbValid = days.map(d => d.tsb).filter(v => v != null);
+  const tsbRawMn = Math.min(...tsbValid, -15), tsbRawMx = Math.max(...tsbValid, 15);
+  const tsbMn = Math.floor(tsbRawMn / 5) * 5, tsbMx = Math.ceil(tsbRawMx / 5) * 5, tsbRng = tsbMx - tsbMn || 1;
   const pyTsb = v => PDY + (1 - (v - tsbMn) / tsbRng) * (H - 2 * PDY);
   const tsbPts = days.map((d, i) => d.tsb != null ? `${px(i).toFixed(1)},${pyTsb(d.tsb).toFixed(1)}` : null).filter(Boolean).join(' ');
-
-  // Zero line for TSB
   const tsbZeroY = pyTsb(0).toFixed(1);
 
-  // Check-in dots (mood coloured)
+  // Left Y-axis ticks (CTL/ATL) — 5 evenly spaced
+  const leftTickCount = 5;
+  const leftTicks = Array.from({length: leftTickCount}, (_, k) => {
+    const v = mn + k * (mx - mn) / (leftTickCount - 1);
+    const y = py(v).toFixed(1);
+    return `<line x1="${PDL}" y1="${y}" x2="${PDL + plotW}" y2="${y}" stroke="#f2f2f7" stroke-width="1"/>
+            <text x="${PDL - 6}" y="${y}" font-size="9" fill="#aeaeb2" text-anchor="end" dominant-baseline="middle">${Math.round(v)}</text>`;
+  }).join('');
+
+  // Right Y-axis ticks (TSB)
+  const rightTickValues = [tsbMn, Math.round(tsbMn + tsbRng * 0.25), 0, Math.round(tsbMn + tsbRng * 0.75), tsbMx];
+  const rightTicks = [...new Set(rightTickValues)].map(v => {
+    const y = pyTsb(v).toFixed(1);
+    const col = v === 0 ? '#8e8e93' : '#aeaeb2';
+    return `<text x="${PDL + plotW + 6}" y="${y}" font-size="9" fill="${col}" text-anchor="start" dominant-baseline="middle">${Math.round(v)}</text>`;
+  }).join('');
+
+  // Axis labels
+  const leftAxisLabel = `<text x="10" y="${H / 2}" font-size="9" fill="#8e8e93" text-anchor="middle" transform="rotate(-90 10 ${H / 2})">CTL / ATL</text>`;
+  const rightAxisLabel = `<text x="${W - 6}" y="${H / 2}" font-size="9" fill="#bf5af2" text-anchor="middle" transform="rotate(90 ${W - 6} ${H / 2})">TSB</text>`;
+
+  // Check-in dots on CTL line, coloured by mood
   const dots = days.map((d, i) => {
     if (!d.mood && !d.fatigue) return '';
     const field = d.mood ?? d.fatigue;
     const col = CHECKIN_COLORS[field] ?? '#aeaeb2';
     const yPos = d.ctl != null ? py(d.ctl) : d.atl != null ? py(d.atl) : H / 2;
-    // Place dot just above the CTL line
     return `<circle cx="${px(i).toFixed(1)}" cy="${(yPos - 10).toFixed(1)}" r="5" fill="${col}" opacity="0.85" stroke="#fff" stroke-width="1.5"><title>${fmtDate(d.date)}: Humør=${MOOD_LABELS[d.mood] ?? '–'}, Fatigue=${FAT_LABELS[d.fatigue] ?? '–'}</title></circle>`;
   }).join('');
 
-  // X-axis labels (every ~10 days)
+  // X-axis labels
   const step = Math.max(1, Math.floor(days.length / 8));
   const xLabels = days.map((d, i) => {
     if (i % step !== 0 && i !== days.length - 1) return '';
@@ -192,30 +207,27 @@ function fitnessCheckinChart(series) {
     return `<text x="${px(i).toFixed(1)}" y="${H + axH - 3}" font-size="9" fill="#aeaeb2" text-anchor="middle">${dd.getDate()}/${dd.getMonth() + 1}</text>`;
   }).join('');
 
-  // Y-axis ticks
-  const yTicks = [mn, (mn + mx) / 2, mx].map(v => {
-    const y = py(v).toFixed(1);
-    return `<text x="4" y="${y}" font-size="9" fill="#c7c7cc" dominant-baseline="middle">${Math.round(v)}</text>`;
-  }).join('');
-
   return `
     <div class="legend">
       <div class="legend-item"><div class="legend-line" style="background:#007aff"></div>CTL (fitness)</div>
       <div class="legend-item"><div class="legend-line" style="background:#ff9f0a"></div>ATL (fatigue load)</div>
-      <div class="legend-item"><div class="legend-line" style="background:#bf5af2;opacity:0.7"></div>TSB (form)</div>
+      <div class="legend-item"><div class="legend-line" style="background:#bf5af2;opacity:0.7"></div>TSB (form) →</div>
       <div class="legend-item"><div class="legend-dot" style="background:#30d158"></div>Mood: Great</div>
       <div class="legend-item"><div class="legend-dot" style="background:#ff9f0a"></div>Mood: Good</div>
       <div class="legend-item"><div class="legend-dot" style="background:#ff3b30"></div>Mood: Avg/Low</div>
     </div>
     <div class="chart-wrap">
       <svg viewBox="0 0 ${W} ${H + axH}" width="100%" style="overflow:visible">
-        <line x1="${PD}" y1="${tsbZeroY}" x2="${W - PD}" y2="${tsbZeroY}" stroke="#e5e5ea" stroke-width="1" stroke-dasharray="4,3"/>
+        ${leftTicks}
+        <line x1="${PDL}" y1="${tsbZeroY}" x2="${PDL + plotW}" y2="${tsbZeroY}" stroke="#d1d1d6" stroke-width="1" stroke-dasharray="4,3"/>
         <polyline fill="none" stroke="#bf5af2" stroke-width="1.5" stroke-dasharray="5,3" opacity="0.7" stroke-linecap="round" stroke-linejoin="round" points="${tsbPts}"/>
         <polyline fill="none" stroke="#007aff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" points="${ctlPts}"/>
         <polyline fill="none" stroke="#ff9f0a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" points="${atlPts}"/>
         ${dots}
         ${xLabels}
-        ${yTicks}
+        ${rightTicks}
+        ${leftAxisLabel}
+        ${rightAxisLabel}
       </svg>
     </div>`;
 }
@@ -225,11 +237,24 @@ function hrvCheckinChart(series) {
   const days = series.filter(d => d.hrv != null);
   if (days.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Ikke nok HRV data</p>';
 
-  const W = 500, H = 160, axH = 18, PD = 8, PDY = 5;
+  const W = 500, H = 180, axH = 18, PDL = 36, PDR = 10, PDY = 8;
+  const plotW = W - PDL - PDR;
   const vals = days.map(d => d.hrv);
-  const mn = Math.min(...vals), mx = Math.max(...vals), rng = mx - mn || 1;
-  const px = i => PD + i * (W - 2 * PD) / Math.max(days.length - 1, 1);
+  const rawMn = Math.min(...vals), rawMx = Math.max(...vals);
+  const mn = Math.floor(rawMn / 5) * 5, mx = Math.ceil(rawMx / 5) * 5, rng = mx - mn || 1;
+  const px = i => PDL + i * plotW / Math.max(days.length - 1, 1);
   const py = v => PDY + (1 - (v - mn) / rng) * (H - 2 * PDY);
+
+  // Y-axis ticks + gridlines (5 ticks)
+  const tickCount = 5;
+  const yTicks = Array.from({length: tickCount}, (_, k) => {
+    const v = mn + k * (mx - mn) / (tickCount - 1);
+    const y = py(v).toFixed(1);
+    return `<line x1="${PDL}" y1="${y}" x2="${PDL + plotW}" y2="${y}" stroke="#f2f2f7" stroke-width="1"/>
+            <text x="${PDL - 6}" y="${y}" font-size="9" fill="#aeaeb2" text-anchor="end" dominant-baseline="middle">${Math.round(v)} ms</text>`;
+  }).join('');
+
+  const axisLabel = `<text x="10" y="${H / 2}" font-size="9" fill="#8e8e93" text-anchor="middle" transform="rotate(-90 10 ${H / 2})">HRV (ms)</text>`;
 
   const segments = days.map((d, i) => {
     if (i === 0) return '';
@@ -260,7 +285,7 @@ function hrvCheckinChart(series) {
     </div>
     <div class="chart-wrap">
       <svg viewBox="0 0 ${W} ${H + axH}" width="100%" style="overflow:visible">
-        ${segments}${dots}${xLabels}
+        ${yTicks}${axisLabel}${segments}${dots}${xLabels}
       </svg>
     </div>`;
 }
@@ -270,11 +295,26 @@ function sleepMoodChart(series) {
   const days = series.filter(d => d.sleep != null);
   if (days.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Ikke nok søvn data</p>';
 
-  const W = 500, H = 160, axH = 18, PD = 8, PDY = 5;
+  const W = 500, H = 180, axH = 18, PDL = 36, PDR = 10, PDY = 8;
+  const plotW = W - PDL - PDR;
   const vals = days.map(d => d.sleep);
-  const mn = Math.max(0, Math.min(...vals) - 0.5), mx = Math.max(...vals) + 0.3, rng = mx - mn || 1;
-  const px = i => PD + i * (W - 2 * PD) / Math.max(days.length - 1, 1);
+  const mn = Math.max(0, Math.floor(Math.min(...vals) - 0.5)), mx = Math.ceil(Math.max(...vals) + 0.5), rng = mx - mn || 1;
+  const px = i => PDL + i * plotW / Math.max(days.length - 1, 1);
   const py = v => PDY + (1 - (v - mn) / rng) * (H - 2 * PDY);
+
+  // Y-axis ticks: whole hours in range
+  const hourTicks = [];
+  for (let h = Math.ceil(mn); h <= Math.floor(mx); h++) {
+    const y = py(h).toFixed(1);
+    const isRef = h === 7 || h === 8;
+    const col = h === 8 ? '#30d158' : h === 7 ? '#ff9f0a' : '#aeaeb2';
+    hourTicks.push(
+      `<line x1="${PDL}" y1="${y}" x2="${PDL + plotW}" y2="${y}" stroke="${isRef ? col + '33' : '#f2f2f7'}" stroke-width="${isRef ? 1.5 : 1}"/>`,
+      `<text x="${PDL - 6}" y="${y}" font-size="9" fill="${col}" text-anchor="end" dominant-baseline="middle">${h}h</text>`
+    );
+  }
+
+  const axisLabel = `<text x="10" y="${H / 2}" font-size="9" fill="#8e8e93" text-anchor="middle" transform="rotate(-90 10 ${H / 2})">Søvn (t)</text>`;
 
   // 7-hour reference line
   const y7 = py(7).toFixed(1);
@@ -308,11 +348,7 @@ function sleepMoodChart(series) {
     </div>
     <div class="chart-wrap">
       <svg viewBox="0 0 ${W} ${H + axH}" width="100%" style="overflow:visible">
-        <line x1="${PD}" y1="${y7}" x2="${W - PD}" y2="${y7}" stroke="#e5e5ea" stroke-width="1" stroke-dasharray="4,3"/>
-        <line x1="${PD}" y1="${y8}" x2="${W - PD}" y2="${y8}" stroke="#e8f8ee" stroke-width="1" stroke-dasharray="4,3"/>
-        <text x="${W - PD - 2}" y="${parseFloat(y7) - 3}" font-size="8" fill="#aeaeb2" text-anchor="end">7h</text>
-        <text x="${W - PD - 2}" y="${parseFloat(y8) - 3}" font-size="8" fill="#30d158" text-anchor="end">8h</text>
-        ${segments}${dots}${xLabels}
+        ${hourTicks.join('')}${axisLabel}${segments}${dots}${xLabels}
       </svg>
     </div>`;
 }
