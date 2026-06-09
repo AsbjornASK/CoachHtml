@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Coach Dashboard</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif; background: #f2f2f7; color: #1c1c1e; min-height: 100vh; }
+
+    /* ── Top bar ── */
+    .topbar { background: #fff; border-bottom: 1px solid #e5e5ea; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 56px; position: sticky; top: 0; z-index: 10; }
+    .topbar-title { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
+    .topbar-nav { display: flex; gap: 8px; }
+    .nav-link { font-size: 13px; font-weight: 600; color: #007aff; text-decoration: none; padding: 6px 12px; border-radius: 8px; }
+    .nav-link:hover { background: #f0f6ff; }
+    .topbar-date { font-size: 12px; color: #8e8e93; }
+
+    /* ── Layout ── */
+    .main { max-width: 1280px; margin: 0 auto; padding: 20px 20px 40px; }
+    .row { display: grid; gap: 16px; margin-bottom: 16px; }
+    .row-4 { grid-template-columns: repeat(4, 1fr); }
+    .row-3 { grid-template-columns: repeat(3, 1fr); }
+    .row-2 { grid-template-columns: 1fr 1fr; }
+    .row-2-1 { grid-template-columns: 2fr 1fr; }
+    .row-full { grid-template-columns: 1fr; }
+    @media (max-width: 900px) { .row-4, .row-3, .row-2, .row-2-1 { grid-template-columns: 1fr; } }
+
+    /* ── Cards ── */
+    .card { background: #fff; border-radius: 16px; padding: 18px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.07); }
+    .card-title { font-size: 11px; font-weight: 700; color: #8e8e93; text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 12px; }
+    .card-subtitle { font-size: 10px; color: #aeaeb2; margin-top: 2px; }
+
+    /* ── KPI tiles ── */
+    .kpi-value { font-size: 32px; font-weight: 800; line-height: 1; letter-spacing: -1px; }
+    .kpi-unit  { font-size: 14px; font-weight: 500; color: #8e8e93; margin-left: 3px; }
+    .kpi-sub   { font-size: 12px; color: #8e8e93; margin-top: 5px; }
+    .kpi-badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; margin-top: 6px; }
+    .green { color: #30d158; } .yellow { color: #ff9f0a; } .red { color: #ff3b30; } .blue { color: #007aff; } .neutral { color: #1c1c1e; }
+    .bg-green { background: #e8f8ee; color: #1a7a33; } .bg-yellow { background: #fff3e0; color: #b86e00; } .bg-red { background: #ffe5e5; color: #c0392b; }
+
+    /* ── Chart wrapper ── */
+    .chart-wrap { width: 100%; overflow: hidden; }
+    .chart-wrap svg { display: block; }
+
+    /* ── Legend ── */
+    .legend { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 10px; }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #8e8e93; }
+    .legend-dot { width: 9px; height: 9px; border-radius: 50%; }
+    .legend-line { width: 18px; height: 3px; border-radius: 2px; }
+
+    /* ── Correlation table ── */
+    .ctable { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .ctable th { font-size: 10px; font-weight: 700; color: #8e8e93; text-transform: uppercase; letter-spacing: 0.5px; padding: 0 8px 8px 0; text-align: left; border-bottom: 1px solid #f2f2f7; }
+    .ctable td { padding: 7px 8px 7px 0; border-bottom: 1px solid #f2f2f7; vertical-align: middle; }
+    .ctable tr:last-child td { border-bottom: none; }
+    .chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; white-space: nowrap; }
+    .chip-1 { background: #e8f8ee; color: #1a7a33; }
+    .chip-2 { background: #fff3e0; color: #b86e00; }
+    .chip-3 { background: #ffe5e5; color: #c0392b; }
+    .chip-4 { background: #f3e8ff; color: #7a1fa2; }
+    .chip-null { background: #f2f2f7; color: #aeaeb2; }
+
+    /* ── Insight box ── */
+    .insight { background: #f0f6ff; border-radius: 12px; padding: 12px 14px; margin-top: 12px; font-size: 13px; line-height: 1.5; color: #0051a8; }
+    .insight strong { font-weight: 700; }
+
+    /* ── Skeleton ── */
+    .skeleton { animation: pulse 1.4s ease-in-out infinite; background: #e5e5ea; border-radius: 12px; }
+    @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.4} }
+
+    /* ── Loading overlay ── */
+    #loading { display: flex; flex-direction: column; gap: 16px; padding: 20px; max-width: 1280px; margin: 0 auto; }
+    .skel-row { display: grid; gap: 16px; }
+    .skel-r4 { grid-template-columns: repeat(4,1fr); }
+    .skel-r2 { grid-template-columns: 1fr 1fr; }
+    .skel-box { border-radius: 16px; }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-title">Coach Dashboard</div>
+  <div class="topbar-nav">
+    <a class="nav-link" href="/">← Mobil</a>
+  </div>
+  <div class="topbar-date" id="topbar-date"></div>
+</div>
+
+<div id="loading">
+  <div class="skel-row skel-r4">
+    <div class="skel-box skeleton" style="height:100px"></div>
+    <div class="skel-box skeleton" style="height:100px"></div>
+    <div class="skel-box skeleton" style="height:100px"></div>
+    <div class="skel-box skeleton" style="height:100px"></div>
+  </div>
+  <div class="skel-row skel-r2">
+    <div class="skel-box skeleton" style="height:260px"></div>
+    <div class="skel-box skeleton" style="height:260px"></div>
+  </div>
+  <div class="skel-box skeleton" style="height:320px"></div>
+  <div class="skel-row skel-r2">
+    <div class="skel-box skeleton" style="height:280px"></div>
+    <div class="skel-box skeleton" style="height:280px"></div>
+  </div>
+</div>
+
+<div id="app" class="main" style="display:none"></div>
+<div id="error-wrap" class="main" style="display:none">
+  <div style="background:#ffe5e5;border-radius:16px;padding:20px;color:#c0392b;font-size:14px" id="error-msg"></div>
+</div>
+
+<script>
+// ── Constants ──────────────────────────────────────────────────────────────
+const DAYS_S = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+const MOOD_LABELS  = ['','Great','Good','Avg','Low'];
+const SOR_LABELS   = ['','Low','Avg','High','Extreme'];
+const FAT_LABELS   = ['','Low','Avg','High','Extreme'];
+const MOT_LABELS   = ['','Extreme','High','Middel','Low'];
+
+const CHECKIN_COLORS = {1:'#30d158',2:'#ff9f0a',3:'#ff3b30',4:'#bf5af2'};
+
+function chipClass(v) { return v ? `chip chip-${v}` : 'chip chip-null'; }
+function fmtDate(iso) {
+  const d = new Date(iso + 'T12:00:00');
+  return `${DAYS_S[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]}`;
+}
+function r1(v) { return v != null ? Math.round(v * 10) / 10 : null; }
+function fmtN(v, dec = 0) {
+  if (v == null) return '–';
+  return dec === 0 ? String(Math.round(v)) : v.toFixed(dec).replace('.', ',');
+}
+
+// ── KPI tile ──────────────────────────────────────────────────────────────
+function kpiCard(title, value, unit, sub, colorClass, badge = '') {
+  return `<div class="card">
+    <div class="card-title">${title}</div>
+    <div class="kpi-value ${colorClass}">${value}<span class="kpi-unit">${unit}</span></div>
+    <div class="kpi-sub">${sub}</div>
+    ${badge ? `<div class="kpi-badge ${colorClass.includes('green') ? 'bg-green' : colorClass.includes('red') ? 'bg-red' : 'bg-yellow'}">${badge}</div>` : ''}
+  </div>`;
+}
+
+// ── Main fitness chart with check-in overlay ──────────────────────────────
+function fitnessCheckinChart(series) {
+  const days = series.filter(d => d.ctl != null || d.atl != null);
+  if (days.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Ikke nok data</p>';
+
+  const W = 900, H = 200, axH = 22, PD = 12, PDY = 6;
+  const allVals = [...days.map(d => d.ctl), ...days.map(d => d.atl)].filter(v => v != null);
+  const mn = Math.min(...allVals), mx = Math.max(...allVals), rng = mx - mn || 1;
+
+  const px = i => PD + i * (W - 2 * PD) / Math.max(days.length - 1, 1);
+  const py = v => PDY + (1 - (v - mn) / rng) * (H - 2 * PDY);
+
+  // TSB band (light fill between 0 line)
+  const zeroY = py(mn + rng * ((0 - mn) / rng));
+  const clampedZeroY = Math.max(PDY, Math.min(H - PDY, py(0)));
+
+  // CTL line
+  const ctlPts = days.map((d, i) => d.ctl != null ? `${px(i).toFixed(1)},${py(d.ctl).toFixed(1)}` : null).filter(Boolean).join(' ');
+  // ATL line
+  const atlPts = days.map((d, i) => d.atl != null ? `${px(i).toFixed(1)},${py(d.atl).toFixed(1)}` : null).filter(Boolean).join(' ');
+
+  // TSB line (secondary axis — map to same chart for visual reference)
+  const tsbVals = days.map(d => d.tsb);
+  const tsbValid = tsbVals.filter(v => v != null);
+  const tsbMn = Math.min(...tsbValid, -15), tsbMx = Math.max(...tsbValid, 15), tsbRng = tsbMx - tsbMn || 1;
+  const pyTsb = v => PDY + (1 - (v - tsbMn) / tsbRng) * (H - 2 * PDY);
+  const tsbPts = days.map((d, i) => d.tsb != null ? `${px(i).toFixed(1)},${pyTsb(d.tsb).toFixed(1)}` : null).filter(Boolean).join(' ');
+
+  // Zero line for TSB
+  const tsbZeroY = pyTsb(0).toFixed(1);
+
+  // Check-in dots (mood coloured)
+  const dots = days.map((d, i) => {
+    if (!d.mood && !d.fatigue) return '';
+    const field = d.mood ?? d.fatigue;
+    const col = CHECKIN_COLORS[field] ?? '#aeaeb2';
+    const yPos = d.ctl != null ? py(d.ctl) : d.atl != null ? py(d.atl) : H / 2;
+    // Place dot just above the CTL line
+    return `<circle cx="${px(i).toFixed(1)}" cy="${(yPos - 10).toFixed(1)}" r="5" fill="${col}" opacity="0.85" stroke="#fff" stroke-width="1.5"><title>${fmtDate(d.date)}: Humør=${MOOD_LABELS[d.mood] ?? '–'}, Fatigue=${FAT_LABELS[d.fatigue] ?? '–'}</title></circle>`;
+  }).join('');
+
+  // X-axis labels (every ~10 days)
+  const step = Math.max(1, Math.floor(days.length / 8));
+  const xLabels = days.map((d, i) => {
+    if (i % step !== 0 && i !== days.length - 1) return '';
+    const dd = new Date(d.date + 'T12:00:00');
+    return `<text x="${px(i).toFixed(1)}" y="${H + axH - 3}" font-size="9" fill="#aeaeb2" text-anchor="middle">${dd.getDate()}/${dd.getMonth() + 1}</text>`;
+  }).join('');
+
+  // Y-axis ticks
+  const yTicks = [mn, (mn + mx) / 2, mx].map(v => {
+    const y = py(v).toFixed(1);
+    return `<text x="4" y="${y}" font-size="9" fill="#c7c7cc" dominant-baseline="middle">${Math.round(v)}</text>`;
+  }).join('');
+
+  return `
+    <div class="legend">
+      <div class="legend-item"><div class="legend-line" style="background:#007aff"></div>CTL (fitness)</div>
+      <div class="legend-item"><div class="legend-line" style="background:#ff9f0a"></div>ATL (fatigue load)</div>
+      <div class="legend-item"><div class="legend-line" style="background:#bf5af2;opacity:0.7"></div>TSB (form)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#30d158"></div>Mood: Great</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ff9f0a"></div>Mood: Good</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ff3b30"></div>Mood: Avg/Low</div>
+    </div>
+    <div class="chart-wrap">
+      <svg viewBox="0 0 ${W} ${H + axH}" width="100%" style="overflow:visible">
+        <line x1="${PD}" y1="${tsbZeroY}" x2="${W - PD}" y2="${tsbZeroY}" stroke="#e5e5ea" stroke-width="1" stroke-dasharray="4,3"/>
+        <polyline fill="none" stroke="#bf5af2" stroke-width="1.5" stroke-dasharray="5,3" opacity="0.7" stroke-linecap="round" stroke-linejoin="round" points="${tsbPts}"/>
+        <polyline fill="none" stroke="#007aff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" points="${ctlPts}"/>
+        <polyline fill="none" stroke="#ff9f0a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" points="${atlPts}"/>
+        ${dots}
+        ${xLabels}
+        ${yTicks}
+      </svg>
+    </div>`;
+}
+
+// ── HRV + check-in chart ──────────────────────────────────────────────────
+function hrvCheckinChart(series) {
+  const days = series.filter(d => d.hrv != null);
+  if (days.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Ikke nok HRV data</p>';
+
+  const W = 500, H = 160, axH = 18, PD = 8, PDY = 5;
+  const vals = days.map(d => d.hrv);
+  const mn = Math.min(...vals), mx = Math.max(...vals), rng = mx - mn || 1;
+  const px = i => PD + i * (W - 2 * PD) / Math.max(days.length - 1, 1);
+  const py = v => PDY + (1 - (v - mn) / rng) * (H - 2 * PDY);
+
+  const segments = days.map((d, i) => {
+    if (i === 0) return '';
+    const prev = days[i - 1];
+    const col = CHECKIN_COLORS[d.fatigue] ?? '#007aff';
+    return `<line x1="${px(i-1).toFixed(1)}" y1="${py(prev.hrv).toFixed(1)}" x2="${px(i).toFixed(1)}" y2="${py(d.hrv).toFixed(1)}" stroke="${col}" stroke-width="2.2" stroke-linecap="round"/>`;
+  }).join('');
+
+  const dots = days.map((d, i) => {
+    const col = CHECKIN_COLORS[d.fatigue] ?? '#007aff';
+    return `<circle cx="${px(i).toFixed(1)}" cy="${py(d.hrv).toFixed(1)}" r="3.5" fill="${col}" stroke="#fff" stroke-width="1.5"><title>${fmtDate(d.date)}: HRV=${d.hrv} ms, Fatigue=${FAT_LABELS[d.fatigue] ?? '–'}</title></circle>`;
+  }).join('');
+
+  const step = Math.max(1, Math.floor(days.length / 6));
+  const xLabels = days.map((d, i) => {
+    if (i % step !== 0 && i !== days.length - 1) return '';
+    const dd = new Date(d.date + 'T12:00:00');
+    return `<text x="${px(i).toFixed(1)}" y="${H + axH - 3}" font-size="9" fill="#aeaeb2" text-anchor="middle">${dd.getDate()}/${dd.getMonth() + 1}</text>`;
+  }).join('');
+
+  return `
+    <div class="legend">
+      <div class="legend-item"><span style="font-size:10px">Linje farvet efter dagens fatigue:</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:#30d158"></div>Low</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ff9f0a"></div>Avg</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ff3b30"></div>High</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#bf5af2"></div>Extreme</div>
+    </div>
+    <div class="chart-wrap">
+      <svg viewBox="0 0 ${W} ${H + axH}" width="100%" style="overflow:visible">
+        ${segments}${dots}${xLabels}
+      </svg>
+    </div>`;
+}
+
+// ── Sleep chart coloured by mood ──────────────────────────────────────────
+function sleepMoodChart(series) {
+  const days = series.filter(d => d.sleep != null);
+  if (days.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Ikke nok søvn data</p>';
+
+  const W = 500, H = 160, axH = 18, PD = 8, PDY = 5;
+  const vals = days.map(d => d.sleep);
+  const mn = Math.max(0, Math.min(...vals) - 0.5), mx = Math.max(...vals) + 0.3, rng = mx - mn || 1;
+  const px = i => PD + i * (W - 2 * PD) / Math.max(days.length - 1, 1);
+  const py = v => PDY + (1 - (v - mn) / rng) * (H - 2 * PDY);
+
+  // 7-hour reference line
+  const y7 = py(7).toFixed(1);
+  const y8 = py(8).toFixed(1);
+
+  const segments = days.map((d, i) => {
+    if (i === 0) return '';
+    const prev = days[i - 1];
+    const col = CHECKIN_COLORS[d.mood] ?? '#007aff';
+    return `<line x1="${px(i-1).toFixed(1)}" y1="${py(prev.sleep).toFixed(1)}" x2="${px(i).toFixed(1)}" y2="${py(d.sleep).toFixed(1)}" stroke="${col}" stroke-width="2.2" stroke-linecap="round"/>`;
+  }).join('');
+
+  const dots = days.map((d, i) => {
+    const col = CHECKIN_COLORS[d.mood] ?? '#007aff';
+    return `<circle cx="${px(i).toFixed(1)}" cy="${py(d.sleep).toFixed(1)}" r="3.5" fill="${col}" stroke="#fff" stroke-width="1.5"><title>${fmtDate(d.date)}: Søvn=${d.sleep}t, Humør=${MOOD_LABELS[d.mood] ?? '–'}</title></circle>`;
+  }).join('');
+
+  const step = Math.max(1, Math.floor(days.length / 6));
+  const xLabels = days.map((d, i) => {
+    if (i % step !== 0 && i !== days.length - 1) return '';
+    const dd = new Date(d.date + 'T12:00:00');
+    return `<text x="${px(i).toFixed(1)}" y="${H + axH - 3}" font-size="9" fill="#aeaeb2" text-anchor="middle">${dd.getDate()}/${dd.getMonth() + 1}</text>`;
+  }).join('');
+
+  return `
+    <div class="legend">
+      <div class="legend-item"><span style="font-size:10px">Linje farvet efter dagens humør:</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:#30d158"></div>Great</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ff9f0a"></div>Good</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ff3b30"></div>Avg/Low</div>
+    </div>
+    <div class="chart-wrap">
+      <svg viewBox="0 0 ${W} ${H + axH}" width="100%" style="overflow:visible">
+        <line x1="${PD}" y1="${y7}" x2="${W - PD}" y2="${y7}" stroke="#e5e5ea" stroke-width="1" stroke-dasharray="4,3"/>
+        <line x1="${PD}" y1="${y8}" x2="${W - PD}" y2="${y8}" stroke="#e8f8ee" stroke-width="1" stroke-dasharray="4,3"/>
+        <text x="${W - PD - 2}" y="${parseFloat(y7) - 3}" font-size="8" fill="#aeaeb2" text-anchor="end">7h</text>
+        <text x="${W - PD - 2}" y="${parseFloat(y8) - 3}" font-size="8" fill="#30d158" text-anchor="end">8h</text>
+        ${segments}${dots}${xLabels}
+      </svg>
+    </div>`;
+}
+
+// ── TSB vs Mood scatter ───────────────────────────────────────────────────
+function tsbMoodScatter(series) {
+  const pts = series.filter(d => d.tsb != null && d.mood != null);
+  if (pts.length < 4) return '<p style="color:#aeaeb2;font-size:13px">Ikke nok data til scatter</p>';
+
+  const W = 300, H = 200, PD = 24;
+  const tsbVals = pts.map(d => d.tsb);
+  const tsbMn = Math.min(...tsbVals), tsbMx = Math.max(...tsbVals), tsbRng = tsbMx - tsbMn || 1;
+
+  const px = tsb => PD + (tsb - tsbMn) / tsbRng * (W - 2 * PD);
+  const py = mood => PD + (mood - 1) / 3 * (H - 2 * PD);
+
+  // Zero line
+  const x0 = px(0).toFixed(1);
+
+  const dots = pts.map(d => {
+    const col = CHECKIN_COLORS[d.mood];
+    return `<circle cx="${px(d.tsb).toFixed(1)}" cy="${py(d.mood).toFixed(1)}" r="5" fill="${col}" opacity="0.75" stroke="#fff" stroke-width="1.5"><title>${fmtDate(d.date)}: TSB=${d.tsb}, Humør=${MOOD_LABELS[d.mood]}</title></circle>`;
+  }).join('');
+
+  const yLabels = [1,2,3,4].map(v => `<text x="${PD - 4}" y="${py(v).toFixed(1)}" font-size="9" fill="#aeaeb2" text-anchor="end" dominant-baseline="middle">${MOOD_LABELS[v]}</text>`).join('');
+  const xLabel = `<text x="${W/2}" y="${H + 14}" font-size="9" fill="#aeaeb2" text-anchor="middle">TSB (form)</text>`;
+
+  return `
+    <div class="card-subtitle" style="margin-bottom:10px">Hvert punkt = én dag. Ser du et mønster?</div>
+    <div class="chart-wrap">
+      <svg viewBox="0 0 ${W} ${H + 18}" width="100%" style="overflow:visible">
+        <line x1="${x0}" y1="${PD}" x2="${x0}" y2="${H - PD}" stroke="#e5e5ea" stroke-width="1" stroke-dasharray="4,3"/>
+        ${dots}${yLabels}${xLabel}
+      </svg>
+    </div>`;
+}
+
+// ── Insights (simple heuristics) ─────────────────────────────────────────
+function computeInsights(series) {
+  const insights = [];
+  const recent = series.slice(-14);
+  const withCheckin = recent.filter(d => d.mood != null);
+
+  if (withCheckin.length >= 4) {
+    // Low HRV days → how was mood?
+    const lowHrvMoodAvg = recent.filter(d => d.hrv != null && d.hrv < 60 && d.mood != null).map(d => d.mood);
+    if (lowHrvMoodAvg.length >= 2) {
+      const avg = lowHrvMoodAvg.reduce((a,b) => a+b,0) / lowHrvMoodAvg.length;
+      if (avg > 2.5) insights.push(`<strong>HRV ↔ Humør:</strong> På dage med lav HRV (&lt;60 ms) er dit humør gennemsnitligt <em>${MOOD_LABELS[Math.round(avg)]}</em> — der ser ud til at være en sammenhæng.`);
+    }
+
+    // High ATL days → soreness
+    const highAtlSore = recent.filter(d => d.atl != null && d.atl > 50 && d.soreness != null).map(d => d.soreness);
+    if (highAtlSore.length >= 2) {
+      const avg = highAtlSore.reduce((a,b) => a+b,0) / highAtlSore.length;
+      if (avg > 2) insights.push(`<strong>Fatigue load ↔ Soreness:</strong> Når ATL er høj (&gt;50) er din soreness typisk <em>${SOR_LABELS[Math.round(avg)]}</em>.`);
+    }
+
+    // Sleep vs mood
+    const sleepMood = recent.filter(d => d.sleep != null && d.mood != null);
+    if (sleepMood.length >= 4) {
+      const goodSleep = sleepMood.filter(d => d.sleep >= 7.5).map(d => d.mood);
+      const badSleep  = sleepMood.filter(d => d.sleep < 7).map(d => d.mood);
+      if (goodSleep.length >= 2 && badSleep.length >= 2) {
+        const gAvg = goodSleep.reduce((a,b)=>a+b,0)/goodSleep.length;
+        const bAvg = badSleep.reduce((a,b)=>a+b,0)/badSleep.length;
+        if (gAvg < bAvg - 0.5) insights.push(`<strong>Søvn ↔ Humør:</strong> Med ≥7,5t søvn er dit humør typisk <em>${MOOD_LABELS[Math.round(gAvg)]}</em>. Under 7t: <em>${MOOD_LABELS[Math.round(bAvg)]}</em>.`);
+      }
+    }
+
+    // TSB and motivation
+    const tsbMot = recent.filter(d => d.tsb != null && d.motivation != null);
+    if (tsbMot.length >= 4) {
+      const freshDays = tsbMot.filter(d => d.tsb > 5).map(d => d.motivation);
+      const fatDays   = tsbMot.filter(d => d.tsb < -5).map(d => d.motivation);
+      if (freshDays.length >= 2 && fatDays.length >= 2) {
+        const fAvg = freshDays.reduce((a,b)=>a+b,0)/freshDays.length;
+        const tAvg = fatDays.reduce((a,b)=>a+b,0)/fatDays.length;
+        if (fAvg < tAvg - 0.5) insights.push(`<strong>TSB ↔ Motivation:</strong> Friske dage (TSB&gt;5): motivation typisk <em>${MOT_LABELS[Math.round(fAvg)]}</em>. Hårde dage (TSB&lt;-5): <em>${MOT_LABELS[Math.round(tAvg)]}</em>.`);
+      }
+    }
+  }
+
+  if (insights.length === 0) return '';
+  return `<div class="insight">${insights.map(i => `<div style="margin-bottom:6px">💡 ${i}</div>`).join('')}</div>`;
+}
+
+// ── Recent check-in table ─────────────────────────────────────────────────
+function checkinTable(series) {
+  const rows = series.slice(-21).reverse().filter(d => d.mood || d.fatigue || d.soreness || d.motivation || d.hrv || d.sleep);
+  if (!rows.length) return '<p style="color:#aeaeb2;font-size:13px">Ingen check-in data endnu</p>';
+
+  const head = `<thead><tr>
+    <th>Dato</th><th>Humør</th><th>Soreness</th><th>Fatigue</th><th>Motivation</th>
+    <th>HRV</th><th>Søvn</th><th>CTL</th><th>TSB</th><th>Note</th>
+  </tr></thead>`;
+
+  const body = rows.map(d => `<tr>
+    <td style="font-size:11px;white-space:nowrap">${fmtDate(d.date)}</td>
+    <td><span class="${chipClass(d.mood)}">${MOOD_LABELS[d.mood] ?? '–'}</span></td>
+    <td><span class="${chipClass(d.soreness)}">${SOR_LABELS[d.soreness] ?? '–'}</span></td>
+    <td><span class="${chipClass(d.fatigue)}">${FAT_LABELS[d.fatigue] ?? '–'}</span></td>
+    <td><span class="${chipClass(d.motivation)}">${MOT_LABELS[d.motivation] ?? '–'}</span></td>
+    <td style="font-weight:600;color:${d.hrv != null ? (d.hrv >= 70 ? '#30d158' : d.hrv >= 55 ? '#ff9f0a' : '#ff3b30') : '#aeaeb2'}">${fmtN(d.hrv)} <span style="font-size:10px;font-weight:400;color:#aeaeb2">${d.hrv != null ? 'ms' : ''}</span></td>
+    <td style="font-weight:600;color:${d.sleep != null ? (d.sleep >= 7.5 ? '#30d158' : d.sleep >= 6.5 ? '#ff9f0a' : '#ff3b30') : '#aeaeb2'}">${d.sleep != null ? fmtN(d.sleep, 1) + 'h' : '–'}</td>
+    <td style="color:#007aff;font-weight:600">${fmtN(d.ctl)}</td>
+    <td style="font-weight:600;color:${d.tsb != null ? (d.tsb >= 0 ? '#30d158' : '#ff9f0a') : '#aeaeb2'}">${fmtN(d.tsb, 1)}</td>
+    <td style="font-size:11px;color:#8e8e93;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.comments ?? ''}</td>
+  </tr>`).join('');
+
+  return `<div style="overflow-x:auto"><table class="ctable">${head}<tbody>${body}</tbody></table></div>`;
+}
+
+// ── Main render ───────────────────────────────────────────────────────────
+function render(data) {
+  const { series, today } = data;
+  const latest = [...series].reverse().find(d => d.ctl != null) ?? series[series.length - 1] ?? {};
+  const latestCheckin = [...series].reverse().find(d => d.mood != null) ?? {};
+
+  const todayFmt = (() => {
+    const d = new Date(today + 'T12:00:00');
+    return `${DAYS_S[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+  })();
+  document.getElementById('topbar-date').textContent = todayFmt;
+
+  // TSB zone label
+  function tsbLabel(t) {
+    if (t == null) return ['–', ''];
+    if (t > 10)   return ['Tapered', 'bg-yellow'];
+    if (t > 5)    return ['Peak form', 'bg-green'];
+    if (t >= -5)  return ['Maintenance', ''];
+    if (t >= -10) return ['Build phase', ''];
+    if (t >= -20) return ['Accum. fatigue', 'bg-yellow'];
+    return ['Overreaching', 'bg-red'];
+  }
+  const [tsbZone, tsbBg] = tsbLabel(latest.tsb);
+
+  const kpiColor = v => v == null ? 'neutral' : v >= 65 ? 'green' : v >= 45 ? 'yellow' : 'red';
+
+  const kpis = `<div class="row row-4">
+    ${kpiCard('Fitness (CTL)', fmtN(latest.ctl), '', '60-dagrs gennemsnit belastning', 'blue')}
+    ${kpiCard('Fatigue load (ATL)', fmtN(latest.atl), '', '7-dages gennemsnit belastning', 'yellow')}
+    ${kpiCard('Form (TSB)', fmtN(latest.tsb, 1), '', tsbZone, latest.tsb != null && latest.tsb >= 0 ? 'green' : 'yellow')}
+    ${kpiCard('HRV', fmtN(latest.hrv), 'ms', `Seneste check-in: ${latestCheckin.date ? fmtDate(latestCheckin.date) : '–'}`, kpiColor(latest.hrv))}
+  </div>`;
+
+  const insightsHtml = computeInsights(series);
+
+  const app = document.getElementById('app');
+  app.innerHTML = `
+    ${kpis}
+
+    <div class="row row-full">
+      <div class="card">
+        <div class="card-title">Fitness & Form — 60 dage <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#aeaeb2;font-size:10px">Prikker = dagens check-in humør</span></div>
+        ${fitnessCheckinChart(series)}
+        ${insightsHtml}
+      </div>
+    </div>
+
+    <div class="row row-2">
+      <div class="card">
+        <div class="card-title">HRV over tid</div>
+        <div class="card-subtitle" style="margin-bottom:10px">Farvet efter dagens fatigue-niveau</div>
+        ${hrvCheckinChart(series)}
+      </div>
+      <div class="card">
+        <div class="card-title">Søvn over tid</div>
+        <div class="card-subtitle" style="margin-bottom:10px">Farvet efter dagens humør</div>
+        ${sleepMoodChart(series)}
+      </div>
+    </div>
+
+    <div class="row row-2-1">
+      <div class="card" style="overflow:auto">
+        <div class="card-title">Check-in historik — seneste 21 dage</div>
+        ${checkinTable(series)}
+      </div>
+      <div class="card">
+        <div class="card-title">TSB vs Humør</div>
+        ${tsbMoodScatter(series)}
+      </div>
+    </div>
+  `;
+
+  document.getElementById('loading').style.display = 'none';
+  app.style.display = '';
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────────
+(async () => {
+  try {
+    const res = await fetch('/api/get-dashboard');
+    if (!res.ok) throw new Error('API fejl: ' + res.status);
+    const data = await res.json();
+    render(data);
+  } catch (e) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('error-wrap').style.display = '';
+    document.getElementById('error-msg').textContent = 'Kunne ikke hente data: ' + e.message;
+  }
+})();
+</script>
+</body>
+</html>
