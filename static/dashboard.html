@@ -232,6 +232,70 @@ function fitnessCheckinChart(series) {
     </div>`;
 }
 
+// ── Sport-specific Fitness & Form chart (CTL/ATL/TSB derived from activity load) ──
+function sportFitnessChart(days) {
+  if (!days || days.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Ikke nok data</p>';
+
+  const W = 440, H = 180, axH = 22, PDL = 34, PDR = 34, PDY = 8;
+  const plotW = W - PDL - PDR;
+  const allVals = [...days.map(d => d.ctl), ...days.map(d => d.atl)].filter(v => v != null);
+  const rawMn = Math.min(...allVals), rawMx = Math.max(...allVals);
+  const mn = Math.floor(rawMn), mx = Math.ceil(rawMx) || 1, rng = (mx - mn) || 1;
+
+  const px = i => PDL + i * plotW / Math.max(days.length - 1, 1);
+  const py = v => PDY + (1 - (v - mn) / rng) * (H - 2 * PDY);
+
+  const ctlPts = days.map((d, i) => d.ctl != null ? `${px(i).toFixed(1)},${py(d.ctl).toFixed(1)}` : null).filter(Boolean).join(' ');
+  const atlPts = days.map((d, i) => d.atl != null ? `${px(i).toFixed(1)},${py(d.atl).toFixed(1)}` : null).filter(Boolean).join(' ');
+
+  const tsbValid = days.map(d => d.tsb).filter(v => v != null);
+  const tsbRawMn = Math.min(...tsbValid, -5), tsbRawMx = Math.max(...tsbValid, 5);
+  const tsbMn = Math.floor(tsbRawMn), tsbMx = Math.ceil(tsbRawMx) || 1, tsbRng = (tsbMx - tsbMn) || 1;
+  const pyTsb = v => PDY + (1 - (v - tsbMn) / tsbRng) * (H - 2 * PDY);
+  const tsbPts = days.map((d, i) => d.tsb != null ? `${px(i).toFixed(1)},${pyTsb(d.tsb).toFixed(1)}` : null).filter(Boolean).join(' ');
+  const tsbZeroY = pyTsb(0).toFixed(1);
+
+  const leftTickCount = 4;
+  const leftTicks = Array.from({length: leftTickCount}, (_, k) => {
+    const v = mn + k * (mx - mn) / (leftTickCount - 1);
+    const y = py(v).toFixed(1);
+    return `<line x1="${PDL}" y1="${y}" x2="${PDL + plotW}" y2="${y}" stroke="#f2f2f7" stroke-width="1"/>
+            <text x="${PDL - 6}" y="${y}" font-size="9" fill="#aeaeb2" text-anchor="end" dominant-baseline="middle">${Math.round(v)}</text>`;
+  }).join('');
+
+  const rightTickValues = [tsbMn, 0, tsbMx];
+  const rightTicks = [...new Set(rightTickValues)].map(v => {
+    const y = pyTsb(v).toFixed(1);
+    const col = v === 0 ? '#8e8e93' : '#aeaeb2';
+    return `<text x="${PDL + plotW + 6}" y="${y}" font-size="9" fill="${col}" text-anchor="start" dominant-baseline="middle">${Math.round(v)}</text>`;
+  }).join('');
+
+  const step = Math.max(1, Math.floor(days.length / 6));
+  const xLabels = days.map((d, i) => {
+    if (i % step !== 0 && i !== days.length - 1) return '';
+    const dd = new Date(d.date + 'T12:00:00');
+    return `<text x="${px(i).toFixed(1)}" y="${H + axH - 3}" font-size="9" fill="#aeaeb2" text-anchor="middle">${dd.getDate()}/${dd.getMonth() + 1}</text>`;
+  }).join('');
+
+  return `
+    <div class="legend">
+      <div class="legend-item"><div class="legend-line" style="background:#007aff"></div>CTL</div>
+      <div class="legend-item"><div class="legend-line" style="background:#ff9f0a"></div>ATL</div>
+      <div class="legend-item"><div class="legend-line" style="background:#bf5af2;opacity:0.7"></div>TSB →</div>
+    </div>
+    <div class="chart-wrap">
+      <svg viewBox="0 0 ${W} ${H + axH}" width="100%" style="overflow:visible">
+        ${leftTicks}
+        <line x1="${PDL}" y1="${tsbZeroY}" x2="${PDL + plotW}" y2="${tsbZeroY}" stroke="#d1d1d6" stroke-width="1" stroke-dasharray="4,3"/>
+        <polyline fill="none" stroke="#bf5af2" stroke-width="1.5" stroke-dasharray="5,3" opacity="0.7" stroke-linecap="round" stroke-linejoin="round" points="${tsbPts}"/>
+        <polyline fill="none" stroke="#007aff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" points="${ctlPts}"/>
+        <polyline fill="none" stroke="#ff9f0a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" points="${atlPts}"/>
+        ${xLabels}
+        ${rightTicks}
+      </svg>
+    </div>`;
+}
+
 // ── HRV + check-in chart ──────────────────────────────────────────────────
 function hrvCheckinChart(series) {
   const days = series.filter(d => d.hrv != null);
@@ -517,8 +581,9 @@ function checkinTable(series) {
 }
 
 // ── Main render ───────────────────────────────────────────────────────────
-function render(data) {
+function render(data, sportData) {
   const { series, today } = data;
+  const sportSeries = sportData?.series ?? [];
   const latest = [...series].reverse().find(d => d.ctl != null) ?? series[series.length - 1] ?? {};
   const latestCheckin = [...series].reverse().find(d => d.mood != null) ?? {};
 
@@ -565,6 +630,17 @@ function render(data) {
 
     <div class="row row-2">
       <div class="card">
+        <div class="card-title">Løb — Fitness & Form <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#aeaeb2;font-size:10px">Kun løbeaktiviteters belastning</span></div>
+        ${sportFitnessChart(sportSeries.map(d => ({ date: d.date, ...d.run })))}
+      </div>
+      <div class="card">
+        <div class="card-title">Styrke — Fitness & Form <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#aeaeb2;font-size:10px">Kun styrketrænings belastning</span></div>
+        ${sportFitnessChart(sportSeries.map(d => ({ date: d.date, ...d.strength })))}
+      </div>
+    </div>
+
+    <div class="row row-2">
+      <div class="card">
         <div class="card-title">HRV over tid</div>
         <div class="card-subtitle" style="margin-bottom:10px">Farvet efter dagens fatigue-niveau</div>
         ${hrvCheckinChart(series)}
@@ -601,10 +677,14 @@ function render(data) {
 // ── Boot ──────────────────────────────────────────────────────────────────
 (async () => {
   try {
-    const res = await fetch('/api/get-dashboard');
+    const [res, sportRes] = await Promise.all([
+      fetch('/api/get-dashboard'),
+      fetch('/api/get-sport-load').catch(() => null),
+    ]);
     if (!res.ok) throw new Error('API fejl: ' + res.status);
     const data = await res.json();
-    render(data);
+    const sportData = sportRes?.ok ? await sportRes.json() : null;
+    render(data, sportData);
   } catch (e) {
     document.getElementById('loading').style.display = 'none';
     document.getElementById('error-wrap').style.display = '';
