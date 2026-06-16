@@ -325,7 +325,15 @@ function render(data,cal){
     <div><div class="metric-label">VO₂ max</div><div class="metric-value ${hmColor('vo2max',hm.vo2max)}">${fmtN(hm.vo2max)}<span style="font-size:13px;font-weight:500;color:#8e8e93"> ml/kg</span></div><div class="metric-sub">Aerobic capacity</div></div>
   </div></div>`;
 
-  const ibHTML=inBody?`<div class="card"><div class="card-title">Body composition</div><div class="inbody-grid"><div><div class="inbody-item-label">Weight</div><div class="inbody-item-value">${fmtN(inBody.weight)} kg</div></div><div><div class="inbody-item-label">Body fat %</div><div class="inbody-item-value">${fmtN(inBody.fatPct)} %</div></div><div><div class="inbody-item-label">Fat mass</div><div class="inbody-item-value">${fmtN(inBody.fatMass)} kg</div></div><div><div class="inbody-item-label">BMI</div><div class="inbody-item-value">${fmtN(inBody.bmi)}</div></div><div><div class="inbody-item-label">Height</div><div class="inbody-item-value">175,5 cm</div></div><div><div class="inbody-item-label">Measured</div><div class="inbody-item-value" style="font-size:13px;color:#8e8e93">${inBody.date??'-'}</div></div></div></div>`:'';
+  function ibDelta(cur,prev){
+    if(cur==null||prev==null)return'';
+    const d=Math.round((cur-prev)*10)/10;
+    if(Math.abs(d)<0.05)return` <span class="trend-flat">→</span>`;
+    const down=d<0;
+    return` <span class="${down?'trend-up':'trend-down'}">${down?'↓':'↑'} ${fmtN(Math.abs(d))}</span>`;
+  }
+  const ibPrev=inBody?.prev;
+  const ibHTML=inBody?`<div class="card"><div class="card-title">Body composition</div><div class="inbody-grid"><div><div class="inbody-item-label">Weight</div><div class="inbody-item-value">${fmtN(inBody.weight)} kg${ibDelta(inBody.weight,ibPrev?.weight)}</div></div><div><div class="inbody-item-label">Body fat %</div><div class="inbody-item-value">${fmtN(inBody.fatPct)} %${ibDelta(inBody.fatPct,ibPrev?.fatPct)}</div></div><div><div class="inbody-item-label">Fat mass</div><div class="inbody-item-value">${fmtN(inBody.fatMass)} kg${ibDelta(inBody.fatMass,ibPrev?.fatMass)}</div></div><div><div class="inbody-item-label">BMI</div><div class="inbody-item-value">${fmtN(inBody.bmi)}${ibDelta(inBody.bmi,ibPrev?.bmi)}</div></div><div><div class="inbody-item-label">Height</div><div class="inbody-item-value">175,5 cm</div></div><div><div class="inbody-item-label">Measured</div><div class="inbody-item-value" style="font-size:13px;color:#8e8e93">${inBody.date??'-'}</div></div></div>${ibPrev?`<div style="font-size:11px;color:#aeaeb2;margin-top:10px">vs. ${ibPrev.date} (${fmtN(ibPrev.weight)} kg, ${fmtN(ibPrev.fatPct)} %)</div>`:''}</div>`:'';
   const ibUrlRowHTML=`<div class="inbody-quick-row"><input type="text" id="inbody-url-input" class="inbody-url-input" placeholder="Indsæt InBody link…"><button id="inbody-url-btn" class="inbody-url-btn">Importer</button></div><div class="inbody-url-status" id="inbody-url-status"></div>`;
 
   const readyHistSVG=readinessHistGraph(trends.hrv,trends.rhr,trends.sleep);
@@ -456,7 +464,7 @@ function render(data,cal){
       const r=await fetch('/api/update-wellness',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:d.date,weight:d.weight,bodyFat:d.fatPct})});
       if(r.ok){
         st.textContent='Gemt';st.className='inbody-url-status ok';
-        if(_lastData){_lastData.inBody={date:d.date,weight:d.weight,fatPct:d.fatPct,fatMass:d.fatMass,bmi:d.bmi};render(_lastData,_lastCal);}
+        if(_lastData){_lastData.inBody={date:d.date,weight:d.weight,fatPct:d.fatPct,fatMass:d.fatMass,bmi:d.bmi,prev:_lastData.inBody?{date:_lastData.inBody.date,weight:_lastData.inBody.weight,fatPct:_lastData.inBody.fatPct,fatMass:_lastData.inBody.fatMass,bmi:_lastData.inBody.bmi}:null};render(_lastData,_lastCal);}
       }else{
         const e=await r.json().catch(()=>({}));
         st.textContent='Fejl: '+(e.error||r.status)+(e.details?' — '+e.details:'');st.className='inbody-url-status err';

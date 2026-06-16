@@ -50,8 +50,22 @@ export default async () => {
   const todayEntry     = days.find(d => d.date === end)       ?? {};
   const yesterdayEntry = days.find(d => d.date === yesterday) ?? {};
 
-  const bodyCompEntry = [...days].reverse().find(d => d.weight && (d.fatMass || d.bodyFat));
+  const bodyCompEntries = days.filter(d => d.weight && (d.fatMass || d.bodyFat));
+  const bodyCompEntry   = bodyCompEntries[bodyCompEntries.length - 1];
+  const prevBodyCompEntry = bodyCompEntries[bodyCompEntries.length - 2];
   const HEIGHT = 1.755;
+  const toInBody = (e) => {
+    if (!e) return null;
+    const w  = e.weight;
+    const fp = e.bodyFat ?? null;
+    return {
+      date:    e.date,
+      weight:  round1(w),
+      fatPct:  round1(fp),
+      fatMass: (w && fp) ? round1(w * fp / 100) : null,
+      bmi:     round1(w / (HEIGHT * HEIGHT)),
+    };
+  };
 
   return json({
     today: end,
@@ -86,17 +100,7 @@ export default async () => {
       motivation:   todayEntry.motivation   ?? null,
       comments:     todayEntry.comments     ?? null,
     },
-    inBody: bodyCompEntry ? (() => {
-      const w = bodyCompEntry.weight;
-      const fp = bodyCompEntry.bodyFat ?? null;
-      return {
-        date:    bodyCompEntry.date,
-        weight:  round1(w),
-        fatPct:  round1(fp),
-        fatMass: (w && fp) ? round1(w * fp / 100) : null,
-        bmi:     round1(w / (HEIGHT * HEIGHT)),
-      };
-    })() : null,
+    inBody: bodyCompEntry ? { ...toInBody(bodyCompEntry), prev: toInBody(prevBodyCompEntry) } : null,
     healthMarkers: {
       date:   yesterday,
       sdnn:   round1(yesterdayEntry.sdnn   ?? yesterdayEntry.hrvSDNN ?? null),
