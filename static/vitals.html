@@ -24,7 +24,14 @@
     .metric-sub { font-size: 11px; color: #aeaeb2; margin-top: 1px; }
     .trend-up { color: #30d158; font-size: 14px; } .trend-down { color: #ff3b30; font-size: 14px; } .trend-flat { color: #aeaeb2; font-size: 14px; }
     .sparkline { margin-top: 4px; }
-    .tsb-zone { display: inline-block; font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; margin-top: 4px; }
+    .tlr-zone-label { text-align: center; font-size: 19px; font-weight: 800; margin-bottom: 14px; }
+    .tlr-row { display: flex; align-items: center; gap: 12px; }
+    .tlr-value { font-size: 24px; font-weight: 800; flex-shrink: 0; min-width: 50px; }
+    .tlr-bar { position: relative; flex: 1; height: 10px; border-radius: 6px; overflow: visible; display: flex; }
+    .tlr-bar-track { position: absolute; inset: 0; display: flex; border-radius: 6px; overflow: hidden; }
+    .tlr-seg { height: 100%; }
+    .tlr-dot { position: absolute; top: 50%; width: 20px; height: 20px; border-radius: 50%; background: #fff; border: 4px solid currentColor; transform: translate(-50%,-50%); box-shadow: 0 1px 3px rgba(0,0,0,0.25); }
+    .tlr-desc { font-size: 13px; color: #1c1c1e; line-height: 1.5; margin-top: 14px; }
     .inbody-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .inbody-item-label { font-size: 11px; font-weight: 500; color: #8e8e93; margin-bottom: 2px; }
     .inbody-item-value { font-size: 20px; font-weight: 700; }
@@ -100,14 +107,32 @@ function calcReadiness(r,s){return(r==null||s==null)?null:Math.min(100,Math.max(
 
 function verdictColor(r){return r>=65?'green':r>=45?'yellow':'red';}
 
-function tsbZone(t){
-  if(t==null)return null;
-  if(t>10)  return{label:'Tapered',bg:'#fff3e0',color:'#b86e00'};
-  if(t>5)   return{label:'Peak form',bg:'#e8f8ee',color:'#1a7a33'};
-  if(t>=-5) return{label:'Maintenance',bg:'#e8f0ff',color:'#0051a8'};
-  if(t>=-10)return{label:'Build phase',bg:'#f0e8ff',color:'#5e0da8'};
-  if(t>=-20)return{label:'Accumulated fatigue',bg:'#fff3e0',color:'#b86e00'};
-  return          {label:'Overreaching',bg:'#ffe5e5',color:'#c0392b'};
+const TLR_ZONES=[
+  {min:-25,max:-20,color:'#ff3b30',label:'Overreaching',desc:'Training load is excessive — high risk of burnout or injury.'},
+  {min:-20,max:-10,color:'#ff9f0a',label:'Accumulated fatigue',desc:'Fatigue has built up — recovery is falling behind.'},
+  {min:-10,max:-5, color:'#bf5af2',label:'Build phase',desc:"You're building fitness with manageable fatigue."},
+  {min:-5, max:5,  color:'#007aff',label:'Maintenance',desc:'The short-term (ATL) and long-term (CTL) training loads are balanced.'},
+  {min:5,  max:10, color:'#30d158',label:'Peak form',desc:'Primed for peak performance with fresh legs.'},
+  {min:10, max:15, color:'#ffcc00',label:'Tapered',desc:"You're well rested, but may be losing fitness from reduced training."},
+];
+
+function tlrHTML(tsb){
+  const SCALE_MIN=TLR_ZONES[0].min,SCALE_MAX=TLR_ZONES[TLR_ZONES.length-1].max,total=SCALE_MAX-SCALE_MIN;
+  const segs=TLR_ZONES.map(z=>`<div class="tlr-seg" style="width:${((z.max-z.min)/total*100).toFixed(2)}%;background:${z.color}"></div>`).join('');
+  const hasVal=tsb!=null;
+  const clamped=hasVal?Math.min(SCALE_MAX,Math.max(SCALE_MIN,tsb)):0;
+  const pct=((clamped-SCALE_MIN)/total*100).toFixed(2);
+  const active=hasVal?(TLR_ZONES.find(z=>tsb>=z.min&&tsb<z.max)??(tsb>=SCALE_MAX?TLR_ZONES[TLR_ZONES.length-1]:TLR_ZONES[0])):null;
+  const color=active?active.color:'#8e8e93';
+  return `<div class="card">
+    <div class="card-title">Training Load Ratio</div>
+    <div class="tlr-zone-label" style="color:${color}">${active?active.label:'No data'}</div>
+    <div class="tlr-row">
+      <div class="tlr-value" style="color:${color}">${fmtN(tsb)}</div>
+      <div class="tlr-bar"><div class="tlr-bar-track">${segs}</div><div class="tlr-dot" style="left:${pct}%;color:${color}"></div></div>
+    </div>
+    ${active?`<div class="tlr-desc">${active.desc}</div>`:''}
+  </div>`;
 }
 
 function fmtN(n,u=''){if(n==null)return '-';return String(n).replace('.',',')+(u?' '+u:'');}
@@ -154,9 +179,6 @@ function render(data){
   const slp_t=trend(trends.sleep);
   const tC=c=>c==='trend-up'?'#30d158':c==='trend-down'?'#ff3b30':'#aeaeb2';
 
-  const zone=tsbZone(latest.tsb);
-  const zHTML=zone?`<div class="tsb-zone" style="background:${zone.bg};color:${zone.color}">${zone.label}</div>`:'';
-
   function hmColor(field,val){
     if(val==null)return'neutral';
     if(field==='sdnn')  return val>=75?'green':val>=60?'yellow':'red';
@@ -194,10 +216,10 @@ function render(data){
       <div class="metrics-grid">
         <div><div class="metric-label">HRV (rMSSD)</div><div class="metric-value ${vc}">${fmtN(latest.hrv)} ms <span class="${hrv_t.c}">${hrv_t.a==='up'?'↑':hrv_t.a==='down'?'↓':'→'}</span></div>${sparkSVG(trends.hrv,tC(hrv_t.c))}</div>
         <div><div class="metric-label">Resting HR</div><div class="metric-value ${vc}">${fmtN(latest.restingHR)} bpm <span class="${rhr_t.c}">${rhr_t.a==='up'?'↑':rhr_t.a==='down'?'↓':'→'}</span></div>${sparkSVG(trends.rhr,tC(rhr_t.c))}</div>
-        <div><div class="metric-label">Sleep</div><div class="metric-value ${vc}">${fmtN(latest.sleepHours)} h <span class="${slp_t.c}">${slp_t.a==='up'?'↑':slp_t.a==='down'?'↓':'→'}</span></div><div class="metric-sub">sleep score ${fmtN(latest.sleepScore)}</div>${sparkSVG(trends.sleep,tC(slp_t.c))}</div>
-        <div><div class="metric-label">TSB</div><div class="metric-value neutral" style="color:${(latest.tsb??0)>=0?'#30d158':'#ff9f0a'}">${fmtN(latest.tsb)}</div>${zHTML}</div>
+        <div><div class="metric-label">Sleep</div><div class="metric-value ${vc}">${fmtN(latest.sleepHours)} h <span class="${slp_t.c}">${slp_t.a==='up'?'↑':slp_t.a==='down'?'↓':'→'}</span> <span style="font-size:13px;font-weight:500;color:#8e8e93">· score ${fmtN(latest.sleepScore)}</span></div>${sparkSVG(trends.sleep,tC(slp_t.c))}</div>
       </div>
     </div>
+    ${tlrHTML(latest.tsb)}
     ${hmHTML}
     ${ibHTML}${ibUrlRowHTML}
   `;
