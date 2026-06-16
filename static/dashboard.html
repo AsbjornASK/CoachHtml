@@ -397,6 +397,49 @@ function tsbMoodScatter(series) {
     </div>`;
 }
 
+// ── Sleep vs Mood scatter ─────────────────────────────────────────────────
+function sleepMoodScatter(series) {
+  const pts = series.filter(d => d.sleep != null && d.mood != null);
+  if (pts.length < 4) return '<p style="color:#aeaeb2;font-size:13px">Ikke nok data til scatter</p>';
+
+  const W = 300, H = 200, PD = 24, axH = 28;
+  const rawVals = pts.map(d => d.sleep);
+  const sleepMn = Math.max(0, Math.floor(Math.min(...rawVals) - 0.5)), sleepMx = Math.ceil(Math.max(...rawVals) + 0.5), sleepRng = (sleepMx - sleepMn) || 1;
+
+  const px = sleep => PD + (sleep - sleepMn) / sleepRng * (W - 2 * PD);
+  const py = mood => PD + (mood - 1) / 3 * (H - 2 * PD);
+
+  // X-axis ticks + gridlines (5 ticks across the sleep range)
+  const tickCount = 5;
+  const xTicks = Array.from({length: tickCount}, (_, k) => {
+    const v = sleepMn + k * (sleepMx - sleepMn) / (tickCount - 1);
+    const x = px(v).toFixed(1);
+    return `<line x1="${x}" y1="${PD}" x2="${x}" y2="${H - PD}" stroke="#f2f2f7" stroke-width="1"/>
+            <text x="${x}" y="${H - PD + 14}" font-size="9" fill="#aeaeb2" text-anchor="middle">${v.toFixed(1)}t</text>`;
+  }).join('');
+
+  // 7h reference line, only if within range
+  const refLine = (sleepMn <= 7 && sleepMx >= 7)
+    ? `<line x1="${px(7).toFixed(1)}" y1="${PD}" x2="${px(7).toFixed(1)}" y2="${H - PD}" stroke="#aeaeb2" stroke-width="1" stroke-dasharray="4,3"/>`
+    : '';
+
+  const dots = pts.map(d => {
+    const col = CHECKIN_COLORS[d.mood];
+    return `<circle cx="${px(d.sleep).toFixed(1)}" cy="${py(d.mood).toFixed(1)}" r="5" fill="${col}" opacity="0.75" stroke="#fff" stroke-width="1.5"><title>${fmtDate(d.date)}: Søvn=${d.sleep}t, Humør=${MOOD_LABELS[d.mood]}</title></circle>`;
+  }).join('');
+
+  const yLabels = [1,2,3,4].map(v => `<text x="${PD - 4}" y="${py(v).toFixed(1)}" font-size="9" fill="#aeaeb2" text-anchor="end" dominant-baseline="middle">${MOOD_LABELS[v]}</text>`).join('');
+  const xLabel = `<text x="${W/2}" y="${H + axH}" font-size="9" fill="#8e8e93" text-anchor="middle">Søvn (timer)</text>`;
+
+  return `
+    <div class="card-subtitle" style="margin-bottom:10px">Hvert punkt = én dag. Ser du et mønster?</div>
+    <div class="chart-wrap">
+      <svg viewBox="0 0 ${W} ${H + axH}" width="100%" style="overflow:visible">
+        ${xTicks}${refLine}${dots}${yLabels}${xLabel}
+      </svg>
+    </div>`;
+}
+
 // ── Insights (simple heuristics) ─────────────────────────────────────────
 function computeInsights(series) {
   const insights = [];
@@ -538,9 +581,15 @@ function render(data) {
         <div class="card-title">Check-in historik — seneste 21 dage</div>
         ${checkinTable(series)}
       </div>
-      <div class="card">
-        <div class="card-title">TSB vs Humør</div>
-        ${tsbMoodScatter(series)}
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div class="card">
+          <div class="card-title">TSB vs Humør</div>
+          ${tsbMoodScatter(series)}
+        </div>
+        <div class="card">
+          <div class="card-title">Søvn vs Humør</div>
+          ${sleepMoodScatter(series)}
+        </div>
       </div>
     </div>
   `;
