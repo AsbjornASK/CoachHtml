@@ -177,6 +177,7 @@ function render(data){
   const hrv_t=trend(trends.hrv);
   const rhr_t=trend(trends.rhr,true);
   const slp_t=trend(trends.sleep);
+  const slpScore_t=trend(trends.sleepScore);
   const tC=c=>c==='trend-up'?'#30d158':c==='trend-down'?'#ff3b30':'#aeaeb2';
 
   function hmColor(field,val){
@@ -216,7 +217,8 @@ function render(data){
       <div class="metrics-grid">
         <div><div class="metric-label">HRV (rMSSD)</div><div class="metric-value ${vc}">${fmtN(latest.hrv)} ms <span class="${hrv_t.c}">${hrv_t.a==='up'?'↑':hrv_t.a==='down'?'↓':'→'}</span></div>${sparkSVG(trends.hrv,tC(hrv_t.c))}</div>
         <div><div class="metric-label">Resting HR</div><div class="metric-value ${vc}">${fmtN(latest.restingHR)} bpm <span class="${rhr_t.c}">${rhr_t.a==='up'?'↑':rhr_t.a==='down'?'↓':'→'}</span></div>${sparkSVG(trends.rhr,tC(rhr_t.c))}</div>
-        <div><div class="metric-label">Sleep</div><div class="metric-value ${vc}">${fmtN(latest.sleepHours)} h <span class="${slp_t.c}">${slp_t.a==='up'?'↑':slp_t.a==='down'?'↓':'→'}</span> <span style="font-size:13px;font-weight:500;color:#8e8e93">· score ${fmtN(latest.sleepScore)}</span></div>${sparkSVG(trends.sleep,tC(slp_t.c))}</div>
+        <div><div class="metric-label">Sleep</div><div class="metric-value ${vc}">${fmtN(latest.sleepHours)} h <span class="${slp_t.c}">${slp_t.a==='up'?'↑':slp_t.a==='down'?'↓':'→'}</span></div>${sparkSVG(trends.sleep,tC(slp_t.c))}</div>
+        <div><div class="metric-label">Sleep score</div><div class="metric-value ${vc}">${fmtN(latest.sleepScore)} <span class="${slpScore_t.c}">${slpScore_t.a==='up'?'↑':slpScore_t.a==='down'?'↓':'→'}</span></div>${sparkSVG(trends.sleepScore,tC(slpScore_t.c))}</div>
       </div>
     </div>
     ${tlrHTML(latest.tsb)}
