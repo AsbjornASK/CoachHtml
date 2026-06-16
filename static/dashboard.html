@@ -11,13 +11,17 @@
     /* ── Top bar ── */
     .topbar { background: #fff; border-bottom: 1px solid #e5e5ea; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 56px; position: sticky; top: 0; z-index: 10; }
     .topbar-title { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
-    .topbar-nav { display: flex; gap: 8px; }
-    .nav-link { font-size: 13px; font-weight: 600; color: #007aff; text-decoration: none; padding: 6px 12px; border-radius: 8px; }
-    .nav-link:hover { background: #f0f6ff; }
     .topbar-date { font-size: 12px; color: #8e8e93; }
 
+    /* ── Bottom bar ── */
+    .bottombar { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid #e5e5ea; height: 58px; z-index: 20; }
+    .bottombar-inner { max-width: 430px; height: 100%; margin: 0 auto; display: flex; }
+    .bottombar a { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 11px; font-weight: 600; color: #8e8e93; text-decoration: none; -webkit-tap-highlight-color: transparent; }
+    .bottombar a svg { width: 22px; height: 22px; }
+    .bottombar a.active { color: #007aff; }
+
     /* ── Layout ── */
-    .main { max-width: 1280px; margin: 0 auto; padding: 20px 20px 40px; }
+    .main { max-width: 1280px; margin: 0 auto; padding: 20px 20px 76px; }
     .row { display: grid; gap: 16px; margin-bottom: 16px; }
     .row-4 { grid-template-columns: repeat(4, 1fr); }
     .row-3 { grid-template-columns: repeat(3, 1fr); }
@@ -81,9 +85,6 @@
 
 <div class="topbar">
   <div class="topbar-title">Coach Dashboard</div>
-  <div class="topbar-nav">
-    <a class="nav-link" href="/">← Mobil</a>
-  </div>
   <div class="topbar-date" id="topbar-date"></div>
 </div>
 
@@ -109,6 +110,12 @@
 <div id="error-wrap" class="main" style="display:none">
   <div style="background:#ffe5e5;border-radius:16px;padding:20px;color:#c0392b;font-size:14px" id="error-msg"></div>
 </div>
+
+<div class="bottombar"><div class="bottombar-inner">
+  <a href="/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg><span>Coach</span></a>
+  <a href="/vitals.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 12 7 12 10 19 14 5 17 12 22 12"/></svg><span>Vitals</span></a>
+  <a href="/dashboard.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="20" x2="6" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="18" y1="20" x2="18" y2="14"/></svg><span>Dashboard</span></a>
+</div></div>
 
 <script>
 // ── Constants ──────────────────────────────────────────────────────────────
