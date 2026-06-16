@@ -77,11 +77,13 @@
     .checkin-done-badge { display: inline-block; background: #e8f8ee; color: #30d158; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; margin-left: 6px; vertical-align: middle; }
     .form-status { text-align: center; font-size: 13px; margin-top: 10px; min-height: 18px; }
     .form-status.ok { color: #30d158; font-weight: 600; } .form-status.err { color: #ff3b30; }
-    .inbody-paste { width: 100%; font-size: 13px; border: 1.5px solid #e5e5ea; border-radius: 10px; padding: 10px 12px; color: #1c1c1e; background: #f9f9fb; resize: none; outline: none; font-family: inherit; }
-    .inbody-paste:focus { border-color: #007aff; background: #fff; }
-    .inbody-parse-btn { width: 100%; margin-top: 10px; padding: 11px; background: #f2f2f7; color: #007aff; font-size: 15px; font-weight: 700; border: none; border-radius: 12px; cursor: pointer; }
-    .inbody-results { display: none; margin-top: 14px; border-top: 1px solid #f2f2f7; padding-top: 12px; }
-    .inbody-date-line { font-size: 12px; color: #aeaeb2; margin-bottom: 12px; }
+    .inbody-quick-row { display: flex; gap: 8px; margin: 0 12px 4px; }
+    .inbody-url-input { flex: 1; font-size: 13px; border: 1.5px solid #e5e5ea; border-radius: 10px; padding: 10px 12px; color: #1c1c1e; background: #f9f9fb; outline: none; font-family: inherit; min-width: 0; }
+    .inbody-url-input:focus { border-color: #007aff; background: #fff; }
+    .inbody-url-btn { flex-shrink: 0; padding: 10px 16px; background: #007aff; color: #fff; font-size: 14px; font-weight: 700; border: none; border-radius: 10px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .inbody-url-btn:disabled { background: #aeaeb2; cursor: default; }
+    .inbody-url-status { text-align: center; font-size: 12px; margin: 4px 12px 12px; min-height: 14px; }
+    .inbody-url-status.ok { color: #30d158; font-weight: 600; } .inbody-url-status.err { color: #ff3b30; }
     .skeleton { animation: pulse 1.4s ease-in-out infinite; background: #e5e5ea; border-radius: 16px; }
     @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.4} }
     .skel-header { height: 80px; margin: 24px 12px 12px; }
@@ -102,25 +104,6 @@
     <div class="skel-card skeleton"></div>
   </div>
   <div id="app" style="display:none"></div>
-
-  <div class="card" id="inbody-card" style="display:none">
-    <div class="card-title">InBody Import</div>
-    <textarea class="inbody-paste" id="inbody-paste" rows="3" placeholder="Paste InBody link here…"></textarea>
-    <button class="inbody-parse-btn" id="inbody-parse-btn">Analyse</button>
-    <div class="form-status" id="inbody-status"></div>
-    <div class="inbody-results" id="inbody-results">
-      <div class="inbody-date-line" id="inbody-date-line"></div>
-      <div class="inbody-grid">
-        <div><div class="inbody-item-label">Weight</div><div class="inbody-item-value" id="ib-weight">-</div></div>
-        <div><div class="inbody-item-label">Body fat %</div><div class="inbody-item-value" id="ib-fatpct">-</div></div>
-        <div><div class="inbody-item-label">Fat mass</div><div class="inbody-item-value" id="ib-fat">-</div></div>
-        <div><div class="inbody-item-label">BMI</div><div class="inbody-item-value" id="ib-bmi">-</div></div>
-        <div><div class="inbody-item-label">Height</div><div class="inbody-item-value">175,5 cm</div></div>
-      </div>
-      <button class="submit-btn" id="inbody-save-btn" style="background:#30d158;margin-top:14px">Save weight to Intervals</button>
-      <div class="form-status" id="inbody-save-status"></div>
-    </div>
-  </div>
 
   <div class="card" id="checkin-card" style="display:none">
     <div class="card-title">Morning Check-in <span id="checkin-done-badge" class="checkin-done-badge" style="display:none">Saved</span></div>
@@ -280,7 +263,7 @@ function fitnessGraph(hist){
     ${labs}</svg>`;
 }
 
-let _lastData=null,_lastCal=null,_checkinSaved=false,_inbodySaved=false;
+let _lastData=null,_lastCal=null,_checkinSaved=false;
 
 function render(data,cal){
   _lastData=data;_lastCal=cal;
@@ -343,6 +326,7 @@ function render(data,cal){
   </div></div>`;
 
   const ibHTML=inBody?`<div class="card"><div class="card-title">Body composition</div><div class="inbody-grid"><div><div class="inbody-item-label">Weight</div><div class="inbody-item-value">${fmtN(inBody.weight)} kg</div></div><div><div class="inbody-item-label">Body fat %</div><div class="inbody-item-value">${fmtN(inBody.fatPct)} %</div></div><div><div class="inbody-item-label">Fat mass</div><div class="inbody-item-value">${fmtN(inBody.fatMass)} kg</div></div><div><div class="inbody-item-label">BMI</div><div class="inbody-item-value">${fmtN(inBody.bmi)}</div></div><div><div class="inbody-item-label">Height</div><div class="inbody-item-value">175,5 cm</div></div><div><div class="inbody-item-label">Measured</div><div class="inbody-item-value" style="font-size:13px;color:#8e8e93">${inBody.date??'-'}</div></div></div></div>`:'';
+  const ibUrlRowHTML=`<div class="inbody-quick-row"><input type="text" id="inbody-url-input" class="inbody-url-input" placeholder="Indsæt InBody link…"><button id="inbody-url-btn" class="inbody-url-btn">Importer</button></div><div class="inbody-url-status" id="inbody-url-status"></div>`;
 
   const readyHistSVG=readinessHistGraph(trends.hrv,trends.rhr,trends.sleep);
   const readyHistHTML=readyHistSVG?`<div class="readiness-hist"><div class="readiness-hist-label">Readiness history</div>${readyHistSVG}</div>`:'';
@@ -377,7 +361,7 @@ function render(data,cal){
       <div style="margin-top:12px"><div class="graph-legend"><div class="legend-item"><div class="legend-dot" style="background:#007aff"></div>CTL</div><div class="legend-item"><div class="legend-dot" style="background:#ff9f0a"></div>ATL</div></div>${fitnessGraph(fitnessHistory)}</div>
     </div>
     ${hmHTML}
-    ${subjHTML}${ibHTML}
+    ${subjHTML}${ibHTML}${ibUrlRowHTML}
     <div class="card"><div class="card-title">Today's sessions</div>${wHTML}</div>
     ${upcoming.length?`<div class="card"><div class="card-title">Upcoming sessions</div>${uHTML}</div>`:''}
   `;
@@ -386,8 +370,6 @@ function render(data,cal){
   document.getElementById('loading').style.display='none';
   if(_checkinSaved||hasSubj){document.getElementById('checkin-card').style.display='none';}
   else{document.getElementById('checkin-card').style.display='';}
-  if(_inbodySaved||inBody){document.getElementById('inbody-card').style.display='none';}
-  else{document.getElementById('inbody-card').style.display='';}
 }
 
 
@@ -401,7 +383,7 @@ function render(data,cal){
   }catch(e){
     document.getElementById('loading').style.display='none';
     document.getElementById('app').innerHTML=`<div class="error-card">Could not load data: ${e.message}</div>`;
-    ['app','inbody-card','checkin-card'].forEach(id=>document.getElementById(id).style.display='');
+    ['app','checkin-card'].forEach(id=>document.getElementById(id).style.display='');
   }
 })();
 
@@ -451,9 +433,6 @@ function render(data,cal){
 })();
 
 (function(){
-  let ib=null;
-  const EN_DAYS_IB=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-  const EN_MONTHS_IB=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const HEIGHT_CM=175.5;
   function parseIB(url){
     const m=url.match(/[?&]IBData=([^&\s]+)/);if(!m)throw new Error('No IBData found');
@@ -465,31 +444,28 @@ function render(data,cal){
     const date=`${ds.slice(0,4)}-${ds.slice(4,6)}-${ds.slice(6,8)}`,time=`${ts.slice(0,2)}:${ts.slice(2,4)}`;
     return{date,time,height:HEIGHT_CM,weight:w,fatMass:fat,bmi,fatPct:fp};
   }
-  function da(n){return String(n).replace('.',',');}
-  document.getElementById('inbody-parse-btn').addEventListener('click',()=>{
-    const url=document.getElementById('inbody-paste').value.trim();
-    const st=document.getElementById('inbody-status');st.textContent='';st.className='form-status';
+  async function importInbodyUrl(){
+    const input=document.getElementById('inbody-url-input'),btn=document.getElementById('inbody-url-btn'),st=document.getElementById('inbody-url-status');
+    if(!input||!btn||!st)return;
+    const url=input.value.trim();
+    st.textContent='';st.className='inbody-url-status';
+    if(!url)return;
+    btn.disabled=true;st.textContent='Importerer…';
     try{
-      ib=parseIB(url);const d=ib;
-      const dt=new Date(d.date+'T12:00:00');
-      document.getElementById('inbody-date-line').textContent=`${EN_DAYS_IB[dt.getDay()]} ${dt.getDate()} ${EN_MONTHS_IB[dt.getMonth()]} ${dt.getFullYear()} — ${d.time}`;
-      document.getElementById('ib-weight').textContent=da(d.weight)+' kg';
-      document.getElementById('ib-fatpct').textContent=da(d.fatPct)+' %';
-      document.getElementById('ib-fat').textContent=da(d.fatMass)+' kg';
-      document.getElementById('ib-bmi').textContent=da(d.bmi);
-      document.getElementById('inbody-results').style.display='block';
-    }catch(e){st.textContent='Error: '+e.message;st.className='form-status err';document.getElementById('inbody-results').style.display='none';}
-  });
-  document.getElementById('inbody-save-btn').addEventListener('click',async()=>{
-    if(!ib)return;const btn=document.getElementById('inbody-save-btn'),st=document.getElementById('inbody-save-status');
-    btn.disabled=true;st.textContent='Saving…';st.className='form-status';
-    const d=ib;
-    try{const r=await fetch('/api/update-wellness',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:d.date,weight:d.weight,bodyFat:d.fatPct})});
-    if(r.ok){_inbodySaved=true;if(_lastData){_lastData.inBody={date:d.date,weight:d.weight,fatPct:d.fatPct,fatMass:d.fatMass,bmi:d.bmi};render(_lastData,_lastCal);}}
-    else{const e=await r.json().catch(()=>({}));st.textContent='Error: '+(e.error||r.status)+(e.details?' — '+e.details:'');st.className='form-status err';}}
-    catch(err){st.textContent='Network error: '+err.message;st.className='form-status err';}
+      const d=parseIB(url);
+      const r=await fetch('/api/update-wellness',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:d.date,weight:d.weight,bodyFat:d.fatPct})});
+      if(r.ok){
+        st.textContent='Gemt';st.className='inbody-url-status ok';
+        if(_lastData){_lastData.inBody={date:d.date,weight:d.weight,fatPct:d.fatPct,fatMass:d.fatMass,bmi:d.bmi};render(_lastData,_lastCal);}
+      }else{
+        const e=await r.json().catch(()=>({}));
+        st.textContent='Fejl: '+(e.error||r.status)+(e.details?' — '+e.details:'');st.className='inbody-url-status err';
+      }
+    }catch(e){st.textContent='Fejl: '+e.message;st.className='inbody-url-status err';}
     finally{btn.disabled=false;}
-  });
+  }
+  document.addEventListener('click',e=>{if(e.target&&e.target.id==='inbody-url-btn')importInbodyUrl();});
+  document.addEventListener('keydown',e=>{if(e.target&&e.target.id==='inbody-url-input'&&e.key==='Enter')importInbodyUrl();});
 })();
 
 (function(){
