@@ -39,6 +39,12 @@
     .graph-legend { display: flex; gap: 14px; margin-bottom: 8px; }
     .legend-item { display: flex; align-items: center; gap: 4px; font-size: 11px; color: #8e8e93; }
     .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .pair-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid #f2f2f7; }
+    .pair-row:last-of-type { border-bottom: none; }
+    .pair-event { font-size: 15px; font-weight: 600; }
+    .pair-activity { font-size: 12px; color: #8e8e93; margin-top: 2px; }
+    .pair-btn { flex-shrink: 0; padding: 8px 14px; background: #007aff; color: #fff; font-size: 13px; font-weight: 700; border: none; border-radius: 10px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .pair-btn:disabled { background: #aeaeb2; cursor: default; }
     .workout-row { display: flex; justify-content: space-between; align-items: center; padding: 11px 0; border-bottom: 1px solid #f2f2f7; }
     .workout-row:last-child { border-bottom: none; }
     .workout-title { font-size: 16px; font-weight: 600; } .workout-time { font-size: 13px; color: #8e8e93; }
@@ -246,7 +252,7 @@ let _lastData=null,_lastCal=null,_checkinSaved=false;
 
 function render(data,cal){
   _lastData=data;_lastCal=cal;
-  const {latest,trends,sleep8,fitnessHistory,subjective}=data;
+  const {latest,trends,sleep8,fitnessHistory,subjective,pairSuggestions}=data;
   const rec=calcRecovery(latest.hrv,latest.restingHR,latest.sleepHours,latest.tsb);
   const slp=calcSleep(latest.sleepHours,latest.sleepScore,sleep8);
   const ready=calcReadiness(rec,slp);
@@ -270,6 +276,8 @@ function render(data,cal){
 
   const upcoming=(cal?.upcoming??[]);
   const uHTML=upcoming.length?upcoming.map(e=>{const d=new Date(e.date+'T12:00:00');return`<div class="upcoming-row"><div class="upcoming-date"><div class="udate-day">${EN_DAYS_S[d.getDay()]}</div><div class="udate-num">${d.getDate()}/${d.getMonth()+1}</div></div><div class="upcoming-info"><div class="upcoming-title">${e.title}</div><div class="upcoming-time">${e.timeStart??''}${e.timeEnd?'–'+e.timeEnd:''}</div></div></div>`;}).join(''):'';
+
+  const pairHTML=(pairSuggestions??[]).length?`<div class="card" id="pair-card"><div class="card-title">Match training</div>${pairSuggestions.map(p=>`<div class="pair-row" data-event="${p.eventId}" data-activity="${p.activityId}"><div class="pair-info"><div class="pair-event">${p.eventName}</div><div class="pair-activity">↳ matcher "${p.activityName}" (${p.activityType})</div></div><button class="pair-btn">Godkend</button></div><div class="form-status" data-pair-status="${p.eventId}"></div>`).join('')}</div>`:'';
 
 
   const SLBLS={mood:['Great','Good','Avg','Low'],soreness:['Low','Avg','High','Extreme'],fatigue:['Low','Avg','High','Extreme'],motivation:['Extreme','High','Middel','Low']};
@@ -308,6 +316,7 @@ function render(data,cal){
       </div>
       <div style="margin-top:12px"><div class="graph-legend"><div class="legend-item"><div class="legend-dot" style="background:#007aff"></div>CTL</div><div class="legend-item"><div class="legend-dot" style="background:#ff9f0a"></div>ATL</div></div>${fitnessGraph(fitnessHistory)}</div>
     </div>
+    ${pairHTML}
     ${subjHTML}
     <div class="card"><div class="card-title">Today's sessions</div>${wHTML}</div>
     ${upcoming.length?`<div class="card"><div class="card-title">Upcoming sessions</div>${uHTML}</div>`:''}
@@ -376,6 +385,27 @@ function render(data,cal){
         else{if(st){st.textContent='Fejl ved gemning';st.className='note-status err';}}
       }catch(err){if(st){st.textContent='Netværksfejl';st.className='note-status err';}}
     },1500);
+  });
+})();
+
+(function(){
+  document.addEventListener('click',async e=>{
+    const btn=e.target.closest('.pair-btn');
+    if(!btn)return;
+    const row=btn.closest('.pair-row');
+    const eventId=row.dataset.event,activityId=row.dataset.activity;
+    const st=document.querySelector(`[data-pair-status="${eventId}"]`);
+    btn.disabled=true;if(st){st.textContent='Godkender…';st.className='form-status';}
+    try{
+      const r=await fetch('/api/pair-event',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({eventId,activityId})});
+      if(r.ok){
+        if(_lastData){_lastData.pairSuggestions=(_lastData.pairSuggestions??[]).filter(p=>String(p.eventId)!==String(eventId));render(_lastData,_lastCal);}
+      }else{
+        const e2=await r.json().catch(()=>({}));
+        if(st){st.textContent='Fejl: '+(e2.error||r.status);st.className='form-status err';}
+        btn.disabled=false;
+      }
+    }catch(err){if(st){st.textContent='Netværksfejl';st.className='form-status err';}btn.disabled=false;}
   });
 })();
 

@@ -17,17 +17,37 @@ export default async () => {
   const auth    = 'Basic ' + btoa('API_KEY:' + apiKey);
   const baseUrl = `https://intervals.icu/api/v1/athlete/${athleteId}`;
 
-  const [wellnessRes, eventsRes] = await Promise.all([
-    fetch(`${baseUrl}/wellness?oldest=${start}&newest=${end}`, { headers: { Authorization: auth } }),
-    fetch(`${baseUrl}/events?oldest=${end}&newest=${end}`,    { headers: { Authorization: auth } }),
+  const [wellnessRes, eventsRes, activitiesRes] = await Promise.all([
+    fetch(`${baseUrl}/wellness?oldest=${start}&newest=${end}`,   { headers: { Authorization: auth } }),
+    fetch(`${baseUrl}/events?oldest=${end}&newest=${end}`,       { headers: { Authorization: auth } }),
+    fetch(`${baseUrl}/activities?oldest=${end}&newest=${end}`,   { headers: { Authorization: auth } }),
   ]);
 
   if (!wellnessRes.ok) {
     return json({ error: 'Intervals wellness API fejl', status: wellnessRes.status }, 502);
   }
 
-  const rawWellness = await wellnessRes.json();
-  const rawEvents   = eventsRes.ok ? await eventsRes.json() : [];
+  const rawWellness   = await wellnessRes.json();
+  const rawEvents     = eventsRes.ok ? await eventsRes.json() : [];
+  const rawActivities = activitiesRes.ok ? await activitiesRes.json() : [];
+
+  // Find dagens planlagte sessions der ikke automatisk er parret med en
+  // uploadet aktivitet, og forslå et match ud fra sportstype.
+  const unpairedEvents     = rawEvents.filter(e => e.category === 'WORKOUT' && !e.paired_activity_id);
+  const unpairedActivities = rawActivities.filter(a => !a.paired_event_id);
+  const pairSuggestions = unpairedEvents
+    .map(e => {
+      const match = unpairedActivities.find(a => a.type === e.type);
+      return match ? {
+        eventId:      e.id,
+        eventName:    e.name,
+        eventType:    e.type,
+        activityId:   match.id,
+        activityName: match.name,
+        activityType: match.type,
+      } : null;
+    })
+    .filter(Boolean);
 
   // API returns an array of objects with an `id` field for the date
   const days = (Array.isArray(rawWellness) ? rawWellness : Object.entries(rawWellness).map(([k, v]) => ({ id: k, ...v })))
@@ -114,6 +134,7 @@ export default async () => {
       vo2max: round1(yesterdayEntry.vo2max ?? yesterdayEntry.vo2Max  ?? null),
     },
     events: rawEvents,
+    pairSuggestions,
   });
 };
 
