@@ -10,7 +10,7 @@ export default async () => {
 
   const today = new Date();
   const end   = fmt(today);
-  const start = fmt(new Date(today - 60 * 86_400_000));
+  const start = fmt(new Date(today - 30 * 86_400_000));
 
   const auth    = 'Basic ' + btoa('API_KEY:' + apiKey);
   const baseUrl = `https://intervals.icu/api/v1/athlete/${athleteId}`;
