@@ -93,9 +93,13 @@
     .ptr-indicator { display: flex; justify-content: center; align-items: center; height: 0; overflow: hidden; transition: height 0.2s; }
     .ptr-spinner { width: 22px; height: 22px; border: 2.5px solid #e5e5ea; border-top-color: #007aff; border-radius: 50%; animation: ptr-spin 0.7s linear infinite; }
     @keyframes ptr-spin { to { transform: rotate(360deg); } }
+    .topnav { display: flex; justify-content: flex-end; padding: 12px 16px 0; }
+    .topnav .nav-link { font-size: 13px; font-weight: 600; color: #007aff; text-decoration: none; padding: 6px 12px; border-radius: 8px; }
+    .topnav .nav-link:active { background: #f0f6ff; }
   </style>
 </head>
 <body>
+  <div class="topnav"><a class="nav-link" href="/dashboard.html">Dashboard →</a></div>
   <div id="ptr-indicator" class="ptr-indicator"><div class="ptr-spinner"></div></div>
   <div id="loading">
     <div class="skel-header skeleton"></div>
