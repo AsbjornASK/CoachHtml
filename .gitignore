@@ -5,9 +5,12 @@
 
 # Local dev / scratch
 .claude/
+.env
+.env.*
 Code/logs/
 Code/.netlify/
 Code/reference-images/
+.vercel/
 
 # Third-party clones (kept locally, not deployed)
 intervals-mcp-server/
