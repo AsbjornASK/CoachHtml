@@ -318,11 +318,11 @@ function render(data){
     stressGroup.querySelectorAll('button').forEach(b=>b.disabled=true);
     const yesterday=new Date(Date.now()-86400000).toISOString().slice(0,10);
     try{
-      const r=await fetch('/api/update-wellness',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:yesterday,stressLevel:val})});
+      const r=await fetch('/api/update-wellness',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:yesterday,stress:val})});
       if(r.ok){
         stressSaveStatus.textContent='Gemt ✓';
         stressSaveStatus.className='checkin-status ok';
-        if(_lastData&&_lastData.healthMarkers)_lastData.healthMarkers.stressLevel=val;
+        if(_lastData&&_lastData.healthMarkers)_lastData.healthMarkers.stressLevel=val; // stressLevel mirrors the saved stress field
         const gi=document.getElementById('stress-grid-item');
         const STRESS_GRID=[{lbl:'LAV'},{lbl:'MODERAT'},{lbl:'HØJ'},{lbl:'MEGET HØJ'}];
         const SC=['s1','s2','s3','s4'];
