@@ -418,10 +418,9 @@ function render(data){
       refreshing=true;
       ptr.style.height='48px';
       try{
-        const [r,ry]=await Promise.all([fetch('/api/get-data'),fetch('/api/get-yesterday-wellness')]);
+        const r=await fetch('/api/get-vitals');
         if(!r.ok)throw new Error('Data error: '+r.status);
         const data=await r.json();
-        if(ry.ok){const yw=await ry.json();data.healthMarkers={...data.healthMarkers,...yw};}
         render(data);
       }catch(e){
         document.getElementById('app').innerHTML=`<div class="error-card">Could not load data: ${e.message}</div>`;
