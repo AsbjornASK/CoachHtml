@@ -17,10 +17,11 @@ export default async () => {
   const auth    = 'Basic ' + btoa('API_KEY:' + apiKey);
   const baseUrl = `https://intervals.icu/api/v1/athlete/${athleteId}`;
 
-  const [wellnessRes, eventsRes, activitiesRes] = await Promise.all([
+  const [wellnessRes, eventsRes, activitiesRes, ywRes] = await Promise.all([
     fetch(`${baseUrl}/wellness?oldest=${start}&newest=${end}`,   { headers: { Authorization: auth } }),
     fetch(`${baseUrl}/events?oldest=${end}&newest=${end}`,       { headers: { Authorization: auth } }),
     fetch(`${baseUrl}/activities?oldest=${end}&newest=${end}`,   { headers: { Authorization: auth } }),
+    fetch(`${baseUrl}/wellness/${yesterday}`,                    { headers: { Authorization: auth } }),
   ]);
 
   if (!wellnessRes.ok) {
@@ -30,6 +31,7 @@ export default async () => {
   const rawWellness   = await wellnessRes.json();
   const rawEvents     = eventsRes.ok ? await eventsRes.json() : [];
   const rawActivities = activitiesRes.ok ? await activitiesRes.json() : [];
+  const yw            = ywRes.ok ? await ywRes.json() : {};
 
   // Find dagens planlagte sessions der ikke automatisk er parret med en
   // uploadet aktivitet, og forslå et match ud fra sportstype.
@@ -132,13 +134,13 @@ export default async () => {
       steps:        yesterdayEntry.steps  ?? null,
       spo2:         round1(yesterdayEntry.spO2   ?? yesterdayEntry.spo2   ?? null),
       vo2max:       round1(yesterdayEntry.vo2max ?? yesterdayEntry.vo2Max  ?? null),
-      stressLevel:  yesterdayEntry.stress  ?? null,
-      sleepQuality: round1(yesterdayEntry.sleepQuality ?? null),
-      mood:         yesterdayEntry.mood       ?? null,
-      soreness:     yesterdayEntry.soreness   ?? null,
-      fatigue:      yesterdayEntry.fatigue    ?? null,
-      motivation:   yesterdayEntry.motivation ?? null,
-      comments:     yesterdayEntry.comments   ?? null,
+      mood:         yw.mood          ?? yesterdayEntry.mood        ?? null,
+      soreness:     yw.soreness     ?? yesterdayEntry.soreness    ?? null,
+      fatigue:      yw.fatigue      ?? yesterdayEntry.fatigue     ?? null,
+      motivation:   yw.motivation   ?? yesterdayEntry.motivation  ?? null,
+      stress:       yw.stress       ?? yesterdayEntry.stress      ?? null,
+      sleepQuality: yw.sleepQuality ?? round1(yesterdayEntry.sleepQuality ?? null),
+      comments:     yw.comments    ?? yesterdayEntry.comments   ?? null,
     },
     events: rawEvents,
     pairSuggestions,

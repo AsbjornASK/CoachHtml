@@ -235,7 +235,7 @@ function render(data){
 
   // Stress check-in: 1-4 scale
   const STRESS=[{lbl:'LAV',c:'c-green'},{lbl:'MODERAT',c:'c-yellow'},{lbl:'HØJ',c:'c-red'},{lbl:'MEGET HØJ',c:'c-purple'}];
-  const rawStress=yw.stress??null;
+  const rawStress=(yw.stress??hm.stress)??null;
   const stressVal=(rawStress!=null&&rawStress>=1&&rawStress<=4)?rawStress:null;
   const stressBtns=STRESS.map((s,i)=>{
     const v=i+1;
