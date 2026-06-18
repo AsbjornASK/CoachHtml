@@ -232,7 +232,8 @@ function render(data){
 
   // Stress check-in: 1-4 scale
   const STRESS=[{lbl:'LAV',c:'c-green'},{lbl:'MODERAT',c:'c-yellow'},{lbl:'HØJ',c:'c-red'},{lbl:'MEGET HØJ',c:'c-purple'}];
-  const stressVal=hm.stressLevel??null;
+  // Only accept 1-4 (manual check-in scale) — Garmin syncs 0-100 which would crash
+  const stressVal=(hm.stressLevel!=null&&hm.stressLevel>=1&&hm.stressLevel<=4)?hm.stressLevel:null;
   const stressBtns=STRESS.map((s,i)=>{
     const v=i+1;
     const sel=stressVal===v?`selected ${s.c}`:'';
