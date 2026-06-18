@@ -262,11 +262,11 @@ function render(data){
     <div class="card-title">Check-in i går</div>
     <div class="subjective-grid">${gridItems.join('')}</div>
     ${yesterdayNoteHTML}
-    <div class="checkin-row" style="margin-top:12px;border-top:1px solid #f2f2f7;padding-top:12px;">
+    <div class="checkin-row" id="stress-checkin-row" style="margin-top:12px;border-top:1px solid #f2f2f7;padding-top:12px;${stressVal!=null?'display:none':''}">
       <div class="checkin-label">Stress<small>Check-in</small></div>
       <div class="btn-group" id="stress-btn-group">${stressBtns}</div>
     </div>
-    <div class="checkin-status" id="stress-save-status"></div>
+    <div class="checkin-status" id="stress-save-status" style="${stressVal!=null?'display:none':''}"></div>
   </div>`;
 
   function ibDelta(cur,prev){
@@ -320,13 +320,12 @@ function render(data){
     try{
       const r=await fetch('/api/update-wellness',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:yesterday,stress:val})});
       if(r.ok){
-        stressSaveStatus.textContent='Gemt ✓';
-        stressSaveStatus.className='checkin-status ok';
-        if(_lastData&&_lastData.healthMarkers)_lastData.healthMarkers.stressLevel=val; // stressLevel mirrors the saved stress field
-        const gi=document.getElementById('stress-grid-item');
-        const STRESS_GRID=[{lbl:'LAV'},{lbl:'MODERAT'},{lbl:'HØJ'},{lbl:'MEGET HØJ'}];
-        const SC=['s1','s2','s3','s4'];
-        if(gi){gi.className=`subj-item ${SC[val-1]}`;gi.querySelector('.subj-value').textContent=STRESS_GRID[val-1].lbl;}
+        // Skjul check-in rækken og hent data igen
+        const row=stressGroup.closest('.checkin-row');
+        if(row)row.style.display='none';
+        stressSaveStatus.style.display='none';
+        const fresh=await fetch('/api/get-data');
+        if(fresh.ok){const d=await fresh.json();render(d);}
       }else{
         const er=await r.json().catch(()=>({}));
         stressSaveStatus.textContent='Fejl: '+(er.error||r.status);
