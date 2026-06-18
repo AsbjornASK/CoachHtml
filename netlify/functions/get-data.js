@@ -17,11 +17,10 @@ export default async () => {
   const auth    = 'Basic ' + btoa('API_KEY:' + apiKey);
   const baseUrl = `https://intervals.icu/api/v1/athlete/${athleteId}`;
 
-  const [wellnessRes, eventsRes, activitiesRes, ywRes] = await Promise.all([
+  const [wellnessRes, eventsRes, activitiesRes] = await Promise.all([
     fetch(`${baseUrl}/wellness?oldest=${start}&newest=${end}`,   { headers: { Authorization: auth } }),
     fetch(`${baseUrl}/events?oldest=${end}&newest=${end}`,       { headers: { Authorization: auth } }),
     fetch(`${baseUrl}/activities?oldest=${end}&newest=${end}`,   { headers: { Authorization: auth } }),
-    fetch(`${baseUrl}/wellness/${yesterday}`,                    { headers: { Authorization: auth } }),
   ]);
 
   if (!wellnessRes.ok) {
@@ -31,7 +30,13 @@ export default async () => {
   const rawWellness   = await wellnessRes.json();
   const rawEvents     = eventsRes.ok ? await eventsRes.json() : [];
   const rawActivities = activitiesRes.ok ? await activitiesRes.json() : [];
-  const yw            = ywRes.ok ? await ywRes.json() : {};
+
+  // Hent gårsdagens wellness-entry direkte for pålidelige subjektive felter
+  let yw = {};
+  try {
+    const ywRes = await fetch(`${baseUrl}/wellness/${yesterday}`, { headers: { Authorization: auth } });
+    if (ywRes.ok) yw = await ywRes.json();
+  } catch { /* ignorer fejl — viser bare blanke værdier */ }
 
   // Find dagens planlagte sessions der ikke automatisk er parret med en
   // uploadet aktivitet, og forslå et match ud fra sportstype.
