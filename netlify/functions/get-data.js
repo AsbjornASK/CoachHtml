@@ -31,13 +31,6 @@ export default async () => {
   const rawEvents     = eventsRes.ok ? await eventsRes.json() : [];
   const rawActivities = activitiesRes.ok ? await activitiesRes.json() : [];
 
-  // Hent gårsdagens wellness-entry direkte for pålidelige subjektive felter
-  let yw = {};
-  try {
-    const ywRes = await fetch(`${baseUrl}/wellness/${yesterday}`, { headers: { Authorization: auth } });
-    if (ywRes.ok) yw = await ywRes.json();
-  } catch { /* ignorer fejl — viser bare blanke værdier */ }
-
   // Find dagens planlagte sessions der ikke automatisk er parret med en
   // uploadet aktivitet, og forslå et match ud fra sportstype.
   const unpairedEvents     = rawEvents.filter(e => e.category === 'WORKOUT' && !e.paired_activity_id);
@@ -142,13 +135,13 @@ export default async () => {
     },
     yesterdayWellness: {
       date:         yesterday,
-      mood:         yw.mood         ?? yesterdayEntry.mood         ?? null,
-      soreness:     yw.soreness     ?? yesterdayEntry.soreness     ?? null,
-      fatigue:      yw.fatigue      ?? yesterdayEntry.fatigue      ?? null,
-      motivation:   yw.motivation   ?? yesterdayEntry.motivation   ?? null,
-      stress:       yw.stress       ?? yesterdayEntry.stress       ?? null,
-      sleepQuality: yw.sleepQuality ?? yesterdayEntry.sleepQuality ?? null,
-      comments:     yw.comments     ?? yesterdayEntry.comments     ?? null,
+      mood:         yesterdayEntry.mood         ?? null,
+      soreness:     yesterdayEntry.soreness     ?? null,
+      fatigue:      yesterdayEntry.fatigue      ?? null,
+      motivation:   yesterdayEntry.motivation   ?? null,
+      stress:       yesterdayEntry.stress       ?? null,
+      sleepQuality: yesterdayEntry.sleepQuality ?? null,
+      comments:     yesterdayEntry.comments     ?? null,
     },
     events: rawEvents,
     pairSuggestions,
