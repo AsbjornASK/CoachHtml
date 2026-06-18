@@ -1,3 +1,5 @@
+export const config = { runtime: 'edge' };
+
 export default async () => {
   const apiKey    = process.env.INTERVALS_API_KEY;
   const athleteId = process.env.INTERVALS_ATHLETE_ID;
@@ -26,8 +28,8 @@ export default async () => {
   const rawEvents     = eventsRes.ok     ? await eventsRes.json()     : [];
   const rawActivities = activitiesRes.ok ? await activitiesRes.json() : [];
 
-  const days = parseDays(rawWellness);
-  const last7 = days.slice(-7);
+  const days   = parseDays(rawWellness);
+  const last7  = days.slice(-7);
   const latest = findLatest(days, d => d.restingHR && d.restingHR < 65);
   const todayEntry = days.find(d => d.date === end) ?? {};
 
@@ -43,13 +45,13 @@ export default async () => {
   return json({
     today: end,
     latest: {
-      date:       latest?.date        ?? null,
-      hrv:        latest?.hrv         ?? null,
-      restingHR:  latest?.restingHR   ?? null,
-      sleepHours: latest?.sleepSecs   ? round1(latest.sleepSecs / 3600) : null,
-      sleepScore: latest?.sleepScore  ?? null,
-      ctl:        round1(latest?.ctl  ?? null),
-      atl:        round1(latest?.atl  ?? null),
+      date:       latest?.date       ?? null,
+      hrv:        latest?.hrv        ?? null,
+      restingHR:  latest?.restingHR  ?? null,
+      sleepHours: latest?.sleepSecs  ? round1(latest.sleepSecs / 3600) : null,
+      sleepScore: latest?.sleepScore ?? null,
+      ctl:        round1(latest?.ctl ?? null),
+      atl:        round1(latest?.atl ?? null),
       tsb:        latest?.ctl != null && latest?.atl != null ? round1(latest.ctl - latest.atl) : null,
       rampRate:   round1(latest?.rampRate ?? null),
     },
@@ -98,5 +100,3 @@ function findLatest(days, pred) {
   for (let i = days.length - 1; i >= 0; i--) if (pred(days[i])) return days[i];
   return days[days.length - 1] ?? null;
 }
-
-export const config = { path: '/api/get-coach' };

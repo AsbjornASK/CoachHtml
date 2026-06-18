@@ -1,3 +1,5 @@
+export const config = { runtime: 'edge' };
+
 export default async () => {
   const apiKey    = process.env.INTERVALS_API_KEY;
   const athleteId = process.env.INTERVALS_ATHLETE_ID;
@@ -22,17 +24,17 @@ export default async () => {
     return json({ error: 'Intervals wellness API fejl', status: wellnessRes.status }, 502);
   }
 
-  const rawWellness = await wellnessRes.json();
-  const yw          = ywRes.ok ? await ywRes.json() : {};
+  const rawWellness    = await wellnessRes.json();
+  const yw             = ywRes.ok ? await ywRes.json() : {};
 
-  const days          = parseDays(rawWellness);
-  const last7         = days.slice(-7);
-  const latest        = findLatest(days, d => d.restingHR && d.restingHR < 65);
+  const days           = parseDays(rawWellness);
+  const last7          = days.slice(-7);
+  const latest         = findLatest(days, d => d.restingHR && d.restingHR < 65);
   const yesterdayEntry = days.find(d => d.date === yesterday) ?? {};
 
   const HEIGHT = 1.755;
   const bodyCompEntries = days.filter(d => d.weight && (d.fatMass || d.bodyFat));
-  const bodyCompEntry   = bodyCompEntries[bodyCompEntries.length - 1];
+  const bodyComp        = bodyCompEntries[bodyCompEntries.length - 1];
   const prevBodyComp    = bodyCompEntries[bodyCompEntries.length - 2];
   const toInBody = e => {
     if (!e) return null;
@@ -43,16 +45,16 @@ export default async () => {
   return json({
     today: end,
     latest: {
-      date:            latest?.date           ?? null,
-      hrv:             latest?.hrv            ?? null,
-      restingHR:       latest?.restingHR      ?? null,
-      sleepHours:      latest?.sleepSecs      ? round1(latest.sleepSecs / 3600) : null,
-      sleepScore:      latest?.sleepScore     ?? null,
-      sleepQuality:    latest?.sleepQuality   ?? null,
-      ctl:             round1(latest?.ctl     ?? null),
-      atl:             round1(latest?.atl     ?? null),
-      tsb:             latest?.ctl != null && latest?.atl != null ? round1(latest.ctl - latest.atl) : null,
-      rampRate:        round1(latest?.rampRate ?? null),
+      date:         latest?.date         ?? null,
+      hrv:          latest?.hrv          ?? null,
+      restingHR:    latest?.restingHR    ?? null,
+      sleepHours:   latest?.sleepSecs    ? round1(latest.sleepSecs / 3600) : null,
+      sleepScore:   latest?.sleepScore   ?? null,
+      sleepQuality: latest?.sleepQuality ?? null,
+      ctl:          round1(latest?.ctl   ?? null),
+      atl:          round1(latest?.atl   ?? null),
+      tsb:          latest?.ctl != null && latest?.atl != null ? round1(latest.ctl - latest.atl) : null,
+      rampRate:     round1(latest?.rampRate ?? null),
     },
     trends: {
       hrv:        last7.map(d => d.hrv ?? null),
@@ -79,7 +81,7 @@ export default async () => {
       sleepQuality: yw.sleepQuality ?? yesterdayEntry.sleepQuality ?? null,
       comments:     yw.comments     ?? yesterdayEntry.comments     ?? null,
     },
-    inBody: bodyCompEntry ? { ...toInBody(bodyCompEntry), prev: toInBody(prevBodyComp) } : null,
+    inBody: bodyComp ? { ...toInBody(bodyComp), prev: toInBody(prevBodyComp) } : null,
   });
 };
 
@@ -102,5 +104,3 @@ function findLatest(days, pred) {
   for (let i = days.length - 1; i >= 0; i--) if (pred(days[i])) return days[i];
   return days[days.length - 1] ?? null;
 }
-
-export const config = { path: '/api/get-vitals' };
