@@ -42,6 +42,29 @@
     .inbody-url-btn:disabled { background: #aeaeb2; cursor: default; }
     .inbody-url-status { text-align: center; font-size: 12px; margin: 4px 12px 12px; min-height: 14px; }
     .inbody-url-status.ok { color: #30d158; font-weight: 600; } .inbody-url-status.err { color: #ff3b30; }
+    .checkin-row { display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid #f2f2f7; gap: 8px; }
+    .checkin-row:last-of-type { border-bottom: none; }
+    .checkin-label { font-size: 13px; font-weight: 500; color: #1c1c1e; width: 88px; flex-shrink: 0; line-height: 1.2; }
+    .checkin-label small { display: block; font-size: 10px; font-weight: 400; color: #aeaeb2; }
+    .btn-group { display: flex; flex: 1; gap: 4px; }
+    .btn-group button { flex: 1; padding: 6px 2px; font-size: 10px; font-weight: 700; border: 1.5px solid #e5e5ea; border-radius: 8px; background: #fff; color: #8e8e93; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .btn-group button.selected { background: #007aff; color: #fff; border-color: #007aff; }
+    .btn-group button.selected.c-green  { background: #30d158; border-color: #30d158; }
+    .btn-group button.selected.c-yellow { background: #ff9f0a; border-color: #ff9f0a; }
+    .btn-group button.selected.c-red    { background: #ff3b30; border-color: #ff3b30; }
+    .btn-group button.selected.c-purple { background: #bf5af2; border-color: #bf5af2; }
+    .btn-group button:disabled { cursor: default; opacity: 0.85; }
+    .submit-btn { width: 100%; margin-top: 14px; padding: 13px; color: #fff; font-size: 16px; font-weight: 700; border: none; border-radius: 12px; cursor: pointer; -webkit-tap-highlight-color: transparent; background: #007aff; }
+    .submit-btn:disabled { background: #aeaeb2 !important; cursor: default; }
+    .checkin-status { font-size: 12px; color: #aeaeb2; margin-top: 6px; min-height: 14px; text-align: center; }
+    .checkin-status.ok { color: #30d158; font-weight: 600; }
+    .checkin-status.err { color: #ff3b30; }
+    .subjective-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 2px; }
+    .subj-item { text-align: center; padding: 8px; border-radius: 10px; }
+    .subj-item.s1 { background: #e8f8ee; color: #1a7a33; } .subj-item.s2 { background: #fff8e1; color: #b86e00; } .subj-item.s3 { background: #ffe5e5; color: #c0392b; } .subj-item.s4 { background: #f3e8ff; color: #7a1fa2; }
+    .subj-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; opacity: 0.7; }
+    .subj-value { font-size: 14px; font-weight: 700; margin-top: 2px; }
+    .yesterday-note { font-size: 13px; color: #3a3a3c; background: #f9f9fb; border-radius: 10px; padding: 10px 12px; margin-top: 10px; line-height: 1.5; border: 1.5px solid #e5e5ea; }
     .skeleton { animation: pulse 1.4s ease-in-out infinite; background: #e5e5ea; border-radius: 16px; }
     @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.4} }
     .skel-header { height: 80px; margin: 24px 12px 12px; }
@@ -198,6 +221,53 @@ function render(data){
     <div><div class="metric-label">VO₂ max</div><div class="metric-value ${hmColor('vo2max',hm.vo2max)}">${fmtN(hm.vo2max)}<span style="font-size:13px;font-weight:500;color:#8e8e93"> ml/kg</span></div><div class="metric-sub">Aerobic capacity</div></div>
   </div></div>`;
 
+  // Sleep quality: Intervals 1-4 scale (1=best, 4=worst)
+  const SQ=[{lbl:'HØJ',c:'c-green'},{lbl:'GOD',c:'c-yellow'},{lbl:'GNS',c:'c-red'},{lbl:'DÅRLIG',c:'c-purple'}];
+  const sqVal=hm.sleepQuality??null;
+  const sqBtns=SQ.map((s,i)=>{
+    const v=i+1;
+    const sel=sqVal===v?`selected ${s.c}`:'';
+    return`<button class="${sel}" data-color="${s.c}" disabled>${s.lbl}</button>`;
+  }).join('');
+
+  // Stress check-in: 1-4 scale
+  const STRESS=[{lbl:'LAV',c:'c-green'},{lbl:'MODERAT',c:'c-yellow'},{lbl:'HØJ',c:'c-red'},{lbl:'MEGET HØJ',c:'c-purple'}];
+  const stressVal=hm.stressLevel??null;
+  const stressBtns=STRESS.map((s,i)=>{
+    const v=i+1;
+    const sel=stressVal===v?`selected ${s.c}`:'';
+    return`<button class="${sel}" data-val="${v}" data-color="${s.c}">${s.lbl}</button>`;
+  }).join('');
+
+  const SLBLS={mood:['Great','Good','Avg','Low'],soreness:['Low','Avg','High','Extreme'],fatigue:['Low','Avg','High','Extreme'],motivation:['Extreme','High','Middel','Low']};
+  const SLBLS_DA={mood:'Humør',soreness:'Soreness',fatigue:'Fatigue',motivation:'Motivation'};
+
+  function subjItem(label,val,labels,colorClass){
+    return`<div class="subj-item ${colorClass}"><div class="subj-label">${label}</div><div class="subj-value">${val!=null?labels[val-1]:'-'}</div></div>`;
+  }
+
+  const stressColorClass=v=>v==null?'s2':v===1?'s1':v===2?'s2':v===3?'s3':'s4';
+  const sqColorClass=v=>v==null?'s2':v===1?'s1':v===2?'s2':v===3?'s3':'s4';
+
+  const gridItems=[
+    ...['mood','soreness','fatigue','motivation'].map(f=>{const v=hm[f];return subjItem(SLBLS_DA[f],v,SLBLS[f],`s${v??2}`);}),
+    `<div class="subj-item ${sqColorClass(sqVal)}" id="sq-grid-item"><div class="subj-label">Søvnkvalitet<span style="font-size:9px;opacity:0.6"> auto</span></div><div class="subj-value">${sqVal!=null?SQ[sqVal-1].lbl:'-'}</div></div>`,
+    `<div class="subj-item ${stressColorClass(stressVal)}" id="stress-grid-item"><div class="subj-label">Stress</div><div class="subj-value">${stressVal!=null?STRESS[stressVal-1].lbl:'-'}</div></div>`,
+  ];
+
+  const yesterdayNoteHTML=hm.comments?`<div class="yesterday-note">${hm.comments}</div>`:'';
+
+  const wellbeingHTML=`<div class="card" id="wellbeing-card">
+    <div class="card-title">Check-in i går</div>
+    <div class="subjective-grid">${gridItems.join('')}</div>
+    ${yesterdayNoteHTML}
+    <div class="checkin-row" style="margin-top:12px;border-top:1px solid #f2f2f7;padding-top:12px;">
+      <div class="checkin-label">Stress<small>Check-in</small></div>
+      <div class="btn-group" id="stress-btn-group">${stressBtns}</div>
+    </div>
+    <div class="checkin-status" id="stress-save-status"></div>
+  </div>`;
+
   function ibDelta(cur,prev){
     if(cur==null||prev==null)return'';
     const d=Math.round((cur-prev)*10)/10;
@@ -223,11 +293,51 @@ function render(data){
     </div>
     ${tlrHTML(latest.tsb)}
     ${hmHTML}
+    ${wellbeingHTML}
     ${ibHTML}${ibUrlRowHTML}
   `;
 
   document.getElementById('app').style.display='';
   document.getElementById('loading').style.display='none';
+
+  // Stress check-in logic
+  const stressGroup=document.getElementById('stress-btn-group');
+  const stressSaveStatus=document.getElementById('stress-save-status');
+
+  stressGroup.addEventListener('click',async e=>{
+    const btn=e.target.closest('button[data-val]');
+    if(!btn||btn.disabled)return;
+    const val=parseInt(btn.dataset.val,10);
+    stressGroup.querySelectorAll('button').forEach(b=>{
+      b.className='';
+      if(parseInt(b.dataset.val,10)===val){b.classList.add('selected');if(b.dataset.color)b.classList.add(b.dataset.color);}
+    });
+    stressSaveStatus.textContent='Gemmer…';
+    stressSaveStatus.className='checkin-status';
+    stressGroup.querySelectorAll('button').forEach(b=>b.disabled=true);
+    const yesterday=new Date(Date.now()-86400000).toISOString().slice(0,10);
+    try{
+      const r=await fetch('/api/update-wellness',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:yesterday,stressLevel:val})});
+      if(r.ok){
+        stressSaveStatus.textContent='Gemt ✓';
+        stressSaveStatus.className='checkin-status ok';
+        if(_lastData&&_lastData.healthMarkers)_lastData.healthMarkers.stressLevel=val;
+        const gi=document.getElementById('stress-grid-item');
+        const STRESS_GRID=[{lbl:'LAV'},{lbl:'MODERAT'},{lbl:'HØJ'},{lbl:'MEGET HØJ'}];
+        const SC=['s1','s2','s3','s4'];
+        if(gi){gi.className=`subj-item ${SC[val-1]}`;gi.querySelector('.subj-value').textContent=STRESS_GRID[val-1].lbl;}
+      }else{
+        const er=await r.json().catch(()=>({}));
+        stressSaveStatus.textContent='Fejl: '+(er.error||r.status);
+        stressSaveStatus.className='checkin-status err';
+      }
+    }catch(e){
+      stressSaveStatus.textContent='Fejl: '+e.message;
+      stressSaveStatus.className='checkin-status err';
+    }finally{
+      stressGroup.querySelectorAll('button').forEach(b=>b.disabled=false);
+    }
+  });
 }
 
 (async()=>{
