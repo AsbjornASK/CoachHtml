@@ -188,7 +188,7 @@ let _lastData=null;
 
 function render(data){
   _lastData=data;
-  const {latest,trends,sleep8,inBody,healthMarkers}=data;
+  const {latest,trends,sleep8,inBody,healthMarkers,yesterdayWellness}=data;
   const rec=calcRecovery(latest.hrv,latest.restingHR,latest.sleepHours,latest.tsb);
   const slp=calcSleep(latest.sleepHours,latest.sleepScore,sleep8);
   const ready=calcReadiness(rec,slp);
@@ -222,8 +222,11 @@ function render(data){
   </div></div>`;
 
   // Sleep quality: Intervals 1-4 scale (1=best, 4=worst)
+  // Use dedicated yesterday endpoint data; fall back to healthMarkers if unavailable
+  const yw=yesterdayWellness??{};
+
   const SQ=[{lbl:'HØJ',c:'c-green'},{lbl:'GOD',c:'c-yellow'},{lbl:'GNS',c:'c-red'},{lbl:'DÅRLIG',c:'c-purple'}];
-  const sqVal=hm.sleepQuality??null;
+  const sqVal=(yw.sleepQuality??hm.sleepQuality)??null;
   const sqBtns=SQ.map((s,i)=>{
     const v=i+1;
     const sel=sqVal===v?`selected ${s.c}`:'';
@@ -232,8 +235,8 @@ function render(data){
 
   // Stress check-in: 1-4 scale
   const STRESS=[{lbl:'LAV',c:'c-green'},{lbl:'MODERAT',c:'c-yellow'},{lbl:'HØJ',c:'c-red'},{lbl:'MEGET HØJ',c:'c-purple'}];
-  // Only accept 1-4 (manual check-in scale) — Garmin syncs 0-100 which would crash
-  const stressVal=(hm.stressLevel!=null&&hm.stressLevel>=1&&hm.stressLevel<=4)?hm.stressLevel:null;
+  const rawStress=yw.stress??null;
+  const stressVal=(rawStress!=null&&rawStress>=1&&rawStress<=4)?rawStress:null;
   const stressBtns=STRESS.map((s,i)=>{
     const v=i+1;
     const sel=stressVal===v?`selected ${s.c}`:'';
@@ -251,12 +254,12 @@ function render(data){
   const sqColorClass=v=>v==null?'s2':v===1?'s1':v===2?'s2':v===3?'s3':'s4';
 
   const gridItems=[
-    ...['mood','soreness','fatigue','motivation'].map(f=>{const v=hm[f];return subjItem(SLBLS_DA[f],v,SLBLS[f],`s${v??2}`);}),
+    ...['mood','soreness','fatigue','motivation'].map(f=>{const v=(yw[f]??hm[f])??null;return subjItem(SLBLS_DA[f],v,SLBLS[f],`s${v??2}`);}),
     `<div class="subj-item ${sqColorClass(sqVal)}" id="sq-grid-item"><div class="subj-label">Søvnkvalitet<span style="font-size:9px;opacity:0.6"> auto</span></div><div class="subj-value">${sqVal!=null?SQ[sqVal-1].lbl:'-'}</div></div>`,
     `<div class="subj-item ${stressColorClass(stressVal)}" id="stress-grid-item"><div class="subj-label">Stress</div><div class="subj-value">${stressVal!=null?STRESS[stressVal-1].lbl:'-'}</div></div>`,
   ];
 
-  const yesterdayNoteHTML=hm.comments?`<div class="yesterday-note">${hm.comments}</div>`:'';
+  const yesterdayNoteHTML=(yw.comments??hm.comments)?`<div class="yesterday-note">${yw.comments??hm.comments}</div>`:'';
 
   const wellbeingHTML=`<div class="card" id="wellbeing-card">
     <div class="card-title">Check-in i går</div>
@@ -340,7 +343,7 @@ function render(data){
     const [r,ry]=await Promise.all([fetch('/api/get-data'),fetch('/api/get-yesterday-wellness')]);
     if(!r.ok)throw new Error('Data error: '+r.status);
     const data=await r.json();
-    if(ry.ok){const yw=await ry.json();data.healthMarkers={...data.healthMarkers,...yw};}
+    if(ry.ok){data.yesterdayWellness=await ry.json();}
     render(data);
   }catch(e){
     document.getElementById('loading').style.display='none';
