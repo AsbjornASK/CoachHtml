@@ -337,9 +337,10 @@ function render(data){
 
 (async()=>{
   try{
-    const r=await fetch('/api/get-data');
+    const [r,ry]=await Promise.all([fetch('/api/get-data'),fetch('/api/get-yesterday-wellness')]);
     if(!r.ok)throw new Error('Data error: '+r.status);
     const data=await r.json();
+    if(ry.ok){const yw=await ry.json();data.healthMarkers={...data.healthMarkers,...yw};}
     render(data);
   }catch(e){
     document.getElementById('loading').style.display='none';
@@ -411,9 +412,10 @@ function render(data){
       refreshing=true;
       ptr.style.height='48px';
       try{
-        const r=await fetch('/api/get-data');
+        const [r,ry]=await Promise.all([fetch('/api/get-data'),fetch('/api/get-yesterday-wellness')]);
         if(!r.ok)throw new Error('Data error: '+r.status);
         const data=await r.json();
+        if(ry.ok){const yw=await ry.json();data.healthMarkers={...data.healthMarkers,...yw};}
         render(data);
       }catch(e){
         document.getElementById('app').innerHTML=`<div class="error-card">Could not load data: ${e.message}</div>`;
