@@ -347,6 +347,7 @@ function render(data){
     const r=await fetch('/api/get-data');
     if(!r.ok)throw new Error('Data error: '+r.status);
     const data=await r.json();
+    console.log('[vitals] yesterdayWellness:', JSON.stringify(data.yesterdayWellness));
     render(data);
   }catch(e){
     document.getElementById('loading').style.display='none';
