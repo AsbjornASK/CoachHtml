@@ -320,8 +320,7 @@ function render(data){
     try{
       const r=await fetch('/api/update-wellness',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:yesterday,stress:val})});
       if(r.ok){
-        if(_lastData)_lastData.healthMarkers.stressLevel=val;
-        if(_lastData)render(_lastData);
+        window.location.reload();
       }else{
         const er=await r.json().catch(()=>({}));
         stressSaveStatus.textContent='Fejl: '+(er.error||r.status);
