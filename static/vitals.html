@@ -344,7 +344,7 @@ function render(data){
 
 (async()=>{
   try{
-    const r=await fetch('/api/get-data');
+    const r=await fetch('/api/get-vitals');
     if(!r.ok)throw new Error('Data error: '+r.status);
     const data=await r.json();
     render(data);

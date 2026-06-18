@@ -331,7 +331,7 @@ function render(data,cal){
 
 (async()=>{
   try{
-    const[dR,cR]=await Promise.all([fetch('/api/get-data'),fetch('/api/get-calendar').catch(()=>null)]);
+    const[dR,cR]=await Promise.all([fetch('/api/get-coach'),fetch('/api/get-calendar').catch(()=>null)]);
     if(!dR.ok)throw new Error('Data error: '+dR.status);
     const data=await dR.json();
     const cal=cR?.ok?await cR.json():null;
@@ -436,7 +436,7 @@ function render(data,cal){
       refreshing=true;
       ptr.style.height='48px';
       try{
-        const[dR,cR]=await Promise.all([fetch('/api/get-data'),fetch('/api/get-calendar').catch(()=>null)]);
+        const[dR,cR]=await Promise.all([fetch('/api/get-coach'),fetch('/api/get-calendar').catch(()=>null)]);
         if(!dR.ok)throw new Error('Data error: '+dR.status);
         const data=await dR.json();
         const cal=cR?.ok?await cR.json():null;
