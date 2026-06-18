@@ -323,16 +323,20 @@ function render(data){
     try{
       const r=await fetch('/api/update-wellness',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:yesterday,stress:val})});
       if(r.ok){
-        window.location.reload();
+        if(_lastData){
+          if(!_lastData.yesterdayWellness)_lastData.yesterdayWellness={};
+          _lastData.yesterdayWellness.stress=val;
+          render(_lastData);
+        }
       }else{
         const er=await r.json().catch(()=>({}));
         stressSaveStatus.textContent='Fejl: '+(er.error||r.status);
         stressSaveStatus.className='checkin-status err';
+        stressGroup.querySelectorAll('button').forEach(b=>b.disabled=false);
       }
     }catch(e){
       stressSaveStatus.textContent='Fejl: '+e.message;
       stressSaveStatus.className='checkin-status err';
-    }finally{
       stressGroup.querySelectorAll('button').forEach(b=>b.disabled=false);
     }
   });
