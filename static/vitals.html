@@ -320,12 +320,8 @@ function render(data){
     try{
       const r=await fetch('/api/update-wellness',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:yesterday,stress:val})});
       if(r.ok){
-        // Skjul check-in rækken og hent data igen
-        const row=stressGroup.closest('.checkin-row');
-        if(row)row.style.display='none';
-        stressSaveStatus.style.display='none';
-        const fresh=await fetch('/api/get-data');
-        if(fresh.ok){const d=await fresh.json();render(d);}
+        if(_lastData)_lastData.healthMarkers.stressLevel=val;
+        if(_lastData)render(_lastData);
       }else{
         const er=await r.json().catch(()=>({}));
         stressSaveStatus.textContent='Fejl: '+(er.error||r.status);
