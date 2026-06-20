@@ -6,7 +6,7 @@
   <title>Coach Health</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif; background: #f2f2f7; color: #1c1c1e; max-width: 430px; margin: 0 auto; padding: 0 0 88px; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif; background: #f2f2f7; color: #1c1c1e; max-width: 430px; margin: 0 auto; padding: 0 0 calc(88px + env(safe-area-inset-bottom)); min-height: 100vh; }
     .topbar { background: #fff; border-bottom: 1px solid #e5e5ea; padding: 0 16px; display: flex; align-items: center; justify-content: space-between; height: 52px; position: sticky; top: 0; z-index: 10; gap: 8px; }
     .topbar-title { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; flex-shrink: 0; }
     .topbar-date { font-size: 11px; color: #8e8e93; text-align: right; line-height: 1.3; flex-shrink: 0; }
@@ -106,16 +106,8 @@
     <div class="skel-card skeleton"></div>
     <div class="skel-card skeleton"></div>
   </div>
-  <div id="app" style="display:none"></div>
-
   <div class="card" id="checkin-card" style="display:none">
     <div class="card-title">Morning Check-in <span id="checkin-done-badge" class="checkin-done-badge" style="display:none">Saved</span></div>
-    <div class="checkin-row">
-      <div class="checkin-label">Humør</div>
-      <div class="btn-group" data-field="mood">
-        <button data-val="1" data-color="c-green">GREAT</button><button data-val="2" data-color="c-yellow">GOOD</button><button data-val="3" data-color="c-red">AVG</button><button data-val="4" data-color="c-purple">LOW</button>
-      </div>
-    </div>
     <div class="checkin-row">
       <div class="checkin-label">Soreness<small>Pre-workout</small></div>
       <div class="btn-group" data-field="soreness">
@@ -129,6 +121,12 @@
       </div>
     </div>
     <div class="checkin-row">
+      <div class="checkin-label">Humør</div>
+      <div class="btn-group" data-field="mood">
+        <button data-val="1" data-color="c-green">GREAT</button><button data-val="2" data-color="c-yellow">GOOD</button><button data-val="3" data-color="c-red">AVG</button><button data-val="4" data-color="c-purple">LOW</button>
+      </div>
+    </div>
+    <div class="checkin-row">
       <div class="checkin-label">Motivation</div>
       <div class="btn-group" data-field="motivation">
         <button data-val="1" data-color="c-green">EXTREME</button><button data-val="2" data-color="c-yellow">HIGH</button><button data-val="3" data-color="c-red">MIDDEL</button><button data-val="4" data-color="c-purple">LOW</button>
@@ -137,6 +135,8 @@
     <button class="submit-btn" id="checkin-submit" style="background:#007aff">Save to Intervals</button>
     <div class="form-status" id="checkin-status"></div>
   </div>
+
+  <div id="app" style="display:none"></div>
 
   <div class="footer" id="footer" style="display:none"></div>
 
@@ -176,7 +176,9 @@ function calcSleep(hrs,score,s8){
   return Math.min(100,Math.max(0,Math.round(0.50*dur+0.30*res+0.20*con)));
 }
 
-function calcReadiness(r,s){return(r==null||s==null)?null:Math.min(100,Math.max(1,Math.round(r*0.5+s*0.5)));}
+const SUBJ_SCORE=[90,68,42,10];
+function calcSubjectiveScore(subj){const f=subj?.fatigue!=null?SUBJ_SCORE[subj.fatigue-1]:null;const s=subj?.soreness!=null?SUBJ_SCORE[subj.soreness-1]:null;if(f==null&&s==null)return null;if(f==null)return s;if(s==null)return f;return Math.round(f*0.6+s*0.4);}
+function calcReadiness(r,s,subj){if(r==null||s==null)return null;const sub=calcSubjectiveScore(subj);if(sub==null)return Math.min(100,Math.max(1,Math.round(r*0.5+s*0.5)));return Math.min(100,Math.max(1,Math.round(r*0.4+s*0.2+sub*0.4)));}
 
 function verdictColor(r){return r>=65?'green':r>=45?'yellow':'red';}
 const HEX={green:'#30d158',yellow:'#ff9f0a',red:'#ff3b30'};
@@ -255,7 +257,7 @@ function render(data,cal){
   const {latest,trends,sleep8,fitnessHistory,subjective,pairSuggestions}=data;
   const rec=calcRecovery(latest.hrv,latest.restingHR,latest.sleepHours,latest.tsb);
   const slp=calcSleep(latest.sleepHours,latest.sleepScore,sleep8);
-  const ready=calcReadiness(rec,slp);
+  const ready=calcReadiness(rec,slp,subjective);
   const vc=verdictColor(ready??50);
   const rColor=HEX[vc];
   const recColor=HEX[verdictColor(rec??50)];
@@ -285,7 +287,7 @@ function render(data,cal){
   const subjHTML=`<div class="card" id="subj-card"><div class="card-title">Today's check-in</div>${
     hasSubj
       ? `<div class="subjective-grid">${['mood','soreness','fatigue','motivation'].map(f=>{const v=subjective[f];const lbl={mood:'Humør',soreness:'Soreness',fatigue:'Fatigue',motivation:'Motivation'}[f];return`<div class="subj-item s${v??2}"><div class="subj-label">${lbl}</div><div class="subj-value">${v?SLBLS[f][v-1]:'-'}</div></div>`;}).join('')}</div><div class="note-area"><textarea class="note-textarea" id="subj-note" placeholder="Tilføj en note til i dag…">${subjective.comments??''}</textarea><div class="note-status" id="subj-note-status"></div></div>`
-      : `<div style="color:#aeaeb2;font-size:14px;text-align:center;padding:8px 0">No check-in data yet — fill in below ↓</div>`
+      : `<div style="color:#aeaeb2;font-size:14px;text-align:center;padding:8px 0">Complete your morning check-in above ↑</div>`
   }</div>`;
 
   const readyHistSVG=readinessHistGraph(trends.hrv,trends.rhr,trends.sleep);
