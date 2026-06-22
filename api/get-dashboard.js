@@ -48,6 +48,8 @@ export default async () => {
       if (!calByDate[ev.date]) calByDate[ev.date] = {};
       calByDate[ev.date][cat]          = (calByDate[ev.date][cat]          ?? 0) + 1;
       calByDate[ev.date][cat + 'Min']  = (calByDate[ev.date][cat + 'Min']  ?? 0) + ev.durationMin;
+      if (!calByDate[ev.date][cat + 'Titles']) calByDate[ev.date][cat + 'Titles'] = [];
+      calByDate[ev.date][cat + 'Titles'].push(ev.title);
     }
   }
 

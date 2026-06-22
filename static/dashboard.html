@@ -612,17 +612,23 @@ function calendarLoadChart(series) {
   const px = i => PDL + (i / Math.max(days.length - 1, 1)) * plotW;
   const pyBar = v => H - PDY - (v / maxEvents) * (H - 2 * PDY);
 
-  // Stacked bars
+  // Stacked bars — one block per event
   const bars = days.map((d, i) => {
     if (!d.cal) return '';
+    const totalEvents = CAT_KEYS.reduce((s, k) => s + (d.cal[k] ?? 0), 0);
+    if (!totalEvents) return '';
+    const blockH = (H - 2 * PDY) / maxEvents;
     let y = H - PDY;
-    return CAT_KEYS.map(k => {
-      const count = d.cal[k] ?? 0;
-      if (!count) return '';
-      const h = (count / maxEvents) * (H - 2 * PDY);
-      y -= h;
+    return CAT_KEYS.flatMap(k => {
+      const titles = d.cal[k + 'Titles'] ?? [];
+      const count  = d.cal[k] ?? 0;
+      if (!count) return [];
       const meta = CAT_META[k];
-      return `<rect x="${(px(i) - barW/2).toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${h.toFixed(1)}" fill="${meta.color}" opacity="0.8"><title>${fmtDate(d.date)}: ${meta.label} (${count})</title></rect>`;
+      return titles.map(title => {
+        y -= blockH;
+        const gap = Math.min(2, blockH * 0.15);
+        return `<rect x="${(px(i) - barW/2).toFixed(1)}" y="${(y + gap/2).toFixed(1)}" width="${barW.toFixed(1)}" height="${Math.max(1, blockH - gap).toFixed(1)}" fill="${meta.color}" opacity="0.85" rx="2"><title>${fmtDate(d.date)}: ${meta.label} — ${title}</title></rect>`;
+      });
     }).join('');
   }).join('');
 
