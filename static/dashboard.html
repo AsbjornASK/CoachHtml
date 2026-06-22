@@ -587,6 +587,94 @@ function checkinTable(series) {
   return `<div style="overflow-x:auto"><table class="ctable">${head}<tbody>${body}</tbody></table></div>`;
 }
 
+// ── SDNN HRV + Stress over tid ────────────────────────────────────────────
+const STRESS_COLORS = {1:'#30d158',2:'#ff9f0a',3:'#ff3b30',4:'#bf5af2'};
+const STRESS_LABELS = ['','Lav','Moderat','Høj','Meget høj'];
+
+function sdnnStressChart(series) {
+  const days = series.filter(d => d.sdnn != null || d.stress != null);
+  if (days.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Ikke nok SDNN/stress data</p>';
+
+  const sdnnDays = days.filter(d => d.sdnn != null);
+  const W = 900, H = 180, stressH = 40, axH = 22, PDL = 40, PDR = 10, PDY = 8;
+  const plotW = W - PDL - PDR;
+  const totalH = H + stressH + axH;
+
+  // SDNN scale
+  const sdnnVals = sdnnDays.map(d => d.sdnn);
+  const rawMn = Math.min(...sdnnVals), rawMx = Math.max(...sdnnVals);
+  const mn = Math.floor(rawMn / 10) * 10, mx = Math.ceil(rawMx / 10) * 10, rng = mx - mn || 10;
+
+  const px = i => PDL + (i / Math.max(days.length - 1, 1)) * plotW;
+  const py = v => PDY + (1 - (v - mn) / rng) * (H - 2 * PDY);
+
+  // Y-axis ticks
+  const tickCount = 5;
+  const yTicks = Array.from({length: tickCount}, (_, k) => {
+    const v = mn + k * (mx - mn) / (tickCount - 1);
+    const y = py(v).toFixed(1);
+    return `<line x1="${PDL}" y1="${y}" x2="${PDL + plotW}" y2="${y}" stroke="#f2f2f7" stroke-width="1"/>
+            <text x="${PDL - 6}" y="${y}" font-size="9" fill="#aeaeb2" text-anchor="end" dominant-baseline="middle">${Math.round(v)}</text>`;
+  }).join('');
+
+  const axisLabel = `<text x="12" y="${H/2}" font-size="9" fill="#8e8e93" text-anchor="middle" transform="rotate(-90 12 ${H/2})">SDNN (ms)</text>`;
+
+  // SDNN line — colored by stress
+  const segments = sdnnDays.map((d, i) => {
+    if (i === 0) return '';
+    const prev = sdnnDays[i - 1];
+    const idx = days.indexOf(d);
+    const col = STRESS_COLORS[d.stress] ?? '#007aff';
+    return `<line x1="${px(days.indexOf(prev)).toFixed(1)}" y1="${py(prev.sdnn).toFixed(1)}" x2="${px(idx).toFixed(1)}" y2="${py(d.sdnn).toFixed(1)}" stroke="${col}" stroke-width="2.2" stroke-linecap="round"/>`;
+  }).join('');
+
+  const sdnnDots = sdnnDays.map(d => {
+    const idx = days.indexOf(d);
+    const col = STRESS_COLORS[d.stress] ?? '#007aff';
+    return `<circle cx="${px(idx).toFixed(1)}" cy="${py(d.sdnn).toFixed(1)}" r="3.5" fill="${col}" stroke="#fff" stroke-width="1.5"><title>${fmtDate(d.date)}: SDNN=${d.sdnn} ms, Stress=${STRESS_LABELS[d.stress] ?? '–'}</title></circle>`;
+  }).join('');
+
+  // Stress bars below the line chart
+  const barW = Math.max(2, (plotW / days.length) * 0.7);
+  const stressTop = H + 8;
+  const stressBars = days.map((d, i) => {
+    if (d.stress == null) return '';
+    const bh = (d.stress / 4) * (stressH - 8);
+    const col = STRESS_COLORS[d.stress];
+    return `<rect x="${(px(i) - barW/2).toFixed(1)}" y="${(stressTop + stressH - 8 - bh).toFixed(1)}" width="${barW.toFixed(1)}" height="${bh.toFixed(1)}" rx="2" fill="${col}" opacity="0.7"><title>${fmtDate(d.date)}: Stress=${STRESS_LABELS[d.stress]}</title></rect>`;
+  }).join('');
+
+  // Stress Y-label
+  const stressLabel = `<text x="12" y="${stressTop + (stressH-8)/2}" font-size="9" fill="#8e8e93" text-anchor="middle" transform="rotate(-90 12 ${stressTop + (stressH-8)/2})">Stress</text>`;
+
+  // Divider line between SDNN and stress
+  const divider = `<line x1="${PDL}" y1="${stressTop}" x2="${PDL + plotW}" y2="${stressTop}" stroke="#f2f2f7" stroke-width="1"/>`;
+
+  // X-axis labels (shared)
+  const step = Math.max(1, Math.floor(days.length / 8));
+  const xLabels = days.map((d, i) => {
+    if (i % step !== 0 && i !== days.length - 1) return '';
+    const dd = new Date(d.date + 'T12:00:00');
+    return `<text x="${px(i).toFixed(1)}" y="${totalH - 3}" font-size="9" fill="#aeaeb2" text-anchor="middle">${dd.getDate()}/${dd.getMonth()+1}</text>`;
+  }).join('');
+
+  return `
+    <div class="legend">
+      <div class="legend-item"><span style="font-size:10px">Linje/prikker farvet efter dagsstress:</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:#30d158"></div>Lav</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ff9f0a"></div>Moderat</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ff3b30"></div>Høj</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#bf5af2"></div>Meget høj</div>
+    </div>
+    <div class="chart-wrap">
+      <svg viewBox="0 0 ${W} ${totalH}" width="100%" style="overflow:visible">
+        ${yTicks}${axisLabel}${segments}${sdnnDots}
+        ${divider}${stressBars}${stressLabel}
+        ${xLabels}
+      </svg>
+    </div>`;
+}
+
 // ── Main render ───────────────────────────────────────────────────────────
 function render(data, sportData) {
   const { series, today } = data;
@@ -644,6 +732,14 @@ function render(data, sportData) {
       <div class="card">
         <div class="card-title">Styrke — Fitness & Form <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#aeaeb2;font-size:10px">Kun styrketrænings belastning</span></div>
         ${sportFitnessChart(sportSeries.map(d => ({ date: d.date, ...d.strength })))}
+      </div>
+    </div>
+
+    <div class="row row-full">
+      <div class="card">
+        <div class="card-title">SDNN HRV & Dagsstress over tid</div>
+        <div class="card-subtitle" style="margin-bottom:10px">SDNN farvet efter stressniveau — søjler viser stress intensitet</div>
+        ${sdnnStressChart(series)}
       </div>
     </div>
 
