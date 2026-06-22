@@ -197,23 +197,16 @@ function weightGraph(history){
   if(!history||history.length<2)return'';
   const pts=history.filter(d=>d.weight!=null);
   if(pts.length<2)return'';
-  const W=320,H=72,PD=6,AX=16;
+  const W=320,H=72,PD=6,AX=24;
   const ws=pts.map(p=>p.weight);
   const mn=Math.min(...ws),mx=Math.max(...ws),rng=mx-mn||0.5;
   const px=i=>PD+(i/(pts.length-1))*(W-2*PD);
   const py=v=>PD+((mx-v)/rng)*(H-2*PD);
   const polyPts=pts.map((p,i)=>`${px(i).toFixed(1)},${py(p.weight).toFixed(1)}`).join(' ');
-  const last=pts[pts.length-1];
-  const lx=px(pts.length-1),ly=py(last.weight);
-  // date labels: first and last
-  const d0=pts[0].date.slice(5).replace('-','/');
-  const d1=last.date.slice(5).replace('-','/');
-  const dots=pts.map((p,i)=>{const cx=px(i),cy=py(p.weight);const isLast=i===pts.length-1;const anchor=i===0?'start':i===pts.length-1?'end':'middle';return`<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${isLast?4:3}" fill="${isLast?'#007aff':'#fff'}" stroke="#007aff" stroke-width="1.8"/><text x="${cx.toFixed(1)}" y="${(cy-8).toFixed(1)}" text-anchor="${anchor}" font-size="10" font-weight="700" fill="#007aff">${fmtN(p.weight)}</text>`;}).join('');
+  const dots=pts.map((p,i)=>{const cx=px(i),cy=py(p.weight);const isLast=i===pts.length-1;const anchor=i===0?'start':i===pts.length-1?'end':'middle';const d=p.date.slice(5).replace('-','/');return`<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${isLast?4:3}" fill="${isLast?'#007aff':'#fff'}" stroke="#007aff" stroke-width="1.8"/><text x="${cx.toFixed(1)}" y="${(cy-8).toFixed(1)}" text-anchor="${anchor}" font-size="10" font-weight="700" fill="#007aff">${fmtN(p.weight)}</text><text x="${cx.toFixed(1)}" y="${(H+AX-2).toFixed(0)}" text-anchor="${anchor}" font-size="10" fill="#aeaeb2">${d}</text>`;}).join('');
   return`<svg viewBox="0 0 ${W} ${H+AX}" width="100%" style="display:block;margin-top:14px;overflow:visible">
     <polyline fill="none" stroke="#007aff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" points="${polyPts}"/>
     ${dots}
-    <text x="${PD}" y="${H+AX-2}" font-size="10" fill="#aeaeb2">${d0}</text>
-    <text x="${(W-PD).toFixed(0)}" y="${H+AX-2}" text-anchor="end" font-size="10" fill="#aeaeb2">${d1}</text>
   </svg>`;
 }
 
