@@ -443,19 +443,26 @@ const CAT_META = {
 const CAT_KEYS = Object.keys(CAT_META);
 
 function calendarLoadChart(series) {
-  const days = series.filter(d => d.cal != null || d.sdnn != null);
-  if (days.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Ingen kalender-data endnu</p>';
-  const W = 900, H = 160, axH = 22, PDL = 36, PDR = 46, PDY = 8;
+  const days = series;
+  const hasCalData = days.some(d => d.cal != null);
+  if (!hasCalData && !days.some(d => d.sdnn != null)) return '<p style="color:#aeaeb2;font-size:13px">Ingen kalender-data endnu</p>';
+
+  const W = 900, H_cal = 160, H_stress = 50, axH = 22, PDL = 36, PDR = 46, PDY = 8;
   const plotW = W - PDL - PDR;
+  const divY = H_cal + 8;
+  const totalH = divY + H_stress + axH;
+
   const maxEvents = Math.max(1, ...days.map(d => CAT_KEYS.reduce((s, k) => s + (d.cal?.[k] ?? 0), 0)));
   const barW = Math.max(2, (plotW / days.length) * 0.7);
   const px = i => PDL + (i / Math.max(days.length - 1, 1)) * plotW;
+
+  // ── Calendar bars (one block per event) ──
   const bars = days.map((d, i) => {
     if (!d.cal) return '';
     const totalEvents = CAT_KEYS.reduce((s, k) => s + (d.cal[k] ?? 0), 0);
     if (!totalEvents) return '';
-    const blockH = (H - 2 * PDY) / maxEvents;
-    let y = H - PDY;
+    const blockH = (H_cal - 2 * PDY) / maxEvents;
+    let y = H_cal - PDY;
     return CAT_KEYS.flatMap(k => {
       const titles = d.cal[k + 'Titles'] ?? [];
       const count  = d.cal[k] ?? 0;
@@ -468,42 +475,57 @@ function calendarLoadChart(series) {
       });
     }).join('');
   }).join('');
-  const sdnnDays = days.map((d, i) => {
-    const next = series[series.indexOf(d) + 1];
-    return { i, sdnn: next?.sdnn ?? null, date: d.date };
-  }).filter(d => d.sdnn != null);
+
+  // ── SDNN next-morning line ──
+  const sdnnDays = days.map((d, i) => ({ i, sdnn: days[i + 1]?.sdnn ?? null, date: d.date })).filter(d => d.sdnn != null);
   const sdnnVals = sdnnDays.map(d => d.sdnn);
-  if (!sdnnVals.length) {
-    const legend = CAT_KEYS.map(k => `<div class="legend-item"><div class="legend-dot" style="background:${CAT_META[k].color}"></div>${CAT_META[k].label}</div>`).join('');
-    return `<div class="legend">${legend}</div><div class="chart-wrap"><svg viewBox="0 0 ${W} ${H+axH}" width="100%" style="overflow:visible">${bars}</svg></div>`;
+  let sdLine = '', sdDots = '', sdTicks = '', sdAxisLabel = '';
+  if (sdnnVals.length) {
+    const sdMn = Math.floor(Math.min(...sdnnVals) / 10) * 10;
+    const sdMx = Math.ceil(Math.max(...sdnnVals) / 10) * 10;
+    const sdRng = sdMx - sdMn || 10;
+    const pySD = v => PDY + (1 - (v - sdMn) / sdRng) * (H_cal - 2 * PDY);
+    sdLine = sdnnDays.map((d, j) => {
+      if (j === 0) return '';
+      const prev = sdnnDays[j - 1];
+      return `<line x1="${px(prev.i).toFixed(1)}" y1="${pySD(prev.sdnn).toFixed(1)}" x2="${px(d.i).toFixed(1)}" y2="${pySD(d.sdnn).toFixed(1)}" stroke="#1c1c1e" stroke-width="2" stroke-linecap="round" opacity="0.7"/>`;
+    }).join('');
+    sdDots = sdnnDays.map(d => `<circle cx="${px(d.i).toFixed(1)}" cy="${pySD(d.sdnn).toFixed(1)}" r="3" fill="#1c1c1e" opacity="0.7"><title>${fmtDate(d.date)}: SDNN næste morgen = ${d.sdnn} ms</title></circle>`).join('');
+    sdTicks = [sdMn, Math.round(sdMn + sdRng / 2), sdMx].map(v =>
+      `<text x="${W - PDR + 8}" y="${pySD(v).toFixed(1)}" font-size="9" fill="#8e8e93" dominant-baseline="middle">${v}</text>`
+    ).join('');
+    sdAxisLabel = `<text x="${W - 8}" y="${H_cal / 2}" font-size="9" fill="#8e8e93" text-anchor="middle" transform="rotate(90 ${W - 8} ${H_cal / 2})">SDNN (ms)</text>`;
   }
-  const sdMn = Math.floor(Math.min(...sdnnVals) / 10) * 10;
-  const sdMx = Math.ceil(Math.max(...sdnnVals) / 10) * 10;
-  const sdRng = sdMx - sdMn || 10;
-  const pySD = v => PDY + (1 - (v - sdMn) / sdRng) * (H - 2 * PDY);
-  const sdLine = sdnnDays.map((d, j) => {
-    if (j === 0) return '';
-    const prev = sdnnDays[j - 1];
-    return `<line x1="${px(prev.i).toFixed(1)}" y1="${pySD(prev.sdnn).toFixed(1)}" x2="${px(d.i).toFixed(1)}" y2="${pySD(d.sdnn).toFixed(1)}" stroke="#1c1c1e" stroke-width="2" stroke-linecap="round" opacity="0.7"/>`;
+
+  // ── Stress bars ──
+  const stressBars = days.map((d, i) => {
+    if (d.stress == null) return '';
+    const bh = (d.stress / 4) * (H_stress - 10);
+    return `<rect x="${(px(i) - barW/2).toFixed(1)}" y="${(divY + H_stress - 10 - bh).toFixed(1)}" width="${barW.toFixed(1)}" height="${bh.toFixed(1)}" rx="2" fill="${STRESS_COLORS[d.stress]}" opacity="0.75"><title>${fmtDate(d.date)}: Stress=${STRESS_LABELS[d.stress]}</title></rect>`;
   }).join('');
-  const sdDots = sdnnDays.map(d => `<circle cx="${px(d.i).toFixed(1)}" cy="${pySD(d.sdnn).toFixed(1)}" r="3" fill="#1c1c1e" opacity="0.7"><title>${fmtDate(d.date)}: SDNN næste morgen = ${d.sdnn} ms</title></circle>`).join('');
-  const sdTicks = [sdMn, Math.round(sdMn + sdRng/2), sdMx].map(v =>
-    `<text x="${W - PDR + 8}" y="${pySD(v).toFixed(1)}" font-size="9" fill="#8e8e93" dominant-baseline="middle">${v}</text>`
-  ).join('');
+  const stressLabel = `<text x="12" y="${(divY + H_stress / 2).toFixed(1)}" font-size="9" fill="#8e8e93" text-anchor="middle" transform="rotate(-90 12 ${(divY + H_stress / 2).toFixed(1)})">Stress</text>`;
+
+  // ── X labels ──
   const step = Math.max(1, Math.floor(days.length / 8));
   const xLabels = days.map((d, i) => {
     if (i % step !== 0 && i !== days.length - 1) return '';
     const dd = new Date(d.date + 'T12:00:00');
-    return `<text x="${px(i).toFixed(1)}" y="${H + axH - 3}" font-size="9" fill="#aeaeb2" text-anchor="middle">${dd.getDate()}/${dd.getMonth()+1}</text>`;
+    return `<text x="${px(i).toFixed(1)}" y="${totalH - 3}" font-size="9" fill="#aeaeb2" text-anchor="middle">${dd.getDate()}/${dd.getMonth() + 1}</text>`;
   }).join('');
+
   const legend = CAT_KEYS.map(k => `<div class="legend-item"><div class="legend-dot" style="background:${CAT_META[k].color}"></div>${CAT_META[k].label}</div>`).join('') +
-    `<div class="legend-item"><div class="legend-line" style="background:#1c1c1e;opacity:0.7"></div>SDNN næste morgen</div>`;
+    `<div class="legend-item"><div class="legend-line" style="background:#1c1c1e;opacity:0.7"></div>SDNN næste morgen</div>` +
+    `<div class="legend-item"><div class="legend-dot" style="background:#30d158"></div>Stress: Lav</div>` +
+    `<div class="legend-item"><div class="legend-dot" style="background:#ff9f0a"></div>Moderat</div>` +
+    `<div class="legend-item"><div class="legend-dot" style="background:#ff3b30"></div>Høj</div>`;
+
   return `
     <div class="legend">${legend}</div>
     <div class="chart-wrap">
-      <svg viewBox="0 0 ${W} ${H+axH}" width="100%" style="overflow:visible">
-        ${bars}${sdLine}${sdDots}${sdTicks}
-        <text x="${W - 8}" y="${H/2}" font-size="9" fill="#8e8e93" text-anchor="middle" transform="rotate(90 ${W-8} ${H/2})">SDNN (ms)</text>
+      <svg viewBox="0 0 ${W} ${totalH}" width="100%" style="overflow:visible">
+        ${bars}${sdLine}${sdDots}${sdTicks}${sdAxisLabel}
+        <line x1="${PDL}" y1="${divY}" x2="${PDL + plotW}" y2="${divY}" stroke="#e5e5ea" stroke-width="1"/>
+        ${stressBars}${stressLabel}
         ${xLabels}
       </svg>
     </div>`;
@@ -674,17 +696,6 @@ function render(data, sportData) {
         <div class="card-title">Kalender-belastning & SDNN restitution</div>
         <div class="card-subtitle" style="margin-bottom:10px">Søjler = antal events pr. kategori — sort linje = SDNN næste morgen</div>
         ${calendarLoadChart(series)}
-      </div>
-    </div>
-
-    <div class="row row-2-1">
-      <div class="card">
-        <div class="card-title">SDNN HRV & Dagsstress over tid</div>
-        ${sdnnStressChart(series)}
-      </div>
-      <div class="card">
-        <div class="card-title">Events vs. SDNN næste morgen</div>
-        ${calHrvScatter(series)}
       </div>
     </div>
 
