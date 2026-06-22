@@ -82,6 +82,7 @@ export default async () => {
       comments:     yw.comments     ?? yesterdayEntry.comments     ?? null,
     },
     inBody: bodyComp ? { ...toInBody(bodyComp), prev: toInBody(prevBodyComp) } : null,
+    weightHistory: days.filter(d => d.weight).slice(-60).map(d => ({ date: d.date, weight: round1(d.weight) })),
   });
 };
 

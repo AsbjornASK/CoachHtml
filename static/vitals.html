@@ -42,6 +42,13 @@
     .inbody-url-btn:disabled { background: #aeaeb2; cursor: default; }
     .inbody-url-status { text-align: center; font-size: 12px; margin: 4px 12px 12px; min-height: 14px; }
     .inbody-url-status.ok { color: #30d158; font-weight: 600; } .inbody-url-status.err { color: #ff3b30; }
+    .weight-input-row { display: flex; gap: 8px; margin: 14px 0 4px; }
+    .weight-input { flex: 1; font-size: 15px; border: 1.5px solid #e5e5ea; border-radius: 10px; padding: 10px 12px; color: #1c1c1e; background: #f9f9fb; outline: none; font-family: inherit; min-width: 0; }
+    .weight-input:focus { border-color: #007aff; background: #fff; }
+    .weight-btn { flex-shrink: 0; padding: 10px 16px; background: #007aff; color: #fff; font-size: 14px; font-weight: 700; border: none; border-radius: 10px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .weight-btn:disabled { background: #aeaeb2; cursor: default; }
+    .weight-save-status { text-align: center; font-size: 12px; margin-top: 4px; min-height: 14px; }
+    .weight-save-status.ok { color: #30d158; font-weight: 600; } .weight-save-status.err { color: #ff3b30; }
     .checkin-row { display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid #f2f2f7; gap: 8px; }
     .checkin-row:last-of-type { border-bottom: none; }
     .checkin-label { font-size: 13px; font-weight: 500; color: #1c1c1e; width: 88px; flex-shrink: 0; line-height: 1.2; }
@@ -186,11 +193,35 @@ function sparkSVG(vals,color,W=60,H=24){
   return `<svg class="sparkline" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><polyline fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" points="${p}"/></svg>`;
 }
 
+function weightGraph(history){
+  if(!history||history.length<2)return'';
+  const pts=history.filter(d=>d.weight!=null);
+  if(pts.length<2)return'';
+  const W=320,H=72,PD=6,AX=16;
+  const ws=pts.map(p=>p.weight);
+  const mn=Math.min(...ws),mx=Math.max(...ws),rng=mx-mn||0.5;
+  const px=i=>PD+(i/(pts.length-1))*(W-2*PD);
+  const py=v=>PD+((mx-v)/rng)*(H-2*PD);
+  const polyPts=pts.map((p,i)=>`${px(i).toFixed(1)},${py(p.weight).toFixed(1)}`).join(' ');
+  const last=pts[pts.length-1];
+  const lx=px(pts.length-1),ly=py(last.weight);
+  // date labels: first and last
+  const d0=pts[0].date.slice(5).replace('-','/');
+  const d1=last.date.slice(5).replace('-','/');
+  return`<svg viewBox="0 0 ${W} ${H+AX}" width="100%" style="display:block;margin-top:14px;overflow:visible">
+    <polyline fill="none" stroke="#007aff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" points="${polyPts}"/>
+    <circle cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" r="4" fill="#007aff"/>
+    <text x="${lx.toFixed(1)}" y="${(ly-8).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="700" fill="#007aff">${fmtN(last.weight)} kg</text>
+    <text x="${PD}" y="${H+AX-2}" font-size="10" fill="#aeaeb2">${d0}</text>
+    <text x="${(W-PD).toFixed(0)}" y="${H+AX-2}" text-anchor="end" font-size="10" fill="#aeaeb2">${d1}</text>
+  </svg>`;
+}
+
 let _lastData=null;
 
 function render(data){
   _lastData=data;
-  const {latest,trends,sleep8,inBody,healthMarkers,yesterdayWellness}=data;
+  const {latest,trends,sleep8,inBody,healthMarkers,yesterdayWellness,weightHistory}=data;
   const rec=calcRecovery(latest.hrv,latest.restingHR,latest.sleepHours,latest.tsb);
   const slp=calcSleep(latest.sleepHours,latest.sleepScore,sleep8);
   const ready=calcReadiness(rec,slp);
@@ -282,7 +313,11 @@ function render(data){
     return` <span class="${down?'trend-up':'trend-down'}">${down?'↓':'↑'} ${fmtN(Math.abs(d))}</span>`;
   }
   const ibPrev=inBody?.prev;
-  const ibHTML=inBody?`<div class="card"><div class="card-title">Body composition</div><div class="inbody-grid"><div><div class="inbody-item-label">Weight</div><div class="inbody-item-value">${fmtN(inBody.weight)} kg${ibDelta(inBody.weight,ibPrev?.weight)}</div></div><div><div class="inbody-item-label">Body fat %</div><div class="inbody-item-value">${fmtN(inBody.fatPct)} %${ibDelta(inBody.fatPct,ibPrev?.fatPct)}</div></div><div><div class="inbody-item-label">Fat mass</div><div class="inbody-item-value">${fmtN(inBody.fatMass)} kg${ibDelta(inBody.fatMass,ibPrev?.fatMass)}</div></div><div><div class="inbody-item-label">BMI</div><div class="inbody-item-value">${fmtN(inBody.bmi)}${ibDelta(inBody.bmi,ibPrev?.bmi)}</div></div><div><div class="inbody-item-label">Height</div><div class="inbody-item-value">175,5 cm</div></div><div><div class="inbody-item-label">Measured</div><div class="inbody-item-value" style="font-size:13px;color:#8e8e93">${inBody.date??'-'}</div></div></div>${ibPrev?`<div style="font-size:11px;color:#aeaeb2;margin-top:10px">vs. ${ibPrev.date} (${fmtN(ibPrev.weight)} kg, ${fmtN(ibPrev.fatPct)} %)</div>`:''}</div>`:'';
+  const wGraphHTML=weightGraph(weightHistory??[]);
+  const weightCardHTML=`<div class="card"><div class="card-title">Body composition</div>${inBody?`<div class="inbody-grid"><div><div class="inbody-item-label">Weight</div><div class="inbody-item-value">${fmtN(inBody.weight)} kg${ibDelta(inBody.weight,ibPrev?.weight)}</div></div><div><div class="inbody-item-label">Body fat %</div><div class="inbody-item-value">${fmtN(inBody.fatPct)} %${ibDelta(inBody.fatPct,ibPrev?.fatPct)}</div></div><div><div class="inbody-item-label">Fat mass</div><div class="inbody-item-value">${fmtN(inBody.fatMass)} kg${ibDelta(inBody.fatMass,ibPrev?.fatMass)}</div></div><div><div class="inbody-item-label">BMI</div><div class="inbody-item-value">${fmtN(inBody.bmi)}${ibDelta(inBody.bmi,ibPrev?.bmi)}</div></div><div><div class="inbody-item-label">Height</div><div class="inbody-item-value">175,5 cm</div></div><div><div class="inbody-item-label">Measured</div><div class="inbody-item-value" style="font-size:13px;color:#8e8e93">${inBody.date??'-'}</div></div></div>${ibPrev?`<div style="font-size:11px;color:#aeaeb2;margin-top:10px">vs. ${ibPrev.date} (${fmtN(ibPrev.weight)} kg, ${fmtN(ibPrev.fatPct)} %)</div>`:''}`:''}`+
+    `${wGraphHTML?`<div style="border-top:1px solid #f2f2f7;margin-top:${inBody?'14px':'0'};padding-top:${inBody?'14px':'0'}"><div class="card-title" style="margin-bottom:0">Vægt trend</div>${wGraphHTML}</div>`:''}` +
+    `<div class="weight-input-row"><input type="number" id="weight-input" class="weight-input" placeholder="Dagens vægt (kg)" step="0.1" min="40" max="200"></div><div class="weight-save-status" id="weight-save-status"></div>` +
+    `<button id="weight-save-btn" class="submit-btn" style="margin-top:10px">Gem vægt</button></div>`;
   const ibUrlRowHTML=`<div class="inbody-quick-row"><input type="text" id="inbody-url-input" class="inbody-url-input" placeholder="Indsæt InBody link…"><button id="inbody-url-btn" class="inbody-url-btn">Importer</button></div><div class="inbody-url-status" id="inbody-url-status"></div>`;
 
   document.getElementById('topbar-date').innerHTML=`${todayStr}<br>Updated ${timeStr}`;
@@ -300,7 +335,7 @@ function render(data){
     ${tlrHTML(latest.tsb)}
     ${hmHTML}
     ${wellbeingHTML}
-    ${ibHTML}${ibUrlRowHTML}
+    ${weightCardHTML}${ibUrlRowHTML}
   `;
 
   document.getElementById('app').style.display='';
@@ -391,6 +426,39 @@ function render(data){
   }
   document.addEventListener('click',e=>{if(e.target&&e.target.id==='inbody-url-btn')importInbodyUrl();});
   document.addEventListener('keydown',e=>{if(e.target&&e.target.id==='inbody-url-input'&&e.key==='Enter')importInbodyUrl();});
+})();
+
+(function(){
+  async function saveWeight(){
+    const input=document.getElementById('weight-input'),btn=document.getElementById('weight-save-btn'),st=document.getElementById('weight-save-status');
+    if(!input||!btn||!st)return;
+    const raw=input.value.trim().replace(',','.');
+    const val=parseFloat(raw);
+    if(!val||val<40||val>200){st.textContent='Ugyldig vægt';st.className='weight-save-status err';return;}
+    const today=new Date().toISOString().slice(0,10);
+    btn.disabled=true;st.textContent='Gemmer…';st.className='weight-save-status';
+    try{
+      const r=await fetch('/api/update-wellness',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:today,weight:val})});
+      if(r.ok){
+        st.textContent='Gemt ✓';st.className='weight-save-status ok';
+        input.value='';
+        if(_lastData){
+          const wh=_lastData.weightHistory??[];
+          const idx=wh.findIndex(d=>d.date===today);
+          if(idx>=0)wh[idx].weight=val;else wh.push({date:today,weight:val});
+          _lastData.weightHistory=wh;
+          render(_lastData);
+        }
+        setTimeout(()=>{const s=document.getElementById('weight-save-status');if(s)s.textContent='';},2500);
+      }else{
+        const e=await r.json().catch(()=>({}));
+        st.textContent='Fejl: '+(e.error||r.status);st.className='weight-save-status err';
+      }
+    }catch(e){st.textContent='Netværksfejl';st.className='weight-save-status err';}
+    finally{btn.disabled=false;}
+  }
+  document.addEventListener('click',e=>{if(e.target&&e.target.id==='weight-save-btn')saveWeight();});
+  document.addEventListener('keydown',e=>{if(e.target&&e.target.id==='weight-input'&&e.key==='Enter')saveWeight();});
 })();
 
 (function(){
