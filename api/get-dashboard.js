@@ -92,7 +92,7 @@ function parseICS(ics) {
     const summary = extractStr(block, 'SUMMARY');
     const dtstart = extractDT(block, 'DTSTART');
     const dtend   = extractDT(block, 'DTEND');
-    if (!summary || !dtstart) continue;
+    if (!summary || !dtstart || dtstart.ms === null) continue; // skip all-day events
     let durationMin = 60;
     if (dtend?.ms != null && dtstart?.ms != null) {
       durationMin = Math.max(0, Math.round((dtend.ms - dtstart.ms) / 60000));
