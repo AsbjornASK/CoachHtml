@@ -1,47 +1,58 @@
 // Vercel Edge Function: get-calendar
-// Henter og parser ICS fra Google Calendar "Fysisk helbred"
+// Henter ICS fra alle 5 Google Calendars og returnerer dagens + kommende events
 
 export const config = { runtime: 'edge' };
 
+const CAL_SOURCES = [
+  { cat: 'training',     env: 'CAL_TRAINING_ICS_URL',     fallback: 'FYSISK_HELBRED_ICS_URL' },
+  { cat: 'work',         env: 'CAL_WORK_ICS_URL' },
+  { cat: 'social',       env: 'CAL_SOCIAL_ICS_URL' },
+  { cat: 'relationship', env: 'CAL_RELATIONSHIP_ICS_URL' },
+  { cat: 'interests',    env: 'CAL_INTERESTS_ICS_URL' },
+];
+
 export default async () => {
-  const icsUrl = process.env.FYSISK_HELBRED_ICS_URL;
+  const activeSources = CAL_SOURCES.map(s => ({
+    cat: s.cat,
+    url: process.env[s.env] || (s.fallback ? process.env[s.fallback] : null),
+  })).filter(s => s.url);
 
-  if (!icsUrl) {
-    return json({ error: 'Kalender-URL ikke konfigureret (FYSISK_HELBRED_ICS_URL)' }, 500);
+  if (!activeSources.length) {
+    return json({ error: 'Ingen kalender-URLs konfigureret' }, 500);
   }
 
-  const res = await fetch(icsUrl);
-  if (!res.ok) {
-    return json({ error: 'Kunne ikke hente kalender', status: res.status }, 502);
-  }
-
-  const ics    = await res.text();
-  const events = parseICS(ics);
+  const texts = await Promise.all(
+    activeSources.map(s => fetch(s.url).then(r => r.ok ? r.text() : '').catch(() => ''))
+  );
 
   const today    = new Date();
   const todayStr = fmtDate(today);
   const limitStr = fmtDate(new Date(today.getTime() + 14 * 86_400_000));
 
-  const todayEvents    = events.filter(e => e.date === todayStr);
-  const upcomingEvents = events
-    .filter(e => e.date > todayStr && e.date <= limitStr)
-    .slice(0, 3);
+  const allEvents = [];
+  for (let i = 0; i < activeSources.length; i++) {
+    for (const ev of parseICS(texts[i] ?? '')) {
+      allEvents.push({ ...ev, category: activeSources[i].cat });
+    }
+  }
+
+  allEvents.sort((a, b) => a.date.localeCompare(b.date) || (a.timeStart ?? '').localeCompare(b.timeStart ?? ''));
+
+  const todayEvents    = allEvents.filter(e => e.date === todayStr);
+  const upcomingEvents = allEvents.filter(e => e.date > todayStr && e.date <= limitStr).slice(0, 5);
 
   return json({ today: todayEvents, upcoming: upcomingEvents });
 };
 
-// ── ICS parser ────────────────────────────────────────────
 function parseICS(ics) {
   const events = [];
   const blocks = ics.split('BEGIN:VEVENT');
-
   for (let i = 1; i < blocks.length; i++) {
     const block    = blocks[i];
     const summary  = extract(block, 'SUMMARY');
     const dtstart  = extractDT(block, 'DTSTART');
     const dtend    = extractDT(block, 'DTEND');
     if (!summary || !dtstart) continue;
-
     events.push({
       title:     summary,
       date:      dtstart.date,
@@ -49,8 +60,7 @@ function parseICS(ics) {
       timeEnd:   dtend?.time ?? null,
     });
   }
-
-  return events.sort((a, b) => a.date.localeCompare(b.date) || (a.timeStart ?? '').localeCompare(b.timeStart ?? ''));
+  return events;
 }
 
 function extract(block, key) {
@@ -61,35 +71,21 @@ function extract(block, key) {
 function extractDT(block, key) {
   const m = block.match(new RegExp(`^${key}[^:]*:([\\dTZ]+)`, 'm'));
   if (!m) return null;
-
   const raw = m[1];
-
   if (/^\d{8}$/.test(raw)) {
     return { date: `${raw.slice(0,4)}-${raw.slice(4,6)}-${raw.slice(6,8)}`, time: null };
   }
-
-  const year  = raw.slice(0, 4);
-  const month = raw.slice(4, 6);
-  const day   = raw.slice(6, 8);
-  const hour  = raw.slice(9, 11);
-  const min   = raw.slice(11, 13);
-
-  let date = `${year}-${month}-${day}`;
-  let time = `${hour}:${min}`;
-
-  if (raw.endsWith('Z')) {
-    const dt = new Date(`${date}T${time}:00Z`);
-    date = fmtDate(dt, 'Europe/Copenhagen');
-    time = fmtTime(dt, 'Europe/Copenhagen');
-  }
-
-  return { date, time };
+  const year = raw.slice(0,4), mo = raw.slice(4,6), day = raw.slice(6,8);
+  const hr = raw.slice(9,11), min = raw.slice(11,13);
+  const dt = new Date(`${year}-${mo}-${day}T${hr}:${min}:00${raw.endsWith('Z') ? 'Z' : ''}`);
+  return {
+    date: fmtDate(dt, 'Europe/Copenhagen'),
+    time: fmtTime(dt, 'Europe/Copenhagen'),
+  };
 }
 
 function fmtDate(d, tz) {
-  if (tz) {
-    return new Intl.DateTimeFormat('sv-SE', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
-  }
+  if (tz) return new Intl.DateTimeFormat('sv-SE', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
   return d.toISOString().slice(0, 10);
 }
 

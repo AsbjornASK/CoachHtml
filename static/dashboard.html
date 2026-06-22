@@ -587,6 +587,141 @@ function checkinTable(series) {
   return `<div style="overflow-x:auto"><table class="ctable">${head}<tbody>${body}</tbody></table></div>`;
 }
 
+// ── Kalender kategorier ───────────────────────────────────────────────────
+const CAT_META = {
+  training:     { label: 'Træning',       color: '#007aff' },
+  work:         { label: 'Arbejde',       color: '#ff9f0a' },
+  social:       { label: 'Social',        color: '#30d158' },
+  relationship: { label: 'Kæreste',       color: '#ff2d55' },
+  interests:    { label: 'Interesser',    color: '#bf5af2' },
+};
+const CAT_KEYS = Object.keys(CAT_META);
+
+// ── Kalender-load over tid med SDNN næste morgen ──────────────────────────
+function calendarLoadChart(series) {
+  const days = series.filter(d => d.cal != null || d.sdnn != null);
+  if (days.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Ingen kalender-data endnu — tilføj ICS URLs i Vercel</p>';
+
+  const W = 900, H = 160, axH = 22, PDL = 36, PDR = 46, PDY = 8;
+  const plotW = W - PDL - PDR;
+
+  // Max bar height (total events per day)
+  const maxEvents = Math.max(1, ...days.map(d => CAT_KEYS.reduce((s, k) => s + (d.cal?.[k] ?? 0), 0)));
+  const barW = Math.max(2, (plotW / days.length) * 0.7);
+
+  const px = i => PDL + (i / Math.max(days.length - 1, 1)) * plotW;
+  const pyBar = v => H - PDY - (v / maxEvents) * (H - 2 * PDY);
+
+  // Stacked bars
+  const bars = days.map((d, i) => {
+    if (!d.cal) return '';
+    let y = H - PDY;
+    return CAT_KEYS.map(k => {
+      const count = d.cal[k] ?? 0;
+      if (!count) return '';
+      const h = (count / maxEvents) * (H - 2 * PDY);
+      y -= h;
+      const meta = CAT_META[k];
+      return `<rect x="${(px(i) - barW/2).toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${h.toFixed(1)}" fill="${meta.color}" opacity="0.8"><title>${fmtDate(d.date)}: ${meta.label} (${count})</title></rect>`;
+    }).join('');
+  }).join('');
+
+  // SDNN next-morning line (use next day's SDNN for each calendar day)
+  const sdnnDays = days.map((d, i) => {
+    const next = series[series.indexOf(d) + 1];
+    return { i, sdnn: next?.sdnn ?? null, date: d.date };
+  }).filter(d => d.sdnn != null);
+
+  const sdnnVals = sdnnDays.map(d => d.sdnn);
+  const sdMn = Math.floor(Math.min(...sdnnVals) / 10) * 10;
+  const sdMx = Math.ceil(Math.max(...sdnnVals) / 10) * 10;
+  const sdRng = sdMx - sdMn || 10;
+  const pySD = v => PDY + (1 - (v - sdMn) / sdRng) * (H - 2 * PDY);
+
+  const sdLine = sdnnDays.map((d, j) => {
+    if (j === 0) return '';
+    const prev = sdnnDays[j - 1];
+    return `<line x1="${px(prev.i).toFixed(1)}" y1="${pySD(prev.sdnn).toFixed(1)}" x2="${px(d.i).toFixed(1)}" y2="${pySD(d.sdnn).toFixed(1)}" stroke="#1c1c1e" stroke-width="2" stroke-linecap="round" opacity="0.7"/>`;
+  }).join('');
+  const sdDots = sdnnDays.map(d => `<circle cx="${px(d.i).toFixed(1)}" cy="${pySD(d.sdnn).toFixed(1)}" r="3" fill="#1c1c1e" opacity="0.7"><title>${fmtDate(d.date)}: SDNN næste morgen = ${d.sdnn} ms</title></circle>`).join('');
+
+  // Right Y-axis (SDNN)
+  const sdTicks = [sdMn, Math.round(sdMn + sdRng/2), sdMx].map(v =>
+    `<text x="${W - PDR + 8}" y="${pySD(v).toFixed(1)}" font-size="9" fill="#8e8e93" dominant-baseline="middle">${v}</text>`
+  ).join('');
+  const sdAxisLabel = `<text x="${W - 8}" y="${H/2}" font-size="9" fill="#8e8e93" text-anchor="middle" transform="rotate(90 ${W-8} ${H/2})">SDNN (ms)</text>`;
+
+  // X labels
+  const step = Math.max(1, Math.floor(days.length / 8));
+  const xLabels = days.map((d, i) => {
+    if (i % step !== 0 && i !== days.length - 1) return '';
+    const dd = new Date(d.date + 'T12:00:00');
+    return `<text x="${px(i).toFixed(1)}" y="${H + axH - 3}" font-size="9" fill="#aeaeb2" text-anchor="middle">${dd.getDate()}/${dd.getMonth()+1}</text>`;
+  }).join('');
+
+  const legend = CAT_KEYS.map(k => `<div class="legend-item"><div class="legend-dot" style="background:${CAT_META[k].color}"></div>${CAT_META[k].label}</div>`).join('') +
+    `<div class="legend-item"><div class="legend-line" style="background:#1c1c1e;opacity:0.7"></div>SDNN næste morgen</div>`;
+
+  return `
+    <div class="legend">${legend}</div>
+    <div class="chart-wrap">
+      <svg viewBox="0 0 ${W} ${H+axH}" width="100%" style="overflow:visible">
+        ${bars}${sdLine}${sdDots}${sdTicks}${sdAxisLabel}${xLabels}
+      </svg>
+    </div>`;
+}
+
+// ── Kalender-kategori vs. SDNN næste morgen (scatter) ────────────────────
+function calHrvScatter(series) {
+  const pts = [];
+  for (let i = 0; i < series.length - 1; i++) {
+    const d = series[i];
+    const next = series[i + 1];
+    if (!d.cal || next.sdnn == null) continue;
+    const total = CAT_KEYS.reduce((s, k) => s + (d.cal[k] ?? 0), 0);
+    if (!total) continue;
+    // Dominant category = most events
+    const dom = CAT_KEYS.reduce((best, k) => (d.cal[k] ?? 0) > (d.cal[best] ?? 0) ? k : best, CAT_KEYS[0]);
+    pts.push({ date: d.date, total, dom, sdnn: next.sdnn });
+  }
+  if (pts.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Ikke nok data endnu</p>';
+
+  const W = 400, H = 200, PD = 30, axH = 28;
+  const maxTotal = Math.max(...pts.map(p => p.total));
+  const sdnnVals = pts.map(p => p.sdnn);
+  const sdMn = Math.floor(Math.min(...sdnnVals)/10)*10;
+  const sdMx = Math.ceil(Math.max(...sdnnVals)/10)*10;
+  const sdRng = sdMx - sdMn || 10;
+
+  const px = v => PD + (v / maxTotal) * (W - 2*PD);
+  const py = v => PD + (1 - (v - sdMn) / sdRng) * (H - 2*PD);
+
+  const xTicks = Array.from({length: maxTotal+1}, (_, k) => {
+    const x = px(k).toFixed(1);
+    return `<line x1="${x}" y1="${PD}" x2="${x}" y2="${H-PD}" stroke="#f2f2f7" stroke-width="1"/>
+            <text x="${x}" y="${H-PD+14}" font-size="9" fill="#aeaeb2" text-anchor="middle">${k}</text>`;
+  }).join('');
+
+  const yTicks = [sdMn, Math.round(sdMn+sdRng/2), sdMx].map(v =>
+    `<text x="${PD-4}" y="${py(v).toFixed(1)}" font-size="9" fill="#aeaeb2" text-anchor="end" dominant-baseline="middle">${v}</text>`
+  ).join('');
+
+  const dots = pts.map(p =>
+    `<circle cx="${px(p.total).toFixed(1)}" cy="${py(p.sdnn).toFixed(1)}" r="5.5" fill="${CAT_META[p.dom].color}" opacity="0.75" stroke="#fff" stroke-width="1.5"><title>${fmtDate(p.date)}: ${p.total} events (${CAT_META[p.dom].label}) → SDNN ${p.sdnn} ms</title></circle>`
+  ).join('');
+
+  const xLabel = `<text x="${W/2}" y="${H+axH}" font-size="9" fill="#8e8e93" text-anchor="middle">Antal events i dag</text>`;
+  const yLabel = `<text x="10" y="${H/2}" font-size="9" fill="#8e8e93" text-anchor="middle" transform="rotate(-90 10 ${H/2})">SDNN næste morgen (ms)</text>`;
+
+  return `
+    <div class="card-subtitle" style="margin-bottom:10px">Farve = dominerende kalenderkategori. Ser du et mønster?</div>
+    <div class="chart-wrap">
+      <svg viewBox="0 0 ${W} ${H+axH}" width="100%" style="overflow:visible">
+        ${xTicks}${yTicks}${dots}${xLabel}${yLabel}
+      </svg>
+    </div>`;
+}
+
 // ── SDNN HRV + Stress over tid ────────────────────────────────────────────
 const STRESS_COLORS = {1:'#30d158',2:'#ff9f0a',3:'#ff3b30',4:'#bf5af2'};
 const STRESS_LABELS = ['','Lav','Moderat','Høj','Meget høj'];
@@ -737,9 +872,21 @@ function render(data, sportData) {
 
     <div class="row row-full">
       <div class="card">
+        <div class="card-title">Kalender-belastning & SDNN restitution</div>
+        <div class="card-subtitle" style="margin-bottom:10px">Søjler = antal events pr. kategori — sort linje = SDNN næste morgen</div>
+        ${calendarLoadChart(series)}
+      </div>
+    </div>
+
+    <div class="row row-2-1">
+      <div class="card">
         <div class="card-title">SDNN HRV & Dagsstress over tid</div>
         <div class="card-subtitle" style="margin-bottom:10px">SDNN farvet efter stressniveau — søjler viser stress intensitet</div>
         ${sdnnStressChart(series)}
+      </div>
+      <div class="card">
+        <div class="card-title">Events vs. SDNN næste morgen</div>
+        ${calHrvScatter(series)}
       </div>
     </div>
 
