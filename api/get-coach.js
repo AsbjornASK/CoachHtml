@@ -56,10 +56,14 @@ export default async () => {
       rampRate:   round1(latest?.rampRate ?? null),
     },
     trends: {
-      hrv:   last7.map(d => d.hrv ?? null),
-      rhr:   last7.map(d => (d.restingHR && d.restingHR < 65) ? d.restingHR : null),
-      sleep: last7.map(d => d.sleepSecs ? round1(d.sleepSecs / 3600) : null),
-      dates: last7.map(d => d.date),
+      hrv:       last7.map(d => d.hrv ?? null),
+      rhr:       last7.map(d => (d.restingHR && d.restingHR < 65) ? d.restingHR : null),
+      sleep:     last7.map(d => d.sleepSecs ? round1(d.sleepSecs / 3600) : null),
+      sleepScore:last7.map(d => d.sleepScore ?? null),
+      tsb:       last7.map(d => d.ctl != null && d.atl != null ? round1(d.ctl - d.atl) : null),
+      fatigue:   last7.map(d => d.fatigue   ?? null),
+      soreness:  last7.map(d => d.soreness  ?? null),
+      dates:     last7.map(d => d.date),
     },
     sleep8: days.slice(-8).map(d => d.sleepSecs ? round1(d.sleepSecs / 3600) : null),
     fitnessHistory: days.map(d => ({

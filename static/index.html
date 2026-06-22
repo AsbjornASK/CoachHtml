@@ -197,13 +197,14 @@ function trend(arr,invert=false){
   return{a:up?'up':'down',c:good?'trend-up':'trend-down'};
 }
 
-function readinessHistGraph(hrvArr,rhrArr,sleepArr){
+function readinessHistGraph(hrvArr,rhrArr,sleepArr,sleepScoreArr,tsbArr,fatigueArr,sorennessArr){
   const len=Math.min(hrvArr.length,rhrArr.length,sleepArr.length);
   const vals=[];
   for(let i=0;i<len;i++){
-    const rec=calcRecovery(hrvArr[i],rhrArr[i],sleepArr[i],null);
-    const slp=calcSleep(sleepArr[i],null,null);
-    vals.push(calcReadiness(rec,slp));
+    const rec=calcRecovery(hrvArr[i],rhrArr[i],sleepArr[i],(tsbArr??[])[i]??null);
+    const slp=calcSleep(sleepArr[i],(sleepScoreArr??[])[i]??null,null);
+    const subj={fatigue:(fatigueArr??[])[i]??null,soreness:(sorennessArr??[])[i]??null};
+    vals.push(calcReadiness(rec,slp,subj));
   }
   const pts=vals.map((v,i)=>v!=null?{x:i,v}:null).filter(Boolean);
   if(pts.length<3)return'';
@@ -290,7 +291,7 @@ function render(data,cal){
       : `<div style="color:#aeaeb2;font-size:14px;text-align:center;padding:8px 0">Complete your morning check-in above ↑</div>`
   }</div>`;
 
-  const readyHistSVG=readinessHistGraph(trends.hrv,trends.rhr,trends.sleep);
+  const readyHistSVG=readinessHistGraph(trends.hrv,trends.rhr,trends.sleep,trends.sleepScore,trends.tsb,trends.fatigue,trends.soreness);
   const readyHistHTML=readyHistSVG?`<div class="readiness-hist"><div class="readiness-hist-label">Readiness history</div>${readyHistSVG}</div>`:'';
 
   document.getElementById('topbar-date').innerHTML=`${todayStr}<br>Updated ${timeStr}`;
