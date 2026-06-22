@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Coach Dashboard</title>
+  <title>Data</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif; background: #f2f2f7; color: #1c1c1e; min-height: 100vh; }
@@ -12,16 +12,12 @@
     .topbar { background: #fff; border-bottom: 1px solid #e5e5ea; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 56px; position: sticky; top: 0; z-index: 10; }
     .topbar-title { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
     .topbar-date { font-size: 12px; color: #8e8e93; text-align: right; line-height: 1.3; }
-
-    /* ── Bottom bar ── */
-    .bottombar { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid #e5e5ea; height: calc(80px + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom); z-index: 20; }
-    .bottombar-inner { max-width: 430px; height: 80px; margin: 0 auto; display: flex; }
-    .bottombar a { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 11px; font-weight: 600; color: #8e8e93; text-decoration: none; -webkit-tap-highlight-color: transparent; padding-bottom: 10px; }
-    .bottombar a svg { width: 22px; height: 22px; }
-    .bottombar a.active { color: #007aff; }
+    .topbar-nav { display: flex; gap: 20px; align-items: center; }
+    .topbar-nav a { font-size: 13px; font-weight: 600; color: #007aff; text-decoration: none; }
+    .topbar-nav a:hover { opacity: 0.7; }
 
     /* ── Layout ── */
-    .main { max-width: 1280px; margin: 0 auto; padding: 20px 20px 88px; }
+    .main { max-width: 1280px; margin: 0 auto; padding: 20px; }
     .row { display: grid; gap: 16px; margin-bottom: 16px; }
     .row-4 { grid-template-columns: repeat(4, 1fr); }
     .row-3 { grid-template-columns: repeat(3, 1fr); }
@@ -59,29 +55,17 @@
     .ctable td { padding: 7px 8px 7px 0; border-bottom: 1px solid #f2f2f7; vertical-align: middle; }
     .ctable tr:last-child td { border-bottom: none; }
     .chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; white-space: nowrap; }
-    .chip-1 { background: #e8f8ee; color: #1a7a33; }
-    .chip-2 { background: #fff3e0; color: #b86e00; }
-    .chip-3 { background: #ffe5e5; color: #c0392b; }
-    .chip-4 { background: #f3e8ff; color: #7a1fa2; }
+    .chip-1 { background: #e8f8ee; color: #1a7a33; } .chip-2 { background: #fff3e0; color: #b86e00; }
+    .chip-3 { background: #ffe5e5; color: #c0392b; } .chip-4 { background: #f3e8ff; color: #7a1fa2; }
     .chip-null { background: #f2f2f7; color: #aeaeb2; }
 
     /* ── Insight box ── */
     .insight { background: #f0f6ff; border-radius: 12px; padding: 12px 14px; margin-top: 12px; font-size: 13px; line-height: 1.5; color: #0051a8; }
     .insight strong { font-weight: 700; }
 
-    /* ── Compact KPI strip (mobile) ── */
-    .kpi-strip { display: flex; background: #fff; border-radius: 16px; padding: 12px 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.07); margin-bottom: 16px; }
-    .kpi-chip { flex: 1; text-align: center; border-right: 1px solid #f2f2f7; padding: 0 4px; }
-    .kpi-chip:last-child { border-right: none; }
-    .kpi-chip .kl { font-size: 9px; font-weight: 700; color: #8e8e93; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 3px; }
-    .kpi-chip .kv { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; display: block; line-height: 1; }
-    .kpi-chip .ku { font-size: 10px; font-weight: 500; color: #8e8e93; }
-
     /* ── Skeleton ── */
     .skeleton { animation: pulse 1.4s ease-in-out infinite; background: #e5e5ea; border-radius: 12px; }
     @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.4} }
-
-    /* ── Loading overlay ── */
     #loading { display: flex; flex-direction: column; gap: 16px; padding: 20px; max-width: 1280px; margin: 0 auto; }
     .skel-row { display: grid; gap: 16px; }
     .skel-r4 { grid-template-columns: repeat(4,1fr); }
@@ -92,7 +76,11 @@
 <body>
 
 <div class="topbar">
-  <div class="topbar-title">Dashboard</div>
+  <div class="topbar-title">Data</div>
+  <div class="topbar-nav">
+    <a href="/">← Coach</a>
+    <a href="/dashboard.html">Mobil</a>
+  </div>
   <div class="topbar-date" id="topbar-date"></div>
 </div>
 
@@ -108,10 +96,6 @@
     <div class="skel-box skeleton" style="height:260px"></div>
   </div>
   <div class="skel-box skeleton" style="height:320px"></div>
-  <div class="skel-row skel-r2">
-    <div class="skel-box skeleton" style="height:280px"></div>
-    <div class="skel-box skeleton" style="height:280px"></div>
-  </div>
 </div>
 
 <div id="app" class="main" style="display:none"></div>
@@ -119,23 +103,13 @@
   <div style="background:#ffe5e5;border-radius:16px;padding:20px;color:#c0392b;font-size:14px" id="error-msg"></div>
 </div>
 
-<div class="bottombar"><div class="bottombar-inner">
-  <a href="/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg><span>Coach</span></a>
-  <a href="/vitals.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 12 7 12 10 19 14 5 17 12 22 12"/></svg><span>Vitals</span></a>
-  <a href="/dashboard.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="20" x2="6" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="18" y1="20" x2="18" y2="14"/></svg><span>Dashboard</span></a>
-  <a href="/data.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span>Data</span></a>
-</div></div>
-
 <script>
-// ── Constants ──────────────────────────────────────────────────────────────
 const DAYS_S = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-
 const MOOD_LABELS  = ['','Great','Good','Avg','Low'];
 const SOR_LABELS   = ['','Low','Avg','High','Extreme'];
 const FAT_LABELS   = ['','Low','Avg','High','Extreme'];
 const MOT_LABELS   = ['','Extreme','High','Middel','Low'];
-
 const CHECKIN_COLORS = {1:'#30d158',2:'#ff9f0a',3:'#ff3b30',4:'#bf5af2'};
 
 function chipClass(v) { return v ? `chip chip-${v}` : 'chip chip-null'; }
@@ -149,7 +123,6 @@ function fmtN(v, dec = 0) {
   return dec === 0 ? String(Math.round(v)) : v.toFixed(dec).replace('.', ',');
 }
 
-// ── KPI tile ──────────────────────────────────────────────────────────────
 function kpiCard(title, value, unit, sub, colorClass, badge = '') {
   return `<div class="card">
     <div class="card-title">${title}</div>
@@ -159,70 +132,46 @@ function kpiCard(title, value, unit, sub, colorClass, badge = '') {
   </div>`;
 }
 
-// ── Main fitness chart with check-in overlay ──────────────────────────────
 function fitnessCheckinChart(series) {
   const days = series.filter(d => d.ctl != null || d.atl != null);
   if (days.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Ikke nok data</p>';
-
   const W = 900, H = 220, axH = 22, PDL = 38, PDR = 38, PDY = 8;
   const plotW = W - PDL - PDR;
   const allVals = [...days.map(d => d.ctl), ...days.map(d => d.atl)].filter(v => v != null);
   const rawMn = Math.min(...allVals), rawMx = Math.max(...allVals);
-  // Nice round bounds
   const mn = Math.floor(rawMn / 5) * 5, mx = Math.ceil(rawMx / 5) * 5, rng = mx - mn || 1;
-
   const px = i => PDL + i * plotW / Math.max(days.length - 1, 1);
   const py = v => PDY + (1 - (v - mn) / rng) * (H - 2 * PDY);
-
   const ctlPts = days.map((d, i) => d.ctl != null ? `${px(i).toFixed(1)},${py(d.ctl).toFixed(1)}` : null).filter(Boolean).join(' ');
   const atlPts = days.map((d, i) => d.atl != null ? `${px(i).toFixed(1)},${py(d.atl).toFixed(1)}` : null).filter(Boolean).join(' ');
-
-  // TSB secondary axis (right)
   const tsbValid = days.map(d => d.tsb).filter(v => v != null);
   const tsbRawMn = Math.min(...tsbValid, -15), tsbRawMx = Math.max(...tsbValid, 15);
   const tsbMn = Math.floor(tsbRawMn / 5) * 5, tsbMx = Math.ceil(tsbRawMx / 5) * 5, tsbRng = tsbMx - tsbMn || 1;
   const pyTsb = v => PDY + (1 - (v - tsbMn) / tsbRng) * (H - 2 * PDY);
   const tsbPts = days.map((d, i) => d.tsb != null ? `${px(i).toFixed(1)},${pyTsb(d.tsb).toFixed(1)}` : null).filter(Boolean).join(' ');
   const tsbZeroY = pyTsb(0).toFixed(1);
-
-  // Left Y-axis ticks (CTL/ATL) — 5 evenly spaced
-  const leftTickCount = 5;
-  const leftTicks = Array.from({length: leftTickCount}, (_, k) => {
-    const v = mn + k * (mx - mn) / (leftTickCount - 1);
+  const leftTicks = Array.from({length: 5}, (_, k) => {
+    const v = mn + k * (mx - mn) / 4;
     const y = py(v).toFixed(1);
     return `<line x1="${PDL}" y1="${y}" x2="${PDL + plotW}" y2="${y}" stroke="#f2f2f7" stroke-width="1"/>
             <text x="${PDL - 6}" y="${y}" font-size="9" fill="#aeaeb2" text-anchor="end" dominant-baseline="middle">${Math.round(v)}</text>`;
   }).join('');
-
-  // Right Y-axis ticks (TSB)
-  const rightTickValues = [tsbMn, Math.round(tsbMn + tsbRng * 0.25), 0, Math.round(tsbMn + tsbRng * 0.75), tsbMx];
-  const rightTicks = [...new Set(rightTickValues)].map(v => {
+  const rightTicks = [...new Set([tsbMn, Math.round(tsbMn + tsbRng * 0.25), 0, Math.round(tsbMn + tsbRng * 0.75), tsbMx])].map(v => {
     const y = pyTsb(v).toFixed(1);
-    const col = v === 0 ? '#8e8e93' : '#aeaeb2';
-    return `<text x="${PDL + plotW + 6}" y="${y}" font-size="9" fill="${col}" text-anchor="start" dominant-baseline="middle">${Math.round(v)}</text>`;
+    return `<text x="${PDL + plotW + 6}" y="${y}" font-size="9" fill="${v === 0 ? '#8e8e93' : '#aeaeb2'}" text-anchor="start" dominant-baseline="middle">${Math.round(v)}</text>`;
   }).join('');
-
-  // Axis labels
-  const leftAxisLabel = `<text x="10" y="${H / 2}" font-size="9" fill="#8e8e93" text-anchor="middle" transform="rotate(-90 10 ${H / 2})">CTL / ATL</text>`;
-  const rightAxisLabel = `<text x="${W - 6}" y="${H / 2}" font-size="9" fill="#bf5af2" text-anchor="middle" transform="rotate(90 ${W - 6} ${H / 2})">TSB</text>`;
-
-  // Check-in dots on CTL line, coloured by mood
   const dots = days.map((d, i) => {
     if (!d.mood && !d.fatigue) return '';
-    const field = d.mood ?? d.fatigue;
-    const col = CHECKIN_COLORS[field] ?? '#aeaeb2';
+    const col = CHECKIN_COLORS[d.mood ?? d.fatigue] ?? '#aeaeb2';
     const yPos = d.ctl != null ? py(d.ctl) : d.atl != null ? py(d.atl) : H / 2;
-    return `<circle cx="${px(i).toFixed(1)}" cy="${(yPos - 10).toFixed(1)}" r="5" fill="${col}" opacity="0.85" stroke="#fff" stroke-width="1.5"><title>${fmtDate(d.date)}: Humør=${MOOD_LABELS[d.mood] ?? '–'}, Fatigue=${FAT_LABELS[d.fatigue] ?? '–'}</title></circle>`;
+    return `<circle cx="${px(i).toFixed(1)}" cy="${(yPos - 10).toFixed(1)}" r="5" fill="${col}" opacity="0.85" stroke="#fff" stroke-width="1.5"><title>${fmtDate(d.date)}: Humør=${MOOD_LABELS[d.mood] ?? '–'}</title></circle>`;
   }).join('');
-
-  // X-axis labels
   const step = Math.max(1, Math.floor(days.length / 8));
   const xLabels = days.map((d, i) => {
     if (i % step !== 0 && i !== days.length - 1) return '';
     const dd = new Date(d.date + 'T12:00:00');
     return `<text x="${px(i).toFixed(1)}" y="${H + axH - 3}" font-size="9" fill="#aeaeb2" text-anchor="middle">${dd.getDate()}/${dd.getMonth() + 1}</text>`;
   }).join('');
-
   return `
     <div class="legend">
       <div class="legend-item"><div class="legend-line" style="background:#007aff"></div>CTL (fitness)</div>
@@ -239,60 +188,45 @@ function fitnessCheckinChart(series) {
         <polyline fill="none" stroke="#bf5af2" stroke-width="1.5" stroke-dasharray="5,3" opacity="0.7" stroke-linecap="round" stroke-linejoin="round" points="${tsbPts}"/>
         <polyline fill="none" stroke="#007aff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" points="${ctlPts}"/>
         <polyline fill="none" stroke="#ff9f0a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" points="${atlPts}"/>
-        ${dots}
-        ${xLabels}
-        ${rightTicks}
-        ${leftAxisLabel}
-        ${rightAxisLabel}
+        ${dots}${xLabels}${rightTicks}
+        <text x="10" y="${H / 2}" font-size="9" fill="#8e8e93" text-anchor="middle" transform="rotate(-90 10 ${H / 2})">CTL / ATL</text>
+        <text x="${W - 6}" y="${H / 2}" font-size="9" fill="#bf5af2" text-anchor="middle" transform="rotate(90 ${W - 6} ${H / 2})">TSB</text>
       </svg>
     </div>`;
 }
 
-// ── Sport-specific Fitness & Form chart (CTL/ATL/TSB derived from activity load) ──
 function sportFitnessChart(days) {
   if (!days || days.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Ikke nok data</p>';
-
   const W = 440, H = 180, axH = 22, PDL = 34, PDR = 34, PDY = 8;
   const plotW = W - PDL - PDR;
   const allVals = [...days.map(d => d.ctl), ...days.map(d => d.atl)].filter(v => v != null);
   const rawMn = Math.min(...allVals), rawMx = Math.max(...allVals);
   const mn = Math.floor(rawMn), mx = Math.ceil(rawMx) || 1, rng = (mx - mn) || 1;
-
   const px = i => PDL + i * plotW / Math.max(days.length - 1, 1);
   const py = v => PDY + (1 - (v - mn) / rng) * (H - 2 * PDY);
-
   const ctlPts = days.map((d, i) => d.ctl != null ? `${px(i).toFixed(1)},${py(d.ctl).toFixed(1)}` : null).filter(Boolean).join(' ');
   const atlPts = days.map((d, i) => d.atl != null ? `${px(i).toFixed(1)},${py(d.atl).toFixed(1)}` : null).filter(Boolean).join(' ');
-
   const tsbValid = days.map(d => d.tsb).filter(v => v != null);
   const tsbRawMn = Math.min(...tsbValid, -5), tsbRawMx = Math.max(...tsbValid, 5);
   const tsbMn = Math.floor(tsbRawMn), tsbMx = Math.ceil(tsbRawMx) || 1, tsbRng = (tsbMx - tsbMn) || 1;
   const pyTsb = v => PDY + (1 - (v - tsbMn) / tsbRng) * (H - 2 * PDY);
   const tsbPts = days.map((d, i) => d.tsb != null ? `${px(i).toFixed(1)},${pyTsb(d.tsb).toFixed(1)}` : null).filter(Boolean).join(' ');
-  const tsbZeroY = pyTsb(0).toFixed(1);
-
-  const leftTickCount = 4;
-  const leftTicks = Array.from({length: leftTickCount}, (_, k) => {
-    const v = mn + k * (mx - mn) / (leftTickCount - 1);
+  const leftTicks = Array.from({length: 4}, (_, k) => {
+    const v = mn + k * (mx - mn) / 3;
     const y = py(v).toFixed(1);
     return `<line x1="${PDL}" y1="${y}" x2="${PDL + plotW}" y2="${y}" stroke="#f2f2f7" stroke-width="1"/>
             <text x="${PDL - 6}" y="${y}" font-size="9" fill="#aeaeb2" text-anchor="end" dominant-baseline="middle">${Math.round(v)}</text>`;
   }).join('');
-
-  const rightTickValues = [tsbMn, 0, tsbMx];
-  const rightTicks = [...new Set(rightTickValues)].map(v => {
+  const rightTicks = [...new Set([tsbMn, 0, tsbMx])].map(v => {
     const y = pyTsb(v).toFixed(1);
-    const col = v === 0 ? '#8e8e93' : '#aeaeb2';
-    return `<text x="${PDL + plotW + 6}" y="${y}" font-size="9" fill="${col}" text-anchor="start" dominant-baseline="middle">${Math.round(v)}</text>`;
+    return `<text x="${PDL + plotW + 6}" y="${y}" font-size="9" fill="${v === 0 ? '#8e8e93' : '#aeaeb2'}" text-anchor="start" dominant-baseline="middle">${Math.round(v)}</text>`;
   }).join('');
-
   const step = Math.max(1, Math.floor(days.length / 6));
   const xLabels = days.map((d, i) => {
     if (i % step !== 0 && i !== days.length - 1) return '';
     const dd = new Date(d.date + 'T12:00:00');
     return `<text x="${px(i).toFixed(1)}" y="${H + axH - 3}" font-size="9" fill="#aeaeb2" text-anchor="middle">${dd.getDate()}/${dd.getMonth() + 1}</text>`;
   }).join('');
-
   return `
     <div class="legend">
       <div class="legend-item"><div class="legend-line" style="background:#007aff"></div>CTL</div>
@@ -302,21 +236,18 @@ function sportFitnessChart(days) {
     <div class="chart-wrap">
       <svg viewBox="0 0 ${W} ${H + axH}" width="100%" style="overflow:visible">
         ${leftTicks}
-        <line x1="${PDL}" y1="${tsbZeroY}" x2="${PDL + plotW}" y2="${tsbZeroY}" stroke="#d1d1d6" stroke-width="1" stroke-dasharray="4,3"/>
+        <line x1="${PDL}" y1="${pyTsb(0).toFixed(1)}" x2="${PDL + plotW}" y2="${pyTsb(0).toFixed(1)}" stroke="#d1d1d6" stroke-width="1" stroke-dasharray="4,3"/>
         <polyline fill="none" stroke="#bf5af2" stroke-width="1.5" stroke-dasharray="5,3" opacity="0.7" stroke-linecap="round" stroke-linejoin="round" points="${tsbPts}"/>
         <polyline fill="none" stroke="#007aff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" points="${ctlPts}"/>
         <polyline fill="none" stroke="#ff9f0a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" points="${atlPts}"/>
-        ${xLabels}
-        ${rightTicks}
+        ${xLabels}${rightTicks}
       </svg>
     </div>`;
 }
 
-// ── HRV + check-in chart ──────────────────────────────────────────────────
 function hrvCheckinChart(series) {
   const days = series.filter(d => d.hrv != null);
   if (days.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Ikke nok HRV data</p>';
-
   const W = 500, H = 180, axH = 18, PDL = 36, PDR = 10, PDY = 8;
   const plotW = W - PDL - PDR;
   const vals = days.map(d => d.hrv);
@@ -324,40 +255,29 @@ function hrvCheckinChart(series) {
   const mn = Math.floor(rawMn / 5) * 5, mx = Math.ceil(rawMx / 5) * 5, rng = mx - mn || 1;
   const px = i => PDL + i * plotW / Math.max(days.length - 1, 1);
   const py = v => PDY + (1 - (v - mn) / rng) * (H - 2 * PDY);
-
-  // Y-axis ticks + gridlines (5 ticks)
-  const tickCount = 5;
-  const yTicks = Array.from({length: tickCount}, (_, k) => {
-    const v = mn + k * (mx - mn) / (tickCount - 1);
+  const yTicks = Array.from({length: 5}, (_, k) => {
+    const v = mn + k * (mx - mn) / 4;
     const y = py(v).toFixed(1);
     return `<line x1="${PDL}" y1="${y}" x2="${PDL + plotW}" y2="${y}" stroke="#f2f2f7" stroke-width="1"/>
             <text x="${PDL - 6}" y="${y}" font-size="9" fill="#aeaeb2" text-anchor="end" dominant-baseline="middle">${Math.round(v)} ms</text>`;
   }).join('');
-
-  const axisLabel = `<text x="10" y="${H / 2}" font-size="9" fill="#8e8e93" text-anchor="middle" transform="rotate(-90 10 ${H / 2})">HRV (ms)</text>`;
-
   const segments = days.map((d, i) => {
     if (i === 0) return '';
     const prev = days[i - 1];
-    const col = CHECKIN_COLORS[d.fatigue] ?? '#007aff';
-    return `<line x1="${px(i-1).toFixed(1)}" y1="${py(prev.hrv).toFixed(1)}" x2="${px(i).toFixed(1)}" y2="${py(d.hrv).toFixed(1)}" stroke="${col}" stroke-width="2.2" stroke-linecap="round"/>`;
+    return `<line x1="${px(i-1).toFixed(1)}" y1="${py(prev.hrv).toFixed(1)}" x2="${px(i).toFixed(1)}" y2="${py(d.hrv).toFixed(1)}" stroke="${CHECKIN_COLORS[d.fatigue] ?? '#007aff'}" stroke-width="2.2" stroke-linecap="round"/>`;
   }).join('');
-
-  const dots = days.map((d, i) => {
-    const col = CHECKIN_COLORS[d.fatigue] ?? '#007aff';
-    return `<circle cx="${px(i).toFixed(1)}" cy="${py(d.hrv).toFixed(1)}" r="3.5" fill="${col}" stroke="#fff" stroke-width="1.5"><title>${fmtDate(d.date)}: HRV=${d.hrv} ms, Fatigue=${FAT_LABELS[d.fatigue] ?? '–'}</title></circle>`;
-  }).join('');
-
+  const dots = days.map((d, i) =>
+    `<circle cx="${px(i).toFixed(1)}" cy="${py(d.hrv).toFixed(1)}" r="3.5" fill="${CHECKIN_COLORS[d.fatigue] ?? '#007aff'}" stroke="#fff" stroke-width="1.5"><title>${fmtDate(d.date)}: HRV=${d.hrv} ms, Fatigue=${FAT_LABELS[d.fatigue] ?? '–'}</title></circle>`
+  ).join('');
   const step = Math.max(1, Math.floor(days.length / 6));
   const xLabels = days.map((d, i) => {
     if (i % step !== 0 && i !== days.length - 1) return '';
     const dd = new Date(d.date + 'T12:00:00');
     return `<text x="${px(i).toFixed(1)}" y="${H + axH - 3}" font-size="9" fill="#aeaeb2" text-anchor="middle">${dd.getDate()}/${dd.getMonth() + 1}</text>`;
   }).join('');
-
   return `
     <div class="legend">
-      <div class="legend-item"><span style="font-size:10px">Linje farvet efter dagens fatigue:</span></div>
+      <div class="legend-item"><span style="font-size:10px">Farvet efter fatigue:</span></div>
       <div class="legend-item"><div class="legend-dot" style="background:#30d158"></div>Low</div>
       <div class="legend-item"><div class="legend-dot" style="background:#ff9f0a"></div>Avg</div>
       <div class="legend-item"><div class="legend-dot" style="background:#ff3b30"></div>High</div>
@@ -365,263 +285,171 @@ function hrvCheckinChart(series) {
     </div>
     <div class="chart-wrap">
       <svg viewBox="0 0 ${W} ${H + axH}" width="100%" style="overflow:visible">
-        ${yTicks}${axisLabel}${segments}${dots}${xLabels}
+        ${yTicks}<text x="10" y="${H/2}" font-size="9" fill="#8e8e93" text-anchor="middle" transform="rotate(-90 10 ${H/2})">HRV (ms)</text>${segments}${dots}${xLabels}
       </svg>
     </div>`;
 }
 
-// ── Sleep chart coloured by mood ──────────────────────────────────────────
 function sleepMoodChart(series) {
   const days = series.filter(d => d.sleep != null);
   if (days.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Ikke nok søvn data</p>';
-
   const W = 500, H = 180, axH = 18, PDL = 36, PDR = 10, PDY = 8;
   const plotW = W - PDL - PDR;
   const vals = days.map(d => d.sleep);
   const mn = Math.max(0, Math.floor(Math.min(...vals) - 0.5)), mx = Math.ceil(Math.max(...vals) + 0.5), rng = mx - mn || 1;
   const px = i => PDL + i * plotW / Math.max(days.length - 1, 1);
   const py = v => PDY + (1 - (v - mn) / rng) * (H - 2 * PDY);
-
-  // Y-axis ticks: whole hours in range
   const hourTicks = [];
   for (let h = Math.ceil(mn); h <= Math.floor(mx); h++) {
     const y = py(h).toFixed(1);
-    const isRef = h === 7 || h === 8;
     const col = h === 8 ? '#30d158' : h === 7 ? '#ff9f0a' : '#aeaeb2';
-    hourTicks.push(
-      `<line x1="${PDL}" y1="${y}" x2="${PDL + plotW}" y2="${y}" stroke="${isRef ? col + '33' : '#f2f2f7'}" stroke-width="${isRef ? 1.5 : 1}"/>`,
-      `<text x="${PDL - 6}" y="${y}" font-size="9" fill="${col}" text-anchor="end" dominant-baseline="middle">${h}h</text>`
-    );
+    hourTicks.push(`<line x1="${PDL}" y1="${y}" x2="${PDL + plotW}" y2="${y}" stroke="${(h===7||h===8) ? col+'33' : '#f2f2f7'}" stroke-width="${(h===7||h===8)?1.5:1}"/>`,
+      `<text x="${PDL - 6}" y="${y}" font-size="9" fill="${col}" text-anchor="end" dominant-baseline="middle">${h}h</text>`);
   }
-
-  const axisLabel = `<text x="10" y="${H / 2}" font-size="9" fill="#8e8e93" text-anchor="middle" transform="rotate(-90 10 ${H / 2})">Søvn (t)</text>`;
-
-  // 7-hour reference line
-  const y7 = py(7).toFixed(1);
-  const y8 = py(8).toFixed(1);
-
   const segments = days.map((d, i) => {
     if (i === 0) return '';
     const prev = days[i - 1];
-    const col = CHECKIN_COLORS[d.mood] ?? '#007aff';
-    return `<line x1="${px(i-1).toFixed(1)}" y1="${py(prev.sleep).toFixed(1)}" x2="${px(i).toFixed(1)}" y2="${py(d.sleep).toFixed(1)}" stroke="${col}" stroke-width="2.2" stroke-linecap="round"/>`;
+    return `<line x1="${px(i-1).toFixed(1)}" y1="${py(prev.sleep).toFixed(1)}" x2="${px(i).toFixed(1)}" y2="${py(d.sleep).toFixed(1)}" stroke="${CHECKIN_COLORS[d.mood] ?? '#007aff'}" stroke-width="2.2" stroke-linecap="round"/>`;
   }).join('');
-
-  const dots = days.map((d, i) => {
-    const col = CHECKIN_COLORS[d.mood] ?? '#007aff';
-    return `<circle cx="${px(i).toFixed(1)}" cy="${py(d.sleep).toFixed(1)}" r="3.5" fill="${col}" stroke="#fff" stroke-width="1.5"><title>${fmtDate(d.date)}: Søvn=${d.sleep}t, Humør=${MOOD_LABELS[d.mood] ?? '–'}</title></circle>`;
-  }).join('');
-
+  const dots = days.map((d, i) =>
+    `<circle cx="${px(i).toFixed(1)}" cy="${py(d.sleep).toFixed(1)}" r="3.5" fill="${CHECKIN_COLORS[d.mood] ?? '#007aff'}" stroke="#fff" stroke-width="1.5"><title>${fmtDate(d.date)}: Søvn=${d.sleep}t, Humør=${MOOD_LABELS[d.mood] ?? '–'}</title></circle>`
+  ).join('');
   const step = Math.max(1, Math.floor(days.length / 6));
   const xLabels = days.map((d, i) => {
     if (i % step !== 0 && i !== days.length - 1) return '';
     const dd = new Date(d.date + 'T12:00:00');
     return `<text x="${px(i).toFixed(1)}" y="${H + axH - 3}" font-size="9" fill="#aeaeb2" text-anchor="middle">${dd.getDate()}/${dd.getMonth() + 1}</text>`;
   }).join('');
-
   return `
     <div class="legend">
-      <div class="legend-item"><span style="font-size:10px">Linje farvet efter dagens humør:</span></div>
+      <div class="legend-item"><span style="font-size:10px">Farvet efter humør:</span></div>
       <div class="legend-item"><div class="legend-dot" style="background:#30d158"></div>Great</div>
       <div class="legend-item"><div class="legend-dot" style="background:#ff9f0a"></div>Good</div>
       <div class="legend-item"><div class="legend-dot" style="background:#ff3b30"></div>Avg/Low</div>
     </div>
     <div class="chart-wrap">
       <svg viewBox="0 0 ${W} ${H + axH}" width="100%" style="overflow:visible">
-        ${hourTicks.join('')}${axisLabel}${segments}${dots}${xLabels}
+        ${hourTicks.join('')}<text x="10" y="${H/2}" font-size="9" fill="#8e8e93" text-anchor="middle" transform="rotate(-90 10 ${H/2})">Søvn (t)</text>${segments}${dots}${xLabels}
       </svg>
     </div>`;
 }
 
-// ── TSB vs Mood scatter ───────────────────────────────────────────────────
 function tsbMoodScatter(series) {
   const pts = series.filter(d => d.tsb != null && d.mood != null);
-  if (pts.length < 4) return '<p style="color:#aeaeb2;font-size:13px">Ikke nok data til scatter</p>';
-
+  if (pts.length < 4) return '<p style="color:#aeaeb2;font-size:13px">Ikke nok data</p>';
   const W = 300, H = 200, PD = 24, axH = 28;
-  const rawTsbVals = pts.map(d => d.tsb);
-  const rawMn = Math.min(...rawTsbVals), rawMx = Math.max(...rawTsbVals);
-  const tsbMn = Math.floor(rawMn / 5) * 5, tsbMx = Math.ceil(rawMx / 5) * 5, tsbRng = (tsbMx - tsbMn) || 1;
-
+  const tsbMn = Math.floor(Math.min(...pts.map(d => d.tsb)) / 5) * 5;
+  const tsbMx = Math.ceil(Math.max(...pts.map(d => d.tsb)) / 5) * 5;
+  const tsbRng = (tsbMx - tsbMn) || 1;
   const px = tsb => PD + (tsb - tsbMn) / tsbRng * (W - 2 * PD);
   const py = mood => PD + (mood - 1) / 3 * (H - 2 * PD);
-
-  // X-axis ticks + gridlines (5 ticks across the TSB range)
-  const tickCount = 5;
-  const xTicks = Array.from({length: tickCount}, (_, k) => {
-    const v = tsbMn + k * (tsbMx - tsbMn) / (tickCount - 1);
+  const xTicks = Array.from({length: 5}, (_, k) => {
+    const v = tsbMn + k * (tsbMx - tsbMn) / 4;
     const x = px(v).toFixed(1);
     return `<line x1="${x}" y1="${PD}" x2="${x}" y2="${H - PD}" stroke="#f2f2f7" stroke-width="1"/>
             <text x="${x}" y="${H - PD + 14}" font-size="9" fill="#aeaeb2" text-anchor="middle">${Math.round(v)}</text>`;
   }).join('');
-
-  // Zero line (highlighted), only if 0 falls within the range
-  const zeroLine = (tsbMn <= 0 && tsbMx >= 0)
-    ? `<line x1="${px(0).toFixed(1)}" y1="${PD}" x2="${px(0).toFixed(1)}" y2="${H - PD}" stroke="#aeaeb2" stroke-width="1" stroke-dasharray="4,3"/>`
-    : '';
-
-  const dots = pts.map(d => {
-    const col = CHECKIN_COLORS[d.mood];
-    return `<circle cx="${px(d.tsb).toFixed(1)}" cy="${py(d.mood).toFixed(1)}" r="5" fill="${col}" opacity="0.75" stroke="#fff" stroke-width="1.5"><title>${fmtDate(d.date)}: TSB=${d.tsb}, Humør=${MOOD_LABELS[d.mood]}</title></circle>`;
-  }).join('');
-
+  const zeroLine = (tsbMn <= 0 && tsbMx >= 0) ? `<line x1="${px(0).toFixed(1)}" y1="${PD}" x2="${px(0).toFixed(1)}" y2="${H - PD}" stroke="#aeaeb2" stroke-width="1" stroke-dasharray="4,3"/>` : '';
+  const dots = pts.map(d => `<circle cx="${px(d.tsb).toFixed(1)}" cy="${py(d.mood).toFixed(1)}" r="5" fill="${CHECKIN_COLORS[d.mood]}" opacity="0.75" stroke="#fff" stroke-width="1.5"><title>${fmtDate(d.date)}: TSB=${d.tsb}, Humør=${MOOD_LABELS[d.mood]}</title></circle>`).join('');
   const yLabels = [1,2,3,4].map(v => `<text x="${PD - 4}" y="${py(v).toFixed(1)}" font-size="9" fill="#aeaeb2" text-anchor="end" dominant-baseline="middle">${MOOD_LABELS[v]}</text>`).join('');
-  const xLabel = `<text x="${W/2}" y="${H + axH}" font-size="9" fill="#8e8e93" text-anchor="middle">TSB (form)</text>`;
-
   return `
-    <div class="card-subtitle" style="margin-bottom:10px">Hvert punkt = én dag. Ser du et mønster?</div>
+    <div class="card-subtitle" style="margin-bottom:10px">Hvert punkt = én dag</div>
     <div class="chart-wrap">
       <svg viewBox="0 0 ${W} ${H + axH}" width="100%" style="overflow:visible">
-        ${xTicks}${zeroLine}${dots}${yLabels}${xLabel}
+        ${xTicks}${zeroLine}${dots}${yLabels}
+        <text x="${W/2}" y="${H + axH}" font-size="9" fill="#8e8e93" text-anchor="middle">TSB (form)</text>
       </svg>
     </div>`;
 }
 
-// ── Sleep vs Mood scatter ─────────────────────────────────────────────────
 function sleepMoodScatter(series) {
   const pts = series.filter(d => d.sleep != null && d.mood != null);
-  if (pts.length < 4) return '<p style="color:#aeaeb2;font-size:13px">Ikke nok data til scatter</p>';
-
+  if (pts.length < 4) return '<p style="color:#aeaeb2;font-size:13px">Ikke nok data</p>';
   const W = 300, H = 200, PD = 24, axH = 28;
-  const rawVals = pts.map(d => d.sleep);
-  const sleepMn = Math.max(0, Math.floor(Math.min(...rawVals) - 0.5)), sleepMx = Math.ceil(Math.max(...rawVals) + 0.5), sleepRng = (sleepMx - sleepMn) || 1;
-
+  const sleepMn = Math.max(0, Math.floor(Math.min(...pts.map(d => d.sleep)) - 0.5));
+  const sleepMx = Math.ceil(Math.max(...pts.map(d => d.sleep)) + 0.5);
+  const sleepRng = (sleepMx - sleepMn) || 1;
   const px = sleep => PD + (sleep - sleepMn) / sleepRng * (W - 2 * PD);
   const py = mood => PD + (mood - 1) / 3 * (H - 2 * PD);
-
-  // X-axis ticks + gridlines (5 ticks across the sleep range)
-  const tickCount = 5;
-  const xTicks = Array.from({length: tickCount}, (_, k) => {
-    const v = sleepMn + k * (sleepMx - sleepMn) / (tickCount - 1);
+  const xTicks = Array.from({length: 5}, (_, k) => {
+    const v = sleepMn + k * (sleepMx - sleepMn) / 4;
     const x = px(v).toFixed(1);
     return `<line x1="${x}" y1="${PD}" x2="${x}" y2="${H - PD}" stroke="#f2f2f7" stroke-width="1"/>
             <text x="${x}" y="${H - PD + 14}" font-size="9" fill="#aeaeb2" text-anchor="middle">${v.toFixed(1)}t</text>`;
   }).join('');
-
-  // 7h reference line, only if within range
-  const refLine = (sleepMn <= 7 && sleepMx >= 7)
-    ? `<line x1="${px(7).toFixed(1)}" y1="${PD}" x2="${px(7).toFixed(1)}" y2="${H - PD}" stroke="#aeaeb2" stroke-width="1" stroke-dasharray="4,3"/>`
-    : '';
-
-  const dots = pts.map(d => {
-    const col = CHECKIN_COLORS[d.mood];
-    return `<circle cx="${px(d.sleep).toFixed(1)}" cy="${py(d.mood).toFixed(1)}" r="5" fill="${col}" opacity="0.75" stroke="#fff" stroke-width="1.5"><title>${fmtDate(d.date)}: Søvn=${d.sleep}t, Humør=${MOOD_LABELS[d.mood]}</title></circle>`;
-  }).join('');
-
+  const refLine = (sleepMn <= 7 && sleepMx >= 7) ? `<line x1="${px(7).toFixed(1)}" y1="${PD}" x2="${px(7).toFixed(1)}" y2="${H - PD}" stroke="#aeaeb2" stroke-width="1" stroke-dasharray="4,3"/>` : '';
+  const dots = pts.map(d => `<circle cx="${px(d.sleep).toFixed(1)}" cy="${py(d.mood).toFixed(1)}" r="5" fill="${CHECKIN_COLORS[d.mood]}" opacity="0.75" stroke="#fff" stroke-width="1.5"><title>${fmtDate(d.date)}: Søvn=${d.sleep}t, Humør=${MOOD_LABELS[d.mood]}</title></circle>`).join('');
   const yLabels = [1,2,3,4].map(v => `<text x="${PD - 4}" y="${py(v).toFixed(1)}" font-size="9" fill="#aeaeb2" text-anchor="end" dominant-baseline="middle">${MOOD_LABELS[v]}</text>`).join('');
-  const xLabel = `<text x="${W/2}" y="${H + axH}" font-size="9" fill="#8e8e93" text-anchor="middle">Søvn (timer)</text>`;
-
   return `
-    <div class="card-subtitle" style="margin-bottom:10px">Hvert punkt = én dag. Ser du et mønster?</div>
+    <div class="card-subtitle" style="margin-bottom:10px">Hvert punkt = én dag</div>
     <div class="chart-wrap">
       <svg viewBox="0 0 ${W} ${H + axH}" width="100%" style="overflow:visible">
-        ${xTicks}${refLine}${dots}${yLabels}${xLabel}
+        ${xTicks}${refLine}${dots}${yLabels}
+        <text x="${W/2}" y="${H + axH}" font-size="9" fill="#8e8e93" text-anchor="middle">Søvn (timer)</text>
       </svg>
     </div>`;
 }
 
-// ── Insights (simple heuristics) ─────────────────────────────────────────
 function computeInsights(series) {
   const insights = [];
   const recent = series.slice(-14);
   const withCheckin = recent.filter(d => d.mood != null);
-
   if (withCheckin.length >= 4) {
-    // Low HRV days → how was mood?
-    const lowHrvMoodAvg = recent.filter(d => d.hrv != null && d.hrv < 60 && d.mood != null).map(d => d.mood);
-    if (lowHrvMoodAvg.length >= 2) {
-      const avg = lowHrvMoodAvg.reduce((a,b) => a+b,0) / lowHrvMoodAvg.length;
-      if (avg > 2.5) insights.push(`<strong>HRV ↔ Humør:</strong> På dage med lav HRV (&lt;60 ms) er dit humør gennemsnitligt <em>${MOOD_LABELS[Math.round(avg)]}</em> — der ser ud til at være en sammenhæng.`);
+    const lowHrvMood = recent.filter(d => d.hrv != null && d.hrv < 60 && d.mood != null).map(d => d.mood);
+    if (lowHrvMood.length >= 2) {
+      const avg = lowHrvMood.reduce((a,b) => a+b,0) / lowHrvMood.length;
+      if (avg > 2.5) insights.push(`<strong>HRV ↔ Humør:</strong> På dage med lav HRV (&lt;60 ms) er dit humør gennemsnitligt <em>${MOOD_LABELS[Math.round(avg)]}</em>.`);
     }
-
-    // High ATL days → soreness
-    const highAtlSore = recent.filter(d => d.atl != null && d.atl > 50 && d.soreness != null).map(d => d.soreness);
-    if (highAtlSore.length >= 2) {
-      const avg = highAtlSore.reduce((a,b) => a+b,0) / highAtlSore.length;
-      if (avg > 2) insights.push(`<strong>Fatigue load ↔ Soreness:</strong> Når ATL er høj (&gt;50) er din soreness typisk <em>${SOR_LABELS[Math.round(avg)]}</em>.`);
-    }
-
-    // Sleep vs mood
     const sleepMood = recent.filter(d => d.sleep != null && d.mood != null);
     if (sleepMood.length >= 4) {
-      const goodSleep = sleepMood.filter(d => d.sleep >= 7.5).map(d => d.mood);
-      const badSleep  = sleepMood.filter(d => d.sleep < 7).map(d => d.mood);
-      if (goodSleep.length >= 2 && badSleep.length >= 2) {
-        const gAvg = goodSleep.reduce((a,b)=>a+b,0)/goodSleep.length;
-        const bAvg = badSleep.reduce((a,b)=>a+b,0)/badSleep.length;
-        if (gAvg < bAvg - 0.5) insights.push(`<strong>Søvn ↔ Humør:</strong> Med ≥7,5t søvn er dit humør typisk <em>${MOOD_LABELS[Math.round(gAvg)]}</em>. Under 7t: <em>${MOOD_LABELS[Math.round(bAvg)]}</em>.`);
-      }
-    }
-
-    // TSB and motivation
-    const tsbMot = recent.filter(d => d.tsb != null && d.motivation != null);
-    if (tsbMot.length >= 4) {
-      const freshDays = tsbMot.filter(d => d.tsb > 5).map(d => d.motivation);
-      const fatDays   = tsbMot.filter(d => d.tsb < -5).map(d => d.motivation);
-      if (freshDays.length >= 2 && fatDays.length >= 2) {
-        const fAvg = freshDays.reduce((a,b)=>a+b,0)/freshDays.length;
-        const tAvg = fatDays.reduce((a,b)=>a+b,0)/fatDays.length;
-        if (fAvg < tAvg - 0.5) insights.push(`<strong>TSB ↔ Motivation:</strong> Friske dage (TSB&gt;5): motivation typisk <em>${MOT_LABELS[Math.round(fAvg)]}</em>. Hårde dage (TSB&lt;-5): <em>${MOT_LABELS[Math.round(tAvg)]}</em>.`);
+      const g = sleepMood.filter(d => d.sleep >= 7.5).map(d => d.mood);
+      const b = sleepMood.filter(d => d.sleep < 7).map(d => d.mood);
+      if (g.length >= 2 && b.length >= 2) {
+        const gA = g.reduce((a,v)=>a+v,0)/g.length, bA = b.reduce((a,v)=>a+v,0)/b.length;
+        if (gA < bA - 0.5) insights.push(`<strong>Søvn ↔ Humør:</strong> Med ≥7,5t søvn er dit humør typisk <em>${MOOD_LABELS[Math.round(gA)]}</em>. Under 7t: <em>${MOOD_LABELS[Math.round(bA)]}</em>.`);
       }
     }
   }
-
   if (insights.length === 0) return '';
   return `<div class="insight">${insights.map(i => `<div style="margin-bottom:6px">💡 ${i}</div>`).join('')}</div>`;
 }
 
-// ── Recent check-in table ─────────────────────────────────────────────────
 function checkinTable(series) {
   const rows = series.slice(-21).reverse().filter(d => d.mood || d.fatigue || d.soreness || d.motivation || d.hrv || d.sleep);
   if (!rows.length) return '<p style="color:#aeaeb2;font-size:13px">Ingen check-in data endnu</p>';
-
-  const head = `<thead><tr>
-    <th>Dato</th><th>Humør</th><th>Soreness</th><th>Fatigue</th><th>Motivation</th>
-    <th>HRV</th><th>Søvn</th><th>CTL</th><th>TSB</th><th>Note</th>
-  </tr></thead>`;
-
+  const head = `<thead><tr><th>Dato</th><th>Humør</th><th>Soreness</th><th>Fatigue</th><th>Motivation</th><th>HRV</th><th>Søvn</th><th>CTL</th><th>TSB</th><th>Note</th></tr></thead>`;
   const body = rows.map(d => `<tr>
     <td style="font-size:11px;white-space:nowrap">${fmtDate(d.date)}</td>
     <td><span class="${chipClass(d.mood)}">${MOOD_LABELS[d.mood] ?? '–'}</span></td>
     <td><span class="${chipClass(d.soreness)}">${SOR_LABELS[d.soreness] ?? '–'}</span></td>
     <td><span class="${chipClass(d.fatigue)}">${FAT_LABELS[d.fatigue] ?? '–'}</span></td>
     <td><span class="${chipClass(d.motivation)}">${MOT_LABELS[d.motivation] ?? '–'}</span></td>
-    <td style="font-weight:600;color:${d.hrv != null ? (d.hrv >= 70 ? '#30d158' : d.hrv >= 55 ? '#ff9f0a' : '#ff3b30') : '#aeaeb2'}">${fmtN(d.hrv)} <span style="font-size:10px;font-weight:400;color:#aeaeb2">${d.hrv != null ? 'ms' : ''}</span></td>
+    <td style="font-weight:600;color:${d.hrv != null ? (d.hrv >= 70 ? '#30d158' : d.hrv >= 55 ? '#ff9f0a' : '#ff3b30') : '#aeaeb2'}">${fmtN(d.hrv)}${d.hrv != null ? ' <span style="font-size:10px;font-weight:400;color:#aeaeb2">ms</span>' : ''}</td>
     <td style="font-weight:600;color:${d.sleep != null ? (d.sleep >= 7.5 ? '#30d158' : d.sleep >= 6.5 ? '#ff9f0a' : '#ff3b30') : '#aeaeb2'}">${d.sleep != null ? fmtN(d.sleep, 1) + 'h' : '–'}</td>
     <td style="color:#007aff;font-weight:600">${fmtN(d.ctl)}</td>
     <td style="font-weight:600;color:${d.tsb != null ? (d.tsb >= 0 ? '#30d158' : '#ff9f0a') : '#aeaeb2'}">${fmtN(d.tsb, 1)}</td>
     <td style="font-size:11px;color:#8e8e93;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.comments ?? ''}</td>
   </tr>`).join('');
-
   return `<div style="overflow-x:auto"><table class="ctable">${head}<tbody>${body}</tbody></table></div>`;
 }
 
-// ── Kalender kategorier ───────────────────────────────────────────────────
 const CAT_META = {
-  training:     { label: 'Træning',       color: '#bf5af2' },
-  work:         { label: 'Arbejde',       color: '#ff9f0a' },
-  social:       { label: 'Social',        color: '#30d158' },
-  relationship: { label: 'Dating',         color: '#ff2d55' },
-  interests:    { label: 'Interesser',    color: '#007aff' },
+  training:     { label: 'Træning',    color: '#bf5af2' },
+  work:         { label: 'Arbejde',    color: '#ff9f0a' },
+  social:       { label: 'Social',     color: '#30d158' },
+  relationship: { label: 'Dating',     color: '#ff2d55' },
+  interests:    { label: 'Interesser', color: '#007aff' },
 };
 const CAT_KEYS = Object.keys(CAT_META);
 
-// ── Kalender-load over tid med SDNN næste morgen ──────────────────────────
 function calendarLoadChart(series) {
   const days = series.filter(d => d.cal != null || d.sdnn != null);
-  if (days.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Ingen kalender-data endnu — tilføj ICS URLs i Vercel</p>';
-
+  if (days.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Ingen kalender-data endnu</p>';
   const W = 900, H = 160, axH = 22, PDL = 36, PDR = 46, PDY = 8;
   const plotW = W - PDL - PDR;
-
-  // Max bar height (total events per day)
   const maxEvents = Math.max(1, ...days.map(d => CAT_KEYS.reduce((s, k) => s + (d.cal?.[k] ?? 0), 0)));
   const barW = Math.max(2, (plotW / days.length) * 0.7);
-
   const px = i => PDL + (i / Math.max(days.length - 1, 1)) * plotW;
-  const pyBar = v => H - PDY - (v / maxEvents) * (H - 2 * PDY);
-
-  // Stacked bars — one block per event
   const bars = days.map((d, i) => {
     if (!d.cal) return '';
     const totalEvents = CAT_KEYS.reduce((s, k) => s + (d.cal[k] ?? 0), 0);
@@ -640,177 +468,132 @@ function calendarLoadChart(series) {
       });
     }).join('');
   }).join('');
-
-  // SDNN next-morning line (use next day's SDNN for each calendar day)
   const sdnnDays = days.map((d, i) => {
     const next = series[series.indexOf(d) + 1];
     return { i, sdnn: next?.sdnn ?? null, date: d.date };
   }).filter(d => d.sdnn != null);
-
   const sdnnVals = sdnnDays.map(d => d.sdnn);
+  if (!sdnnVals.length) {
+    const legend = CAT_KEYS.map(k => `<div class="legend-item"><div class="legend-dot" style="background:${CAT_META[k].color}"></div>${CAT_META[k].label}</div>`).join('');
+    return `<div class="legend">${legend}</div><div class="chart-wrap"><svg viewBox="0 0 ${W} ${H+axH}" width="100%" style="overflow:visible">${bars}</svg></div>`;
+  }
   const sdMn = Math.floor(Math.min(...sdnnVals) / 10) * 10;
   const sdMx = Math.ceil(Math.max(...sdnnVals) / 10) * 10;
   const sdRng = sdMx - sdMn || 10;
   const pySD = v => PDY + (1 - (v - sdMn) / sdRng) * (H - 2 * PDY);
-
   const sdLine = sdnnDays.map((d, j) => {
     if (j === 0) return '';
     const prev = sdnnDays[j - 1];
     return `<line x1="${px(prev.i).toFixed(1)}" y1="${pySD(prev.sdnn).toFixed(1)}" x2="${px(d.i).toFixed(1)}" y2="${pySD(d.sdnn).toFixed(1)}" stroke="#1c1c1e" stroke-width="2" stroke-linecap="round" opacity="0.7"/>`;
   }).join('');
   const sdDots = sdnnDays.map(d => `<circle cx="${px(d.i).toFixed(1)}" cy="${pySD(d.sdnn).toFixed(1)}" r="3" fill="#1c1c1e" opacity="0.7"><title>${fmtDate(d.date)}: SDNN næste morgen = ${d.sdnn} ms</title></circle>`).join('');
-
-  // Right Y-axis (SDNN)
   const sdTicks = [sdMn, Math.round(sdMn + sdRng/2), sdMx].map(v =>
     `<text x="${W - PDR + 8}" y="${pySD(v).toFixed(1)}" font-size="9" fill="#8e8e93" dominant-baseline="middle">${v}</text>`
   ).join('');
-  const sdAxisLabel = `<text x="${W - 8}" y="${H/2}" font-size="9" fill="#8e8e93" text-anchor="middle" transform="rotate(90 ${W-8} ${H/2})">SDNN (ms)</text>`;
-
-  // X labels
   const step = Math.max(1, Math.floor(days.length / 8));
   const xLabels = days.map((d, i) => {
     if (i % step !== 0 && i !== days.length - 1) return '';
     const dd = new Date(d.date + 'T12:00:00');
     return `<text x="${px(i).toFixed(1)}" y="${H + axH - 3}" font-size="9" fill="#aeaeb2" text-anchor="middle">${dd.getDate()}/${dd.getMonth()+1}</text>`;
   }).join('');
-
   const legend = CAT_KEYS.map(k => `<div class="legend-item"><div class="legend-dot" style="background:${CAT_META[k].color}"></div>${CAT_META[k].label}</div>`).join('') +
     `<div class="legend-item"><div class="legend-line" style="background:#1c1c1e;opacity:0.7"></div>SDNN næste morgen</div>`;
-
   return `
     <div class="legend">${legend}</div>
     <div class="chart-wrap">
       <svg viewBox="0 0 ${W} ${H+axH}" width="100%" style="overflow:visible">
-        ${bars}${sdLine}${sdDots}${sdTicks}${sdAxisLabel}${xLabels}
+        ${bars}${sdLine}${sdDots}${sdTicks}
+        <text x="${W - 8}" y="${H/2}" font-size="9" fill="#8e8e93" text-anchor="middle" transform="rotate(90 ${W-8} ${H/2})">SDNN (ms)</text>
+        ${xLabels}
       </svg>
     </div>`;
 }
 
-// ── Kalender-kategori vs. SDNN næste morgen (scatter) ────────────────────
 function calHrvScatter(series) {
   const pts = [];
   for (let i = 0; i < series.length - 1; i++) {
-    const d = series[i];
-    const next = series[i + 1];
+    const d = series[i], next = series[i + 1];
     if (!d.cal || next.sdnn == null) continue;
     const total = CAT_KEYS.reduce((s, k) => s + (d.cal[k] ?? 0), 0);
     if (!total) continue;
-    // Dominant category = most events
     const dom = CAT_KEYS.reduce((best, k) => (d.cal[k] ?? 0) > (d.cal[best] ?? 0) ? k : best, CAT_KEYS[0]);
     pts.push({ date: d.date, total, dom, sdnn: next.sdnn });
   }
   if (pts.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Ikke nok data endnu</p>';
-
   const W = 400, H = 200, PD = 30, axH = 28;
   const maxTotal = Math.max(...pts.map(p => p.total));
-  const sdnnVals = pts.map(p => p.sdnn);
-  const sdMn = Math.floor(Math.min(...sdnnVals)/10)*10;
-  const sdMx = Math.ceil(Math.max(...sdnnVals)/10)*10;
+  const sdMn = Math.floor(Math.min(...pts.map(p => p.sdnn))/10)*10;
+  const sdMx = Math.ceil(Math.max(...pts.map(p => p.sdnn))/10)*10;
   const sdRng = sdMx - sdMn || 10;
-
   const px = v => PD + (v / maxTotal) * (W - 2*PD);
   const py = v => PD + (1 - (v - sdMn) / sdRng) * (H - 2*PD);
-
   const xTicks = Array.from({length: maxTotal+1}, (_, k) => {
     const x = px(k).toFixed(1);
     return `<line x1="${x}" y1="${PD}" x2="${x}" y2="${H-PD}" stroke="#f2f2f7" stroke-width="1"/>
             <text x="${x}" y="${H-PD+14}" font-size="9" fill="#aeaeb2" text-anchor="middle">${k}</text>`;
   }).join('');
-
   const yTicks = [sdMn, Math.round(sdMn+sdRng/2), sdMx].map(v =>
     `<text x="${PD-4}" y="${py(v).toFixed(1)}" font-size="9" fill="#aeaeb2" text-anchor="end" dominant-baseline="middle">${v}</text>`
   ).join('');
-
   const dots = pts.map(p =>
-    `<circle cx="${px(p.total).toFixed(1)}" cy="${py(p.sdnn).toFixed(1)}" r="5.5" fill="${CAT_META[p.dom].color}" opacity="0.75" stroke="#fff" stroke-width="1.5"><title>${fmtDate(p.date)}: ${p.total} events (${CAT_META[p.dom].label}) → SDNN ${p.sdnn} ms</title></circle>`
+    `<circle cx="${px(p.total).toFixed(1)}" cy="${py(p.sdnn).toFixed(1)}" r="5.5" fill="${CAT_META[p.dom].color}" opacity="0.75" stroke="#fff" stroke-width="1.5"><title>${fmtDate(p.date)}: ${p.total} events → SDNN ${p.sdnn} ms</title></circle>`
   ).join('');
-
-  const xLabel = `<text x="${W/2}" y="${H+axH}" font-size="9" fill="#8e8e93" text-anchor="middle">Antal events i dag</text>`;
-  const yLabel = `<text x="10" y="${H/2}" font-size="9" fill="#8e8e93" text-anchor="middle" transform="rotate(-90 10 ${H/2})">SDNN næste morgen (ms)</text>`;
-
   return `
-    <div class="card-subtitle" style="margin-bottom:10px">Farve = dominerende kalenderkategori. Ser du et mønster?</div>
+    <div class="card-subtitle" style="margin-bottom:10px">Farve = dominerende kategori</div>
     <div class="chart-wrap">
       <svg viewBox="0 0 ${W} ${H+axH}" width="100%" style="overflow:visible">
-        ${xTicks}${yTicks}${dots}${xLabel}${yLabel}
+        ${xTicks}${yTicks}${dots}
+        <text x="${W/2}" y="${H+axH}" font-size="9" fill="#8e8e93" text-anchor="middle">Antal events i dag</text>
+        <text x="10" y="${H/2}" font-size="9" fill="#8e8e93" text-anchor="middle" transform="rotate(-90 10 ${H/2})">SDNN næste morgen (ms)</text>
       </svg>
     </div>`;
 }
 
-// ── SDNN HRV + Stress over tid ────────────────────────────────────────────
 const STRESS_COLORS = {1:'#30d158',2:'#ff9f0a',3:'#ff3b30',4:'#bf5af2'};
 const STRESS_LABELS = ['','Lav','Moderat','Høj','Meget høj'];
 
 function sdnnStressChart(series) {
   const days = series.filter(d => d.sdnn != null || d.stress != null);
   if (days.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Ikke nok SDNN/stress data</p>';
-
   const sdnnDays = days.filter(d => d.sdnn != null);
   const W = 900, H = 180, stressH = 40, axH = 22, PDL = 40, PDR = 10, PDY = 8;
   const plotW = W - PDL - PDR;
   const totalH = H + stressH + axH;
-
-  // SDNN scale
   const sdnnVals = sdnnDays.map(d => d.sdnn);
   const rawMn = Math.min(...sdnnVals), rawMx = Math.max(...sdnnVals);
   const mn = Math.floor(rawMn / 10) * 10, mx = Math.ceil(rawMx / 10) * 10, rng = mx - mn || 10;
-
   const px = i => PDL + (i / Math.max(days.length - 1, 1)) * plotW;
   const py = v => PDY + (1 - (v - mn) / rng) * (H - 2 * PDY);
-
-  // Y-axis ticks
-  const tickCount = 5;
-  const yTicks = Array.from({length: tickCount}, (_, k) => {
-    const v = mn + k * (mx - mn) / (tickCount - 1);
+  const yTicks = Array.from({length: 5}, (_, k) => {
+    const v = mn + k * (mx - mn) / 4;
     const y = py(v).toFixed(1);
     return `<line x1="${PDL}" y1="${y}" x2="${PDL + plotW}" y2="${y}" stroke="#f2f2f7" stroke-width="1"/>
             <text x="${PDL - 6}" y="${y}" font-size="9" fill="#aeaeb2" text-anchor="end" dominant-baseline="middle">${Math.round(v)}</text>`;
   }).join('');
-
-  const axisLabel = `<text x="12" y="${H/2}" font-size="9" fill="#8e8e93" text-anchor="middle" transform="rotate(-90 12 ${H/2})">SDNN (ms)</text>`;
-
-  // SDNN line — colored by stress
   const segments = sdnnDays.map((d, i) => {
     if (i === 0) return '';
     const prev = sdnnDays[i - 1];
-    const idx = days.indexOf(d);
-    const col = STRESS_COLORS[d.stress] ?? '#007aff';
-    return `<line x1="${px(days.indexOf(prev)).toFixed(1)}" y1="${py(prev.sdnn).toFixed(1)}" x2="${px(idx).toFixed(1)}" y2="${py(d.sdnn).toFixed(1)}" stroke="${col}" stroke-width="2.2" stroke-linecap="round"/>`;
+    return `<line x1="${px(days.indexOf(prev)).toFixed(1)}" y1="${py(prev.sdnn).toFixed(1)}" x2="${px(days.indexOf(d)).toFixed(1)}" y2="${py(d.sdnn).toFixed(1)}" stroke="${STRESS_COLORS[d.stress] ?? '#007aff'}" stroke-width="2.2" stroke-linecap="round"/>`;
   }).join('');
-
-  const sdnnDots = sdnnDays.map(d => {
-    const idx = days.indexOf(d);
-    const col = STRESS_COLORS[d.stress] ?? '#007aff';
-    return `<circle cx="${px(idx).toFixed(1)}" cy="${py(d.sdnn).toFixed(1)}" r="3.5" fill="${col}" stroke="#fff" stroke-width="1.5"><title>${fmtDate(d.date)}: SDNN=${d.sdnn} ms, Stress=${STRESS_LABELS[d.stress] ?? '–'}</title></circle>`;
-  }).join('');
-
-  // Stress bars below the line chart
+  const sdnnDots = sdnnDays.map(d =>
+    `<circle cx="${px(days.indexOf(d)).toFixed(1)}" cy="${py(d.sdnn).toFixed(1)}" r="3.5" fill="${STRESS_COLORS[d.stress] ?? '#007aff'}" stroke="#fff" stroke-width="1.5"><title>${fmtDate(d.date)}: SDNN=${d.sdnn} ms, Stress=${STRESS_LABELS[d.stress] ?? '–'}</title></circle>`
+  ).join('');
   const barW = Math.max(2, (plotW / days.length) * 0.7);
   const stressTop = H + 8;
   const stressBars = days.map((d, i) => {
     if (d.stress == null) return '';
     const bh = (d.stress / 4) * (stressH - 8);
-    const col = STRESS_COLORS[d.stress];
-    return `<rect x="${(px(i) - barW/2).toFixed(1)}" y="${(stressTop + stressH - 8 - bh).toFixed(1)}" width="${barW.toFixed(1)}" height="${bh.toFixed(1)}" rx="2" fill="${col}" opacity="0.7"><title>${fmtDate(d.date)}: Stress=${STRESS_LABELS[d.stress]}</title></rect>`;
+    return `<rect x="${(px(i) - barW/2).toFixed(1)}" y="${(stressTop + stressH - 8 - bh).toFixed(1)}" width="${barW.toFixed(1)}" height="${bh.toFixed(1)}" rx="2" fill="${STRESS_COLORS[d.stress]}" opacity="0.7"><title>${fmtDate(d.date)}: Stress=${STRESS_LABELS[d.stress]}</title></rect>`;
   }).join('');
-
-  // Stress Y-label
-  const stressLabel = `<text x="12" y="${stressTop + (stressH-8)/2}" font-size="9" fill="#8e8e93" text-anchor="middle" transform="rotate(-90 12 ${stressTop + (stressH-8)/2})">Stress</text>`;
-
-  // Divider line between SDNN and stress
-  const divider = `<line x1="${PDL}" y1="${stressTop}" x2="${PDL + plotW}" y2="${stressTop}" stroke="#f2f2f7" stroke-width="1"/>`;
-
-  // X-axis labels (shared)
   const step = Math.max(1, Math.floor(days.length / 8));
   const xLabels = days.map((d, i) => {
     if (i % step !== 0 && i !== days.length - 1) return '';
     const dd = new Date(d.date + 'T12:00:00');
     return `<text x="${px(i).toFixed(1)}" y="${totalH - 3}" font-size="9" fill="#aeaeb2" text-anchor="middle">${dd.getDate()}/${dd.getMonth()+1}</text>`;
   }).join('');
-
   return `
     <div class="legend">
-      <div class="legend-item"><span style="font-size:10px">Linje/prikker farvet efter dagsstress:</span></div>
+      <div class="legend-item"><span style="font-size:10px">Farvet efter stress:</span></div>
       <div class="legend-item"><div class="legend-dot" style="background:#30d158"></div>Lav</div>
       <div class="legend-item"><div class="legend-dot" style="background:#ff9f0a"></div>Moderat</div>
       <div class="legend-item"><div class="legend-dot" style="background:#ff3b30"></div>Høj</div>
@@ -818,96 +601,118 @@ function sdnnStressChart(series) {
     </div>
     <div class="chart-wrap">
       <svg viewBox="0 0 ${W} ${totalH}" width="100%" style="overflow:visible">
-        ${yTicks}${axisLabel}${segments}${sdnnDots}
-        ${divider}${stressBars}${stressLabel}
+        ${yTicks}<text x="12" y="${H/2}" font-size="9" fill="#8e8e93" text-anchor="middle" transform="rotate(-90 12 ${H/2})">SDNN (ms)</text>
+        ${segments}${sdnnDots}
+        <line x1="${PDL}" y1="${stressTop}" x2="${PDL + plotW}" y2="${stressTop}" stroke="#f2f2f7" stroke-width="1"/>
+        ${stressBars}<text x="12" y="${stressTop + (stressH-8)/2}" font-size="9" fill="#8e8e93" text-anchor="middle" transform="rotate(-90 12 ${stressTop + (stressH-8)/2})">Stress</text>
         ${xLabels}
       </svg>
     </div>`;
 }
 
-// ── Main render ───────────────────────────────────────────────────────────
 function render(data, sportData) {
   const { series, today } = data;
   const sportSeries = sportData?.series ?? [];
   const latest = [...series].reverse().find(d => d.ctl != null) ?? series[series.length - 1] ?? {};
   const latestCheckin = [...series].reverse().find(d => d.mood != null) ?? {};
-
   const todayFmt = (() => {
     const d = new Date(today + 'T12:00:00');
     return `${DAYS_S[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
   })();
-  const timeFmt = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Copenhagen' });
-  document.getElementById('topbar-date').innerHTML = `${todayFmt}<br>Updated ${timeFmt}`;
+  document.getElementById('topbar-date').innerHTML = `${todayFmt}<br>Opdateret ${new Date().toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Copenhagen' })}`;
 
-  // TSB zone label
   function tsbLabel(t) {
     if (t == null) return ['–', ''];
-    if (t > 10)   return ['Tapered', 'bg-yellow'];
-    if (t > 5)    return ['Peak form', 'bg-green'];
-    if (t >= -5)  return ['Maintenance', ''];
+    if (t > 10) return ['Tapered', 'bg-yellow'];
+    if (t > 5) return ['Peak form', 'bg-green'];
+    if (t >= -5) return ['Maintenance', ''];
     if (t >= -10) return ['Build phase', ''];
     if (t >= -20) return ['Accum. fatigue', 'bg-yellow'];
     return ['Overreaching', 'bg-red'];
   }
-  const [tsbZone, tsbBg] = tsbLabel(latest.tsb);
-
+  const [tsbZone] = tsbLabel(latest.tsb);
   const kpiColor = v => v == null ? 'neutral' : v >= 65 ? 'green' : v >= 45 ? 'yellow' : 'red';
 
-  const s10 = series.slice(-10);
-
-  const tsbCol = latest.tsb != null && latest.tsb >= 0 ? 'green' : 'yellow';
+  function kpiCard(title, value, unit, sub, colorClass) {
+    return `<div class="card">
+      <div class="card-title">${title}</div>
+      <div class="kpi-value ${colorClass}">${value}<span class="kpi-unit">${unit}</span></div>
+      <div class="kpi-sub">${sub}</div>
+    </div>`;
+  }
 
   const app = document.getElementById('app');
   app.innerHTML = `
-    <div class="kpi-strip">
-      <div class="kpi-chip">
-        <span class="kl">CTL</span>
-        <span class="kv blue">${fmtN(latest.ctl)}</span>
+    <div class="row row-4">
+      ${kpiCard('Fitness (CTL)', fmtN(latest.ctl), '', '60-dages gennemsnit', 'blue')}
+      ${kpiCard('Fatigue (ATL)', fmtN(latest.atl), '', '7-dages gennemsnit', 'yellow')}
+      ${kpiCard('Form (TSB)', fmtN(latest.tsb, 1), '', tsbZone, latest.tsb != null && latest.tsb >= 0 ? 'green' : 'yellow')}
+      ${kpiCard('HRV', fmtN(latest.hrv), 'ms', `Seneste: ${latestCheckin.date ? fmtDate(latestCheckin.date) : '–'}`, kpiColor(latest.hrv))}
+    </div>
+
+    <div class="row row-full">
+      <div class="card">
+        <div class="card-title">Fitness & Form — 30 dage <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#aeaeb2;font-size:10px">Prikker = dagens check-in humør</span></div>
+        ${fitnessCheckinChart(series)}
+        ${computeInsights(series)}
       </div>
-      <div class="kpi-chip">
-        <span class="kl">ATL</span>
-        <span class="kv yellow">${fmtN(latest.atl)}</span>
+    </div>
+
+    <div class="row row-2">
+      <div class="card">
+        <div class="card-title">Løb — Fitness & Form</div>
+        ${sportFitnessChart(sportSeries.map(d => ({ date: d.date, ...d.run })))}
       </div>
-      <div class="kpi-chip">
-        <span class="kl">TSB</span>
-        <span class="kv ${tsbCol}">${fmtN(latest.tsb, 1)}</span>
-      </div>
-      <div class="kpi-chip">
-        <span class="kl">HRV</span>
-        <span class="kv ${kpiColor(latest.hrv)}">${fmtN(latest.hrv)}<span class="ku"> ms</span></span>
+      <div class="card">
+        <div class="card-title">Styrke — Fitness & Form</div>
+        ${sportFitnessChart(sportSeries.map(d => ({ date: d.date, ...d.strength })))}
       </div>
     </div>
 
     <div class="row row-full">
       <div class="card">
-        <div class="card-title">Form — 10 dage</div>
-        ${fitnessCheckinChart(s10)}
+        <div class="card-title">Kalender-belastning & SDNN restitution</div>
+        <div class="card-subtitle" style="margin-bottom:10px">Søjler = antal events pr. kategori — sort linje = SDNN næste morgen</div>
+        ${calendarLoadChart(series)}
       </div>
     </div>
 
-    <div class="row row-full">
+    <div class="row row-2-1">
       <div class="card">
-        <div class="card-title">Kalender-belastning & SDNN</div>
-        <div class="card-subtitle" style="margin-bottom:10px">Søjler = events pr. kategori — sort linje = SDNN næste morgen</div>
-        ${calendarLoadChart(s10)}
+        <div class="card-title">SDNN HRV & Dagsstress over tid</div>
+        ${sdnnStressChart(series)}
       </div>
-    </div>
-
-    <div class="row row-full">
       <div class="card">
-        <div class="card-title">SDNN HRV & Stress — 10 dage</div>
-        ${sdnnStressChart(s10)}
+        <div class="card-title">Events vs. SDNN næste morgen</div>
+        ${calHrvScatter(series)}
       </div>
     </div>
 
     <div class="row row-2">
       <div class="card">
         <div class="card-title">HRV over tid</div>
-        ${hrvCheckinChart(s10)}
+        ${hrvCheckinChart(series)}
       </div>
       <div class="card">
         <div class="card-title">Søvn over tid</div>
-        ${sleepMoodChart(s10)}
+        ${sleepMoodChart(series)}
+      </div>
+    </div>
+
+    <div class="row row-2-1">
+      <div class="card" style="overflow:auto">
+        <div class="card-title">Check-in historik — seneste 21 dage</div>
+        ${checkinTable(series)}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div class="card">
+          <div class="card-title">TSB vs Humør</div>
+          ${tsbMoodScatter(series)}
+        </div>
+        <div class="card">
+          <div class="card-title">Søvn vs Humør</div>
+          ${sleepMoodScatter(series)}
+        </div>
       </div>
     </div>
   `;
@@ -916,7 +721,6 @@ function render(data, sportData) {
   app.style.display = '';
 }
 
-// ── Boot ──────────────────────────────────────────────────────────────────
 (async () => {
   try {
     const [res, sportRes] = await Promise.all([
