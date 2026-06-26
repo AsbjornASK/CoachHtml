@@ -115,6 +115,7 @@ const BL = {
 };
 
 function calcRecovery(hrv,rhr,sleep,tsb){
+  if(hrv==null)return null;
   let z=0,wt=0;
   if(hrv!=null){z+=BL.hrv.w*(hrv-BL.hrv.mean)/BL.hrv.std;wt+=BL.hrv.w;}
   if(rhr!=null&&rhr<65){z+=BL.rhr.w*(BL.rhr.mean-rhr)/BL.rhr.std;wt+=BL.rhr.w;}
@@ -125,7 +126,8 @@ function calcRecovery(hrv,rhr,sleep,tsb){
 }
 
 function calcSleep(hrs,score,s8){
-  const dur=hrs?Math.min(100,(hrs/7.5)*100):70;
+  if(hrs==null)return null;
+  const dur=Math.min(100,(hrs/7.5)*100);
   const res=score??70;
   let con=70;
   const v=(s8??[]).filter(x=>x!=null);
@@ -218,7 +220,7 @@ function render(data){
   const rec=calcRecovery(latest.hrv,latest.restingHR,latest.sleepHours,latest.tsb);
   const slp=calcSleep(latest.sleepHours,latest.sleepScore,sleep8);
   const ready=calcReadiness(rec,slp);
-  const vc=verdictColor(ready??50);
+  const vc=ready!=null?verdictColor(ready):'neutral';
   const today=new Date();
   const todayStr=`${EN_DAYS_S[today.getDay()]} ${today.getDate()} ${EN_MONTHS[today.getMonth()]}`;
   const timeStr=today.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Copenhagen'});

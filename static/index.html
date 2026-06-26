@@ -158,6 +158,7 @@ const BL = {
 };
 
 function calcRecovery(hrv,rhr,sleep,tsb){
+  if(hrv==null)return null;
   let z=0,wt=0;
   if(hrv!=null){z+=BL.hrv.w*(hrv-BL.hrv.mean)/BL.hrv.std;wt+=BL.hrv.w;}
   if(rhr!=null&&rhr<65){z+=BL.rhr.w*(BL.rhr.mean-rhr)/BL.rhr.std;wt+=BL.rhr.w;}
@@ -168,7 +169,8 @@ function calcRecovery(hrv,rhr,sleep,tsb){
 }
 
 function calcSleep(hrs,score,s8){
-  const dur=hrs?Math.min(100,(hrs/7.5)*100):70;
+  if(hrs==null)return null;
+  const dur=Math.min(100,(hrs/7.5)*100);
   const res=score??70;
   let con=70;
   const v=(s8??[]).filter(x=>x!=null);
@@ -197,7 +199,7 @@ function trend(arr,invert=false){
   return{a:up?'up':'down',c:good?'trend-up':'trend-down'};
 }
 
-function readinessHistGraph(hrvArr,rhrArr,sleepArr,sleepScoreArr,tsbArr,fatigueArr,sorennessArr){
+function readinessHistGraph(hrvArr,rhrArr,sleepArr,sleepScoreArr,tsbArr,fatigueArr,sorennessArr,datesArr){
   const len=Math.min(hrvArr.length,rhrArr.length,sleepArr.length);
   const vals=[];
   for(let i=0;i<len;i++){
@@ -206,28 +208,31 @@ function readinessHistGraph(hrvArr,rhrArr,sleepArr,sleepScoreArr,tsbArr,fatigueA
     const subj={fatigue:(fatigueArr??[])[i]??null,soreness:(sorennessArr??[])[i]??null};
     vals.push(calcReadiness(rec,slp,subj));
   }
-  const pts=vals.map((v,i)=>v!=null?{x:i,v}:null).filter(Boolean);
-  if(pts.length<3)return'';
+  const pts=vals.map((v,i)=>v!=null?{x:i,v,date:(datesArr??[])[i]??null}:null).filter(Boolean);
+  if(pts.length<2)return'';
   const vs=pts.map(p=>p.v);
   const mn=Math.min(...vs),mx=Math.max(...vs),rng=mx-mn||1;
-  const W=300,H=48,axH=14,pd=6,pdY=3;
+  const W=300,H=56,scoreLblH=14,axH=14,pd=10,pdY=6;
+  const totalH=scoreLblH+H+axH;
   const px=x=>pd+(x/(vals.length-1))*(W-2*pd);
-  const py=v=>pdY+(1-(v-mn)/rng)*(H-2*pdY);
+  const py=v=>scoreLblH+pdY+(1-(v-mn)/rng)*(H-2*pdY);
   const colorForV=v=>v>=65?'#30d158':v>=45?'#ff9f0a':'#ff3b30';
+  const fmtDate=d=>{if(!d)return'';const p=d.split('-');return`${p[2]}/${p[1]}`;};
   const segments=[];
   for(let i=0;i<pts.length-1;i++){
     const a=pts[i],b=pts[i+1];
-    const midV=(a.v+b.v)/2;
-    segments.push(`<line x1="${px(a.x).toFixed(1)}" y1="${py(a.v).toFixed(1)}" x2="${px(b.x).toFixed(1)}" y2="${py(b.v).toFixed(1)}" stroke="${colorForV(midV)}" stroke-width="2" stroke-linecap="round"/>`);
+    if(b.x-a.x===1){const midV=(a.v+b.v)/2;segments.push(`<line x1="${px(a.x).toFixed(1)}" y1="${py(a.v).toFixed(1)}" x2="${px(b.x).toFixed(1)}" y2="${py(b.v).toFixed(1)}" stroke="${colorForV(midV)}" stroke-width="2" stroke-linecap="round"/>`);}
   }
-  const dots=pts.map(p=>`<circle cx="${px(p.x).toFixed(1)}" cy="${py(p.v).toFixed(1)}" r="2.5" fill="${colorForV(p.v)}"/>`).join('');
-  const idxs=[0,Math.floor(pts.length*0.33),Math.floor(pts.length*0.66),pts.length-1];
-  const labs=[...new Set(idxs)].map(i=>{const p=pts[i];return`<text x="${px(p.x).toFixed(1)}" y="${H+axH-1}" font-size="8" fill="#aeaeb2" text-anchor="middle">${p.v}</text>`;}).join('');
-  return `<svg viewBox="0 0 ${W} ${H+axH}" width="100%" height="${H+axH}">${segments.join('')}${dots}${labs}</svg>`;
+  const dots=pts.map(p=>`<circle cx="${px(p.x).toFixed(1)}" cy="${py(p.v).toFixed(1)}" r="3.5" fill="${colorForV(p.v)}"/>`).join('');
+  const scoreLabels=pts.map(p=>`<text x="${px(p.x).toFixed(1)}" y="${(py(p.v)-7).toFixed(1)}" font-size="8" font-weight="700" fill="${colorForV(p.v)}" text-anchor="middle">${p.v}</text>`).join('');
+  const dateLabels=pts.map(p=>`<text x="${px(p.x).toFixed(1)}" y="${(scoreLblH+H+axH-1).toFixed(1)}" font-size="8" fill="#aeaeb2" text-anchor="middle">${fmtDate(p.date)}</text>`).join('');
+  return `<svg viewBox="0 0 ${W} ${totalH}" width="100%" height="${totalH}">${segments.join('')}${dots}${scoreLabels}${dateLabels}</svg>`;
 }
 
 function ring(pct,color,label){
-  const R=38,C=2*Math.PI*R,off=(1-pct/100)*C;
+  const R=38,C=2*Math.PI*R;
+  if(pct==null)return `<div class="ring-wrap"><svg width="96" height="96" viewBox="0 0 96 96"><circle cx="48" cy="48" r="${R}" fill="none" stroke="#e5e5ea" stroke-width="10"/><text x="48" y="52" text-anchor="middle" font-size="22" font-weight="800" fill="#aeaeb2">?</text></svg><div class="ring-label">${label}</div></div>`;
+  const off=(1-pct/100)*C;
   return `<div class="ring-wrap"><svg width="96" height="96" viewBox="0 0 96 96"><circle cx="48" cy="48" r="${R}" fill="none" stroke="#e5e5ea" stroke-width="10"/><circle cx="48" cy="48" r="${R}" fill="none" stroke="${color}" stroke-width="10" stroke-dasharray="${C.toFixed(2)}" stroke-dashoffset="${off.toFixed(2)}" stroke-linecap="round" transform="rotate(-90 48 48)"/><text x="48" y="44" text-anchor="middle" font-size="20" font-weight="800" fill="#1c1c1e">${pct}</text><text x="48" y="58" text-anchor="middle" font-size="10" fill="#8e8e93">%</text></svg><div class="ring-label">${label}</div></div>`;
 }
 
@@ -259,10 +264,10 @@ function render(data,cal){
   const rec=calcRecovery(latest.hrv,latest.restingHR,latest.sleepHours,latest.tsb);
   const slp=calcSleep(latest.sleepHours,latest.sleepScore,sleep8);
   const ready=calcReadiness(rec,slp,subjective);
-  const vc=verdictColor(ready??50);
-  const rColor=HEX[vc];
-  const recColor=HEX[verdictColor(rec??50)];
-  const slpColor=HEX[verdictColor(slp??50)];
+  const vc=ready!=null?verdictColor(ready):'neutral';
+  const rColor=ready!=null?HEX[verdictColor(ready)]:'#aeaeb2';
+  const recColor=rec!=null?HEX[verdictColor(rec)]:'#aeaeb2';
+  const slpColor=slp!=null?HEX[verdictColor(slp)]:'#aeaeb2';
   const today=new Date();
   const todayStr=`${EN_DAYS_S[today.getDay()]} ${today.getDate()} ${EN_MONTHS[today.getMonth()]}`;
   const timeStr=today.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Copenhagen'});
@@ -291,7 +296,7 @@ function render(data,cal){
       : `<div style="color:#aeaeb2;font-size:14px;text-align:center;padding:8px 0">Complete your morning check-in above ↑</div>`
   }</div>`;
 
-  const readyHistSVG=readinessHistGraph(trends.hrv,trends.rhr,trends.sleep,trends.sleepScore,trends.tsb,trends.fatigue,trends.soreness);
+  const readyHistSVG=readinessHistGraph(trends.hrv,trends.rhr,trends.sleep,trends.sleepScore,trends.tsb,trends.fatigue,trends.soreness,trends.dates);
   const readyHistHTML=readyHistSVG?`<div class="readiness-hist"><div class="readiness-hist-label">Readiness history</div>${readyHistSVG}</div>`:'';
 
   document.getElementById('topbar-date').innerHTML=`${todayStr}<br>Updated ${timeStr}`;
@@ -299,7 +304,7 @@ function render(data,cal){
   document.getElementById('app').innerHTML=`
     <div class="card">
       <div class="card-title">Scores</div>
-      <div class="rings">${ring(ready??0,rColor,'Readiness')}${ring(rec??0,recColor,'Recovery')}${ring(slp??0,slpColor,'Sleep')}</div>
+      <div class="rings">${ring(ready,rColor,'Readiness')}${ring(rec,recColor,'Recovery')}${ring(slp,slpColor,'Sleep')}</div>
       ${readyHistHTML}
     </div>
     <div class="card">
