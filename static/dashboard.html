@@ -137,6 +137,11 @@ const MOT_LABELS   = ['','Extreme','High','Middel','Low'];
 
 const CHECKIN_COLORS = {1:'#30d158',2:'#ff9f0a',3:'#ff3b30',4:'#bf5af2'};
 
+// Returns true only if dateB is exactly one calendar day after dateA
+function consecutive(dateA, dateB) {
+  return (new Date(dateB+'T12:00:00') - new Date(dateA+'T12:00:00')) === 86400000;
+}
+
 function chipClass(v) { return v ? `chip chip-${v}` : 'chip chip-null'; }
 function fmtDate(iso) {
   const d = new Date(iso + 'T12:00:00');
@@ -173,15 +178,24 @@ function fitnessCheckinChart(series) {
   const px = i => PDL + i * plotW / Math.max(days.length - 1, 1);
   const py = v => PDY + (1 - (v - mn) / rng) * (H - 2 * PDY);
 
-  const ctlPts = days.map((d, i) => d.ctl != null ? `${px(i).toFixed(1)},${py(d.ctl).toFixed(1)}` : null).filter(Boolean).join(' ');
-  const atlPts = days.map((d, i) => d.atl != null ? `${px(i).toFixed(1)},${py(d.atl).toFixed(1)}` : null).filter(Boolean).join(' ');
+  const ctlSegs = days.map((d, i) => {
+    if (i === 0 || d.ctl == null || days[i-1].ctl == null || !consecutive(days[i-1].date, d.date)) return '';
+    return `<line x1="${px(i-1).toFixed(1)}" y1="${py(days[i-1].ctl).toFixed(1)}" x2="${px(i).toFixed(1)}" y2="${py(d.ctl).toFixed(1)}" stroke="#007aff" stroke-width="2.5" stroke-linecap="round"/>`;
+  }).join('');
+  const atlSegs = days.map((d, i) => {
+    if (i === 0 || d.atl == null || days[i-1].atl == null || !consecutive(days[i-1].date, d.date)) return '';
+    return `<line x1="${px(i-1).toFixed(1)}" y1="${py(days[i-1].atl).toFixed(1)}" x2="${px(i).toFixed(1)}" y2="${py(d.atl).toFixed(1)}" stroke="#ff9f0a" stroke-width="2.5" stroke-linecap="round"/>`;
+  }).join('');
 
   // TSB secondary axis (right)
   const tsbValid = days.map(d => d.tsb).filter(v => v != null);
   const tsbRawMn = Math.min(...tsbValid, -15), tsbRawMx = Math.max(...tsbValid, 15);
   const tsbMn = Math.floor(tsbRawMn / 5) * 5, tsbMx = Math.ceil(tsbRawMx / 5) * 5, tsbRng = tsbMx - tsbMn || 1;
   const pyTsb = v => PDY + (1 - (v - tsbMn) / tsbRng) * (H - 2 * PDY);
-  const tsbPts = days.map((d, i) => d.tsb != null ? `${px(i).toFixed(1)},${pyTsb(d.tsb).toFixed(1)}` : null).filter(Boolean).join(' ');
+  const tsbSegs = days.map((d, i) => {
+    if (i === 0 || d.tsb == null || days[i-1].tsb == null || !consecutive(days[i-1].date, d.date)) return '';
+    return `<line x1="${px(i-1).toFixed(1)}" y1="${pyTsb(days[i-1].tsb).toFixed(1)}" x2="${px(i).toFixed(1)}" y2="${pyTsb(d.tsb).toFixed(1)}" stroke="#bf5af2" stroke-width="1.5" stroke-dasharray="5,3" opacity="0.7" stroke-linecap="round"/>`;
+  }).join('');
   const tsbZeroY = pyTsb(0).toFixed(1);
 
   // Left Y-axis ticks (CTL/ATL) — 5 evenly spaced
@@ -235,9 +249,7 @@ function fitnessCheckinChart(series) {
       <svg viewBox="0 0 ${W} ${H + axH}" width="100%" style="overflow:visible">
         ${leftTicks}
         <line x1="${PDL}" y1="${tsbZeroY}" x2="${PDL + plotW}" y2="${tsbZeroY}" stroke="#d1d1d6" stroke-width="1" stroke-dasharray="4,3"/>
-        <polyline fill="none" stroke="#bf5af2" stroke-width="1.5" stroke-dasharray="5,3" opacity="0.7" stroke-linecap="round" stroke-linejoin="round" points="${tsbPts}"/>
-        <polyline fill="none" stroke="#007aff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" points="${ctlPts}"/>
-        <polyline fill="none" stroke="#ff9f0a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" points="${atlPts}"/>
+        ${tsbSegs}${ctlSegs}${atlSegs}
         ${dots}
         ${xLabels}
         ${rightTicks}
@@ -260,14 +272,23 @@ function sportFitnessChart(days) {
   const px = i => PDL + i * plotW / Math.max(days.length - 1, 1);
   const py = v => PDY + (1 - (v - mn) / rng) * (H - 2 * PDY);
 
-  const ctlPts = days.map((d, i) => d.ctl != null ? `${px(i).toFixed(1)},${py(d.ctl).toFixed(1)}` : null).filter(Boolean).join(' ');
-  const atlPts = days.map((d, i) => d.atl != null ? `${px(i).toFixed(1)},${py(d.atl).toFixed(1)}` : null).filter(Boolean).join(' ');
+  const ctlSegs = days.map((d, i) => {
+    if (i === 0 || d.ctl == null || days[i-1].ctl == null || !consecutive(days[i-1].date, d.date)) return '';
+    return `<line x1="${px(i-1).toFixed(1)}" y1="${py(days[i-1].ctl).toFixed(1)}" x2="${px(i).toFixed(1)}" y2="${py(d.ctl).toFixed(1)}" stroke="#007aff" stroke-width="2.5" stroke-linecap="round"/>`;
+  }).join('');
+  const atlSegs = days.map((d, i) => {
+    if (i === 0 || d.atl == null || days[i-1].atl == null || !consecutive(days[i-1].date, d.date)) return '';
+    return `<line x1="${px(i-1).toFixed(1)}" y1="${py(days[i-1].atl).toFixed(1)}" x2="${px(i).toFixed(1)}" y2="${py(d.atl).toFixed(1)}" stroke="#ff9f0a" stroke-width="2.5" stroke-linecap="round"/>`;
+  }).join('');
 
   const tsbValid = days.map(d => d.tsb).filter(v => v != null);
   const tsbRawMn = Math.min(...tsbValid, -5), tsbRawMx = Math.max(...tsbValid, 5);
   const tsbMn = Math.floor(tsbRawMn), tsbMx = Math.ceil(tsbRawMx) || 1, tsbRng = (tsbMx - tsbMn) || 1;
   const pyTsb = v => PDY + (1 - (v - tsbMn) / tsbRng) * (H - 2 * PDY);
-  const tsbPts = days.map((d, i) => d.tsb != null ? `${px(i).toFixed(1)},${pyTsb(d.tsb).toFixed(1)}` : null).filter(Boolean).join(' ');
+  const tsbSegs = days.map((d, i) => {
+    if (i === 0 || d.tsb == null || days[i-1].tsb == null || !consecutive(days[i-1].date, d.date)) return '';
+    return `<line x1="${px(i-1).toFixed(1)}" y1="${pyTsb(days[i-1].tsb).toFixed(1)}" x2="${px(i).toFixed(1)}" y2="${pyTsb(d.tsb).toFixed(1)}" stroke="#bf5af2" stroke-width="1.5" stroke-dasharray="5,3" opacity="0.7" stroke-linecap="round"/>`;
+  }).join('');
   const tsbZeroY = pyTsb(0).toFixed(1);
 
   const leftTickCount = 4;
@@ -302,9 +323,7 @@ function sportFitnessChart(days) {
       <svg viewBox="0 0 ${W} ${H + axH}" width="100%" style="overflow:visible">
         ${leftTicks}
         <line x1="${PDL}" y1="${tsbZeroY}" x2="${PDL + plotW}" y2="${tsbZeroY}" stroke="#d1d1d6" stroke-width="1" stroke-dasharray="4,3"/>
-        <polyline fill="none" stroke="#bf5af2" stroke-width="1.5" stroke-dasharray="5,3" opacity="0.7" stroke-linecap="round" stroke-linejoin="round" points="${tsbPts}"/>
-        <polyline fill="none" stroke="#007aff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" points="${ctlPts}"/>
-        <polyline fill="none" stroke="#ff9f0a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" points="${atlPts}"/>
+        ${tsbSegs}${ctlSegs}${atlSegs}
         ${xLabels}
         ${rightTicks}
       </svg>
@@ -313,18 +332,18 @@ function sportFitnessChart(days) {
 
 // ── HRV + check-in chart ──────────────────────────────────────────────────
 function hrvCheckinChart(series) {
-  const days = series.filter(d => d.hrv != null);
-  if (days.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Ikke nok HRV data</p>';
+  const days = series;
+  const hrvDays = days.filter(d => d.hrv != null);
+  if (hrvDays.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Ikke nok HRV data</p>';
 
   const W = 500, H = 180, axH = 18, PDL = 36, PDR = 10, PDY = 8;
   const plotW = W - PDL - PDR;
-  const vals = days.map(d => d.hrv);
+  const vals = hrvDays.map(d => d.hrv);
   const rawMn = Math.min(...vals), rawMx = Math.max(...vals);
   const mn = Math.floor(rawMn / 5) * 5, mx = Math.ceil(rawMx / 5) * 5, rng = mx - mn || 1;
   const px = i => PDL + i * plotW / Math.max(days.length - 1, 1);
   const py = v => PDY + (1 - (v - mn) / rng) * (H - 2 * PDY);
 
-  // Y-axis ticks + gridlines (5 ticks)
   const tickCount = 5;
   const yTicks = Array.from({length: tickCount}, (_, k) => {
     const v = mn + k * (mx - mn) / (tickCount - 1);
@@ -336,13 +355,13 @@ function hrvCheckinChart(series) {
   const axisLabel = `<text x="10" y="${H / 2}" font-size="9" fill="#8e8e93" text-anchor="middle" transform="rotate(-90 10 ${H / 2})">HRV (ms)</text>`;
 
   const segments = days.map((d, i) => {
-    if (i === 0) return '';
-    const prev = days[i - 1];
+    if (i === 0 || d.hrv == null || days[i-1].hrv == null || !consecutive(days[i-1].date, d.date)) return '';
     const col = CHECKIN_COLORS[d.fatigue] ?? '#007aff';
-    return `<line x1="${px(i-1).toFixed(1)}" y1="${py(prev.hrv).toFixed(1)}" x2="${px(i).toFixed(1)}" y2="${py(d.hrv).toFixed(1)}" stroke="${col}" stroke-width="2.2" stroke-linecap="round"/>`;
+    return `<line x1="${px(i-1).toFixed(1)}" y1="${py(days[i-1].hrv).toFixed(1)}" x2="${px(i).toFixed(1)}" y2="${py(d.hrv).toFixed(1)}" stroke="${col}" stroke-width="2.2" stroke-linecap="round"/>`;
   }).join('');
 
   const dots = days.map((d, i) => {
+    if (d.hrv == null) return '';
     const col = CHECKIN_COLORS[d.fatigue] ?? '#007aff';
     return `<circle cx="${px(i).toFixed(1)}" cy="${py(d.hrv).toFixed(1)}" r="3.5" fill="${col}" stroke="#fff" stroke-width="1.5"><title>${fmtDate(d.date)}: HRV=${d.hrv} ms, Fatigue=${FAT_LABELS[d.fatigue] ?? '–'}</title></circle>`;
   }).join('');
@@ -371,12 +390,13 @@ function hrvCheckinChart(series) {
 
 // ── Sleep chart coloured by mood ──────────────────────────────────────────
 function sleepMoodChart(series) {
-  const days = series.filter(d => d.sleep != null);
-  if (days.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Ikke nok søvn data</p>';
+  const days = series;
+  const sleepDays = days.filter(d => d.sleep != null);
+  if (sleepDays.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Ikke nok søvn data</p>';
 
   const W = 500, H = 180, axH = 18, PDL = 36, PDR = 10, PDY = 8;
   const plotW = W - PDL - PDR;
-  const vals = days.map(d => d.sleep);
+  const vals = sleepDays.map(d => d.sleep);
   const mn = Math.max(0, Math.floor(Math.min(...vals) - 0.5)), mx = Math.ceil(Math.max(...vals) + 0.5), rng = mx - mn || 1;
   const px = i => PDL + i * plotW / Math.max(days.length - 1, 1);
   const py = v => PDY + (1 - (v - mn) / rng) * (H - 2 * PDY);
@@ -400,13 +420,13 @@ function sleepMoodChart(series) {
   const y8 = py(8).toFixed(1);
 
   const segments = days.map((d, i) => {
-    if (i === 0) return '';
-    const prev = days[i - 1];
+    if (i === 0 || d.sleep == null || days[i-1].sleep == null || !consecutive(days[i-1].date, d.date)) return '';
     const col = CHECKIN_COLORS[d.mood] ?? '#007aff';
-    return `<line x1="${px(i-1).toFixed(1)}" y1="${py(prev.sleep).toFixed(1)}" x2="${px(i).toFixed(1)}" y2="${py(d.sleep).toFixed(1)}" stroke="${col}" stroke-width="2.2" stroke-linecap="round"/>`;
+    return `<line x1="${px(i-1).toFixed(1)}" y1="${py(days[i-1].sleep).toFixed(1)}" x2="${px(i).toFixed(1)}" y2="${py(d.sleep).toFixed(1)}" stroke="${col}" stroke-width="2.2" stroke-linecap="round"/>`;
   }).join('');
 
   const dots = days.map((d, i) => {
+    if (d.sleep == null) return '';
     const col = CHECKIN_COLORS[d.mood] ?? '#007aff';
     return `<circle cx="${px(i).toFixed(1)}" cy="${py(d.sleep).toFixed(1)}" r="3.5" fill="${col}" stroke="#fff" stroke-width="1.5"><title>${fmtDate(d.date)}: Søvn=${d.sleep}t, Humør=${MOOD_LABELS[d.mood] ?? '–'}</title></circle>`;
   }).join('');
@@ -655,15 +675,16 @@ function calendarLoadChart(series) {
   const sdLine = sdnnDays.map((d, j) => {
     if (j === 0) return '';
     const prev = sdnnDays[j - 1];
+    if (!consecutive(days[prev.i].date, days[d.i].date)) return '';
     return `<line x1="${px(prev.i).toFixed(1)}" y1="${pySD(prev.sdnn).toFixed(1)}" x2="${px(d.i).toFixed(1)}" y2="${pySD(d.sdnn).toFixed(1)}" stroke="#1c1c1e" stroke-width="2" stroke-linecap="round" opacity="0.7"/>`;
   }).join('');
-  const sdDots = sdnnDays.map(d => `<circle cx="${px(d.i).toFixed(1)}" cy="${pySD(d.sdnn).toFixed(1)}" r="3" fill="#1c1c1e" opacity="0.7"><title>${fmtDate(d.date)}: SDNN næste morgen = ${d.sdnn} ms</title></circle>`).join('');
+  const sdDots = sdnnDays.map(d => `<circle cx="${px(d.i).toFixed(1)}" cy="${pySD(d.sdnn).toFixed(1)}" r="3" fill="#1c1c1e" opacity="0.7"><title>${fmtDate(d.date)}: Dag HRV næste morgen = ${d.sdnn} ms</title></circle>`).join('');
 
   // Right Y-axis (SDNN)
   const sdTicks = [sdMn, Math.round(sdMn + sdRng/2), sdMx].map(v =>
     `<text x="${W - PDR + 8}" y="${pySD(v).toFixed(1)}" font-size="9" fill="#8e8e93" dominant-baseline="middle">${v}</text>`
   ).join('');
-  const sdAxisLabel = `<text x="${W - 8}" y="${H/2}" font-size="9" fill="#8e8e93" text-anchor="middle" transform="rotate(90 ${W-8} ${H/2})">SDNN (ms)</text>`;
+  const sdAxisLabel = `<text x="${W - 8}" y="${H/2}" font-size="9" fill="#8e8e93" text-anchor="middle" transform="rotate(90 ${W-8} ${H/2})">Dag HRV (ms)</text>`;
 
   // X labels
   const step = Math.max(1, Math.floor(days.length / 8));
@@ -674,7 +695,7 @@ function calendarLoadChart(series) {
   }).join('');
 
   const legend = CAT_KEYS.map(k => `<div class="legend-item"><div class="legend-dot" style="background:${CAT_META[k].color}"></div>${CAT_META[k].label}</div>`).join('') +
-    `<div class="legend-item"><div class="legend-line" style="background:#1c1c1e;opacity:0.7"></div>SDNN næste morgen</div>`;
+    `<div class="legend-item"><div class="legend-line" style="background:#1c1c1e;opacity:0.7"></div>Dag HRV næste morgen</div>`;
 
   return `
     <div class="legend">${legend}</div>
@@ -721,11 +742,11 @@ function calHrvScatter(series) {
   ).join('');
 
   const dots = pts.map(p =>
-    `<circle cx="${px(p.total).toFixed(1)}" cy="${py(p.sdnn).toFixed(1)}" r="5.5" fill="${CAT_META[p.dom].color}" opacity="0.75" stroke="#fff" stroke-width="1.5"><title>${fmtDate(p.date)}: ${p.total} events (${CAT_META[p.dom].label}) → SDNN ${p.sdnn} ms</title></circle>`
+    `<circle cx="${px(p.total).toFixed(1)}" cy="${py(p.sdnn).toFixed(1)}" r="5.5" fill="${CAT_META[p.dom].color}" opacity="0.75" stroke="#fff" stroke-width="1.5"><title>${fmtDate(p.date)}: ${p.total} events (${CAT_META[p.dom].label}) → Dag HRV ${p.sdnn} ms</title></circle>`
   ).join('');
 
   const xLabel = `<text x="${W/2}" y="${H+axH}" font-size="9" fill="#8e8e93" text-anchor="middle">Antal events i dag</text>`;
-  const yLabel = `<text x="10" y="${H/2}" font-size="9" fill="#8e8e93" text-anchor="middle" transform="rotate(-90 10 ${H/2})">SDNN næste morgen (ms)</text>`;
+  const yLabel = `<text x="10" y="${H/2}" font-size="9" fill="#8e8e93" text-anchor="middle" transform="rotate(-90 10 ${H/2})">Dag HRV næste morgen (ms)</text>`;
 
   return `
     <div class="card-subtitle" style="margin-bottom:10px">Farve = dominerende kalenderkategori. Ser du et mønster?</div>
@@ -744,7 +765,7 @@ function sdnnStressChart(series) {
   const days = series.filter(d => d.sdnn != null || d.stress != null);
   if (days.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Ikke nok SDNN/stress data</p>';
 
-  const sdnnDays = days.filter(d => d.sdnn != null);
+  const sdnnDays = days.filter(d => d.sdnn != null); // used only for scale
   const W = 900, H = 180, stressH = 40, axH = 22, PDL = 40, PDR = 10, PDY = 8;
   const plotW = W - PDL - PDR;
   const totalH = H + stressH + axH;
@@ -766,21 +787,19 @@ function sdnnStressChart(series) {
             <text x="${PDL - 6}" y="${y}" font-size="9" fill="#aeaeb2" text-anchor="end" dominant-baseline="middle">${Math.round(v)}</text>`;
   }).join('');
 
-  const axisLabel = `<text x="12" y="${H/2}" font-size="9" fill="#8e8e93" text-anchor="middle" transform="rotate(-90 12 ${H/2})">SDNN (ms)</text>`;
+  const axisLabel = `<text x="12" y="${H/2}" font-size="9" fill="#8e8e93" text-anchor="middle" transform="rotate(-90 12 ${H/2})">Dag HRV (ms)</text>`;
 
-  // SDNN line — colored by stress
-  const segments = sdnnDays.map((d, i) => {
-    if (i === 0) return '';
-    const prev = sdnnDays[i - 1];
-    const idx = days.indexOf(d);
+  // SDNN line — colored by stress, only connect consecutive dates
+  const segments = days.map((d, i) => {
+    if (i === 0 || d.sdnn == null || days[i-1].sdnn == null || !consecutive(days[i-1].date, d.date)) return '';
     const col = STRESS_COLORS[d.stress] ?? '#007aff';
-    return `<line x1="${px(days.indexOf(prev)).toFixed(1)}" y1="${py(prev.sdnn).toFixed(1)}" x2="${px(idx).toFixed(1)}" y2="${py(d.sdnn).toFixed(1)}" stroke="${col}" stroke-width="2.2" stroke-linecap="round"/>`;
+    return `<line x1="${px(i-1).toFixed(1)}" y1="${py(days[i-1].sdnn).toFixed(1)}" x2="${px(i).toFixed(1)}" y2="${py(d.sdnn).toFixed(1)}" stroke="${col}" stroke-width="2.2" stroke-linecap="round"/>`;
   }).join('');
 
-  const sdnnDots = sdnnDays.map(d => {
-    const idx = days.indexOf(d);
+  const sdnnDots = days.map((d, i) => {
+    if (d.sdnn == null) return '';
     const col = STRESS_COLORS[d.stress] ?? '#007aff';
-    return `<circle cx="${px(idx).toFixed(1)}" cy="${py(d.sdnn).toFixed(1)}" r="3.5" fill="${col}" stroke="#fff" stroke-width="1.5"><title>${fmtDate(d.date)}: SDNN=${d.sdnn} ms, Stress=${STRESS_LABELS[d.stress] ?? '–'}</title></circle>`;
+    return `<circle cx="${px(i).toFixed(1)}" cy="${py(d.sdnn).toFixed(1)}" r="3.5" fill="${col}" stroke="#fff" stroke-width="1.5"><title>${fmtDate(d.date)}: Dag HRV=${d.sdnn} ms, Stress=${STRESS_LABELS[d.stress] ?? '–'}</title></circle>`;
   }).join('');
 
   // Stress bars below the line chart
@@ -886,15 +905,15 @@ function render(data, sportData) {
 
     <div class="row row-full">
       <div class="card">
-        <div class="card-title">Kalender-belastning & SDNN</div>
-        <div class="card-subtitle" style="margin-bottom:10px">Søjler = events pr. kategori — sort linje = SDNN næste morgen</div>
+        <div class="card-title">Kalender-belastning & Dag HRV</div>
+        <div class="card-subtitle" style="margin-bottom:10px">Søjler = events pr. kategori — sort linje = Dag HRV næste morgen</div>
         ${calendarLoadChart(s10)}
       </div>
     </div>
 
     <div class="row row-full">
       <div class="card">
-        <div class="card-title">SDNN HRV & Stress — 10 dage</div>
+        <div class="card-title">Dag HRV & Stress — 10 dage</div>
         ${sdnnStressChart(s10)}
       </div>
     </div>
