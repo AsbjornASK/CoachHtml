@@ -65,6 +65,16 @@
     .chip-4 { background: #f3e8ff; color: #7a1fa2; }
     .chip-null { background: #f2f2f7; color: #aeaeb2; }
 
+    /* ── Partner vs. alene ── */
+    .pc-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+    .pc-tile { background: #f9f9fb; border-radius: 12px; padding: 10px 12px; }
+    .pc-label, .pc-chart-label { font-size: 10px; font-weight: 700; color: #8e8e93; text-transform: uppercase; letter-spacing: 0.5px; }
+    .pc-chart-label { margin: 10px 0 2px; }
+    .pc-vals { font-size: 20px; font-weight: 800; margin-top: 4px; display: flex; align-items: baseline; gap: 5px; flex-wrap: wrap; }
+    .pc-vs, .pc-unit { font-size: 11px; font-weight: 500; color: #aeaeb2; }
+    .pc-diff { font-size: 11px; font-weight: 600; margin-top: 2px; }
+    @media (max-width: 600px) { .pc-tiles { gap: 6px; } .pc-tile { padding: 8px; } .pc-vals { font-size: 16px; } }
+
     /* ── Insight box ── */
     .insight { background: #f0f6ff; border-radius: 12px; padding: 12px 14px; margin-top: 12px; font-size: 13px; line-height: 1.5; color: #0051a8; }
     .insight strong { font-weight: 700; }
@@ -762,6 +772,82 @@ function hrvCalStressChart(series) {
     </div>`;
 }
 
+// ── Partner vs. alene — glidende gennemsnit af søvnparametre ─────────────
+const PARTNER_COL = '#ff2d55', ALONE_COL = '#8e8e93';
+const PARTNER_WINDOW = 5; // nights per group in the moving average
+const PARTNER_METRICS = [
+  { key: 'hrv',   label: 'Nat HRV',   unit: 'ms',  dec: 0, higherIsBetter: true  },
+  { key: 'rhr',   label: 'Hvilepuls', unit: 'bpm', dec: 0, higherIsBetter: false },
+  { key: 'sleep', label: 'Søvn',      unit: 't',   dec: 1, higherIsBetter: true  },
+];
+
+function partnerCompare(series) {
+  const nights = series.filter(d => d.partner === 1 || d.partner === 2);
+  const withP = nights.filter(d => d.partner === 1), alone = nights.filter(d => d.partner === 2);
+  if (!withP.length || !alone.length)
+    return `<p style="color:#aeaeb2;font-size:13px">Ikke nok data endnu — kræver mindst én nat med og én uden partner (${withP.length} med, ${alone.length} uden). Udfyld „Partner“ i morgen-check-in.</p>`;
+
+  const avg = arr => arr.length ? arr.reduce((s, v) => s + v, 0) / arr.length : null;
+  const narrow = window.innerWidth < 600;
+  const [W, H, PDL, fs] = narrow ? [350, 90, 34, 9] : [900, 110, 40, 10];
+  const PDR = 8, PDY = 10, axH = 16;
+  const plotW = W - PDL - PDR;
+
+  // Shared x-axis: from the first logged night to the last day in the series
+  const firstIdx = series.indexOf(nights[0]);
+  const range = series.slice(firstIdx);
+  const px = date => PDL + (range.findIndex(d => d.date === date) / Math.max(range.length - 1, 1)) * plotW;
+
+  // Moving average over the last PARTNER_WINDOW nights *within the group*
+  const rolling = (group, key) => {
+    const pts = group.filter(d => d[key] != null);
+    return pts.map((d, i) => ({ date: d.date, raw: d[key], ma: avg(pts.slice(Math.max(0, i - PARTNER_WINDOW + 1), i + 1).map(p => p[key])) }));
+  };
+
+  const tiles = PARTNER_METRICS.map(m => {
+    const a = avg(withP.map(d => d[m.key]).filter(v => v != null));
+    const b = avg(alone.map(d => d[m.key]).filter(v => v != null));
+    const diff = a != null && b != null ? a - b : null;
+    const better = diff == null || Math.abs(diff) < (m.dec ? 0.05 : 0.5) ? null : (diff > 0) === m.higherIsBetter;
+    const diffCol = better == null ? '#8e8e93' : better ? '#30d158' : '#ff3b30';
+    return `<div class="pc-tile">
+      <div class="pc-label">${m.label}</div>
+      <div class="pc-vals"><span style="color:${PARTNER_COL}">${fmtN(a, m.dec)}</span><span class="pc-vs">vs</span><span style="color:${ALONE_COL}">${fmtN(b, m.dec)}</span><span class="pc-unit">${m.unit}</span></div>
+      <div class="pc-diff" style="color:${diffCol}">${diff == null ? '–' : (diff > 0 ? '+' : '') + fmtN(diff, m.dec) + ' ' + m.unit} med partner</div>
+    </div>`;
+  }).join('');
+
+  const charts = PARTNER_METRICS.map(m => {
+    const p = rolling(withP, m.key), q = rolling(alone, m.key);
+    const all = [...p, ...q].flatMap(d => [d.raw, d.ma]);
+    if (!all.length) return '';
+    const lo = Math.min(...all), hi = Math.max(...all), pad = (hi - lo) * 0.1 || 1;
+    const mn = lo - pad, rng = hi - lo + 2 * pad;
+    const py = v => PDY + (1 - (v - mn) / rng) * (H - 2 * PDY);
+    const line = (pts, col) => pts.length > 1
+      ? `<polyline points="${pts.map(d => `${px(d.date).toFixed(1)},${py(d.ma).toFixed(1)}`).join(' ')}" fill="none" stroke="${col}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>` : '';
+    const dots = (pts, col, who) => pts.map(d =>
+      `<circle cx="${px(d.date).toFixed(1)}" cy="${py(d.raw).toFixed(1)}" r="2.5" fill="${col}" opacity="0.35"><title>${fmtDate(d.date)} (${who}): ${fmtN(d.raw, m.dec)} ${m.unit} — gns. ${fmtN(d.ma, m.dec)}</title></circle>`).join('');
+    const ticks = [lo, hi].map(v =>
+      `<text x="${PDL - 6}" y="${py(v).toFixed(1)}" font-size="${fs}" fill="#aeaeb2" text-anchor="end" dominant-baseline="middle">${fmtN(v, m.dec)}</text>`).join('');
+    const step = Math.max(1, Math.floor(range.length / (narrow ? 4 : 8)));
+    const xl = range.map((d, i) => {
+      if (i % step !== 0 && i !== range.length - 1) return '';
+      const dd = new Date(d.date + 'T12:00:00');
+      return `<text x="${px(d.date).toFixed(1)}" y="${H + axH - 4}" font-size="${fs}" fill="#aeaeb2" text-anchor="middle">${dd.getDate()}/${dd.getMonth()+1}</text>`;
+    }).join('');
+    return `<div class="pc-chart-label">${m.label}</div>
+      <div class="chart-wrap"><svg viewBox="0 0 ${W} ${H + axH}" width="100%">
+        ${ticks}${dots(q, ALONE_COL, 'alene')}${dots(p, PARTNER_COL, 'partner')}${line(q, ALONE_COL)}${line(p, PARTNER_COL)}${xl}
+      </svg></div>`;
+  }).join('');
+
+  return `
+    <div class="card-subtitle" style="margin-bottom:12px">Glidende gennemsnit over de seneste ${PARTNER_WINDOW} nætter i hver gruppe — <span style="color:${PARTNER_COL};font-weight:600">med partner</span> (${withP.length} nætter) vs. <span style="color:${ALONE_COL};font-weight:600">alene</span> (${alone.length} nætter)</div>
+    <div class="pc-tiles">${tiles}</div>
+    ${charts}`;
+}
+
 // ── Main render ───────────────────────────────────────────────────────────
 function render(data, sportData) {
   const { series, today } = data;
@@ -837,6 +923,13 @@ function render(data, sportData) {
       <div class="card">
         <div class="card-title">Søvn over tid</div>
         ${sleepMoodChart(s7)}
+      </div>
+    </div>
+
+    <div class="row row-full">
+      <div class="card">
+        <div class="card-title">Partner vs. alene</div>
+        ${partnerCompare(series)}
       </div>
     </div>
   `;

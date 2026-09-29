@@ -633,7 +633,8 @@ function sdnnStressChart(series) {
 }
 
 function render(data, sportData) {
-  const { series, today } = data;
+  const { today } = data;
+  const series = data.series.slice(-31); // API returns 90 days; this page shows the last 30
   const sportSeries = sportData?.series ?? [];
   const latest = [...series].reverse().find(d => d.ctl != null) ?? series[series.length - 1] ?? {};
   const latestCheckin = [...series].reverse().find(d => d.mood != null) ?? {};

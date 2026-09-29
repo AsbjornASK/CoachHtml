@@ -18,7 +18,7 @@ export default async () => {
 
   const today = new Date();
   const end   = fmt(today);
-  const start = fmt(new Date(today - 30 * 86_400_000));
+  const start = fmt(new Date(today - 90 * 86_400_000)); // 90 days so partner comparison has enough nights
 
   const auth    = 'Basic ' + btoa('API_KEY:' + apiKey);
   const baseUrl = `https://intervals.icu/api/v1/athlete/${athleteId}`;
@@ -74,6 +74,7 @@ export default async () => {
     fatigue:    d.fatigue    ?? null,
     motivation: d.motivation ?? null,
     stress:     d.stress     ?? null,
+    partner:    d.Partner    ?? null, // custom field: 1 = Ja, 2 = Nej
     comments:   d.comments   ?? null,
     sdnn:       r1(d.sdnn ?? d.hrvSDNN ?? null),
     weight:     r1(d.weight),
