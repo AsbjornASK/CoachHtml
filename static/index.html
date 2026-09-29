@@ -78,6 +78,8 @@
     .btn-group button.selected.c-yellow { background: #ff9f0a; border-color: #ff9f0a; }
     .btn-group button.selected.c-red { background: #ff3b30; border-color: #ff3b30; }
     .btn-group button.selected.c-purple { background: #bf5af2; border-color: #bf5af2; }
+    .checkin-weight { flex: 1; min-width: 0; font-size: 15px; border: 1.5px solid #e5e5ea; border-radius: 8px; padding: 7px 10px; color: #1c1c1e; background: #f9f9fb; outline: none; font-family: inherit; }
+    .checkin-weight:focus { border-color: #007aff; background: #fff; }
     .submit-btn { width: 100%; margin-top: 14px; padding: 13px; color: #fff; font-size: 16px; font-weight: 700; border: none; border-radius: 12px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
     .submit-btn:disabled { background: #aeaeb2 !important; cursor: default; }
     .checkin-done-badge { display: inline-block; background: #e8f8ee; color: #30d158; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; margin-left: 6px; vertical-align: middle; }
@@ -131,6 +133,16 @@
       <div class="btn-group" data-field="motivation">
         <button data-val="1" data-color="c-green">EXTREME</button><button data-val="2" data-color="c-yellow">HIGH</button><button data-val="3" data-color="c-red">MIDDEL</button><button data-val="4" data-color="c-purple">LOW</button>
       </div>
+    </div>
+    <div class="checkin-row">
+      <div class="checkin-label">Stress<small>I går</small></div>
+      <div class="btn-group" data-field="stress">
+        <button data-val="1" data-color="c-green">LAV</button><button data-val="2" data-color="c-yellow">MODERAT</button><button data-val="3" data-color="c-red">HØJ</button><button data-val="4" data-color="c-purple">MEGET HØJ</button>
+      </div>
+    </div>
+    <div class="checkin-row">
+      <div class="checkin-label">Vægt<small>kg</small></div>
+      <input type="number" id="checkin-weight" class="checkin-weight" placeholder="Dagens vægt (kg)" step="0.1" min="40" max="200" inputmode="decimal">
     </div>
     <button class="submit-btn" id="checkin-submit" style="background:#007aff">Save to Intervals</button>
     <div class="form-status" id="checkin-status"></div>
@@ -354,18 +366,26 @@ function render(data,cal){
 (function(){
   const TODAY=new Date().toISOString().slice(0,10);
   const LS=('checkin_'+TODAY);
-  function selectBtn(g,b){g.querySelectorAll('button').forEach(x=>{x.classList.remove('selected','c-green','c-yellow','c-red');});b.classList.add('selected');if(b.dataset.color)b.classList.add(b.dataset.color);}
+  const YESTERDAY=new Date(Date.now()-86400000).toISOString().slice(0,10);
+  function selectBtn(g,b){g.querySelectorAll('button').forEach(x=>{x.classList.remove('selected','c-green','c-yellow','c-red','c-purple');});b.classList.add('selected');if(b.dataset.color)b.classList.add(b.dataset.color);}
   document.querySelectorAll('.btn-group').forEach(g=>{g.querySelectorAll('button').forEach(b=>{b.addEventListener('click',()=>selectBtn(g,b));});});
   const sv=JSON.parse(localStorage.getItem(LS)||'null');
-  if(sv){document.getElementById('checkin-done-badge').style.display='';Object.entries(sv).forEach(([f,v])=>{const g=document.querySelector(`.btn-group[data-field="${f}"]`);if(g){const b=g.querySelector(`button[data-val="${v}"]`);if(b)selectBtn(g,b);}});}
+  if(sv){document.getElementById('checkin-done-badge').style.display='';Object.entries(sv).forEach(([f,v])=>{const g=document.querySelector(`.btn-group[data-field="${f}"]`);if(g){const b=g.querySelector(`button[data-val="${v}"]`);if(b)selectBtn(g,b);}});if(sv.weight)document.getElementById('checkin-weight').value=sv.weight;}
+  const post=body=>fetch('/api/update-wellness',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
   document.getElementById('checkin-submit').addEventListener('click',async()=>{
     const btn=document.getElementById('checkin-submit'),st=document.getElementById('checkin-status');
     const p={date:TODAY};
-    document.querySelectorAll('.btn-group').forEach(g=>{const s=g.querySelector('button.selected');if(s)p[g.dataset.field]=+s.dataset.val;});
+    document.querySelectorAll('#checkin-card .btn-group').forEach(g=>{const s=g.querySelector('button.selected');if(s)p[g.dataset.field]=+s.dataset.val;});
+    // Stress refers to yesterday (same as Vitals page) — saved separately below
+    const stress=p.stress;delete p.stress;
+    const wRaw=document.getElementById('checkin-weight').value.trim().replace(',','.');
+    if(wRaw){const w=parseFloat(wRaw);if(!w||w<40||w>200){st.textContent='Ugyldig vægt';st.className='form-status err';return;}p.weight=w;}
     btn.disabled=true;st.textContent='Saving…';st.className='form-status';
-    try{const r=await fetch('/api/update-wellness',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
+    try{
+    if(stress!=null){const rs=await post({date:YESTERDAY,stress});if(!rs.ok){const e=await rs.json().catch(()=>({}));throw Object.assign(new Error('Error: '+(e.error||rs.status)),{api:true});}}
+    const r=await post(p);
     if(r.ok){
-      localStorage.setItem(LS,JSON.stringify(p));
+      localStorage.setItem(LS,JSON.stringify(stress!=null?{...p,stress}:p));
       // Update the dashboard subjective card and hide this form
       if(_lastData){
         _lastData.subjective={date:TODAY,...p};
@@ -374,7 +394,7 @@ function render(data,cal){
       }
     }
     else{const e=await r.json().catch(()=>({}));st.textContent='Error: '+(e.error||r.status);st.className='form-status err';btn.disabled=false;}}
-    catch{st.textContent='Network error';st.className='form-status err';btn.disabled=false;}
+    catch(err){st.textContent=err.api?err.message:'Network error';st.className='form-status err';btn.disabled=false;}
     // btn re-enabled above in error paths; success path hides the form entirely
   });
 

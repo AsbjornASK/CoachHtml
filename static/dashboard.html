@@ -625,87 +625,6 @@ const CAT_META = {
 };
 const CAT_KEYS = Object.keys(CAT_META);
 
-// ── Kalender-load over tid med SDNN næste morgen ──────────────────────────
-function calendarLoadChart(series) {
-  const days = series.filter(d => d.cal != null || d.sdnn != null);
-  if (days.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Ingen kalender-data endnu — tilføj ICS URLs i Vercel</p>';
-
-  const W = 900, H = 160, axH = 22, PDL = 36, PDR = 46, PDY = 8;
-  const plotW = W - PDL - PDR;
-
-  // Max bar height (total events per day)
-  const maxEvents = Math.max(1, ...days.map(d => CAT_KEYS.reduce((s, k) => s + (d.cal?.[k] ?? 0), 0)));
-  const barW = Math.max(2, (plotW / days.length) * 0.7);
-
-  const px = i => PDL + (i / Math.max(days.length - 1, 1)) * plotW;
-  const pyBar = v => H - PDY - (v / maxEvents) * (H - 2 * PDY);
-
-  // Stacked bars — one block per event
-  const bars = days.map((d, i) => {
-    if (!d.cal) return '';
-    const totalEvents = CAT_KEYS.reduce((s, k) => s + (d.cal[k] ?? 0), 0);
-    if (!totalEvents) return '';
-    const blockH = (H - 2 * PDY) / maxEvents;
-    let y = H - PDY;
-    return CAT_KEYS.flatMap(k => {
-      const titles = d.cal[k + 'Titles'] ?? [];
-      const count  = d.cal[k] ?? 0;
-      if (!count) return [];
-      const meta = CAT_META[k];
-      return titles.map(title => {
-        y -= blockH;
-        const gap = Math.min(2, blockH * 0.15);
-        return `<rect x="${(px(i) - barW/2).toFixed(1)}" y="${(y + gap/2).toFixed(1)}" width="${barW.toFixed(1)}" height="${Math.max(1, blockH - gap).toFixed(1)}" fill="${meta.color}" opacity="0.85" rx="2"><title>${fmtDate(d.date)}: ${meta.label} — ${title}</title></rect>`;
-      });
-    }).join('');
-  }).join('');
-
-  // SDNN next-morning line (use next day's SDNN for each calendar day)
-  const sdnnDays = days.map((d, i) => {
-    const next = series[series.indexOf(d) + 1];
-    return { i, sdnn: next?.sdnn ?? null, date: d.date };
-  }).filter(d => d.sdnn != null);
-
-  const sdnnVals = sdnnDays.map(d => d.sdnn);
-  const sdMn = Math.floor(Math.min(...sdnnVals) / 10) * 10;
-  const sdMx = Math.ceil(Math.max(...sdnnVals) / 10) * 10;
-  const sdRng = sdMx - sdMn || 10;
-  const pySD = v => PDY + (1 - (v - sdMn) / sdRng) * (H - 2 * PDY);
-
-  const sdLine = sdnnDays.map((d, j) => {
-    if (j === 0) return '';
-    const prev = sdnnDays[j - 1];
-    if (!consecutive(days[prev.i].date, days[d.i].date)) return '';
-    return `<line x1="${px(prev.i).toFixed(1)}" y1="${pySD(prev.sdnn).toFixed(1)}" x2="${px(d.i).toFixed(1)}" y2="${pySD(d.sdnn).toFixed(1)}" stroke="#1c1c1e" stroke-width="2" stroke-linecap="round" opacity="0.7"/>`;
-  }).join('');
-  const sdDots = sdnnDays.map(d => `<circle cx="${px(d.i).toFixed(1)}" cy="${pySD(d.sdnn).toFixed(1)}" r="3" fill="#1c1c1e" opacity="0.7"><title>${fmtDate(d.date)}: Dag HRV næste morgen = ${d.sdnn} ms</title></circle>`).join('');
-
-  // Right Y-axis (SDNN)
-  const sdTicks = [sdMn, Math.round(sdMn + sdRng/2), sdMx].map(v =>
-    `<text x="${W - PDR + 8}" y="${pySD(v).toFixed(1)}" font-size="9" fill="#8e8e93" dominant-baseline="middle">${v}</text>`
-  ).join('');
-  const sdAxisLabel = `<text x="${W - 8}" y="${H/2}" font-size="9" fill="#8e8e93" text-anchor="middle" transform="rotate(90 ${W-8} ${H/2})">Dag HRV (ms)</text>`;
-
-  // X labels
-  const step = Math.max(1, Math.floor(days.length / 8));
-  const xLabels = days.map((d, i) => {
-    if (i % step !== 0 && i !== days.length - 1) return '';
-    const dd = new Date(d.date + 'T12:00:00');
-    return `<text x="${px(i).toFixed(1)}" y="${H + axH - 3}" font-size="9" fill="#aeaeb2" text-anchor="middle">${dd.getDate()}/${dd.getMonth()+1}</text>`;
-  }).join('');
-
-  const legend = CAT_KEYS.map(k => `<div class="legend-item"><div class="legend-dot" style="background:${CAT_META[k].color}"></div>${CAT_META[k].label}</div>`).join('') +
-    `<div class="legend-item"><div class="legend-line" style="background:#1c1c1e;opacity:0.7"></div>Dag HRV næste morgen</div>`;
-
-  return `
-    <div class="legend">${legend}</div>
-    <div class="chart-wrap">
-      <svg viewBox="0 0 ${W} ${H+axH}" width="100%" style="overflow:visible">
-        ${bars}${sdLine}${sdDots}${sdTicks}${sdAxisLabel}${xLabels}
-      </svg>
-    </div>`;
-}
-
 // ── Kalender-kategori vs. SDNN næste morgen (scatter) ────────────────────
 function calHrvScatter(series) {
   const pts = [];
@@ -757,88 +676,88 @@ function calHrvScatter(series) {
     </div>`;
 }
 
-// ── SDNN HRV + Stress over tid ────────────────────────────────────────────
+// ── Dag HRV · Kalender · Stress (swimlanes) ──────────────────────────────
 const STRESS_COLORS = {1:'#30d158',2:'#ff9f0a',3:'#ff3b30',4:'#bf5af2'};
 const STRESS_LABELS = ['','Lav','Moderat','Høj','Meget høj'];
+const STRESS_SHORT  = ['','Lav','Mod.','Høj','M. høj'];
 
-function sdnnStressChart(series) {
-  const days = series.filter(d => d.sdnn != null || d.stress != null);
-  if (days.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Ikke nok SDNN/stress data</p>';
+function hrvCalStressChart(series) {
+  const days = series;
+  if (!days.some(d => d.sdnn != null || d.stress != null || d.cal)) return '<p style="color:#aeaeb2;font-size:13px">Ingen HRV-, kalender- eller stress-data endnu</p>';
 
-  const sdnnDays = days.filter(d => d.sdnn != null); // used only for scale
-  const W = 900, H = 180, stressH = 40, axH = 22, PDL = 40, PDR = 10, PDY = 8;
+  // Narrow screens get a smaller viewBox so text and dots stay readable
+  const narrow = window.innerWidth < 600;
+  const [W, PDL, hrvH, calH, stressH, axH, rMin, rMax, fs] = narrow
+    ? [350, 50, 56, 90, 30, 18, 3, 12, 9]
+    : [900, 78, 62, 110, 36, 22, 5, 17, 10];
+  const PDR = 8, gap = 6;
   const plotW = W - PDL - PDR;
-  const totalH = H + stressH + axH;
+  const colW = plotW / days.length;
+  const px = i => PDL + colW * (i + 0.5);
 
-  // SDNN scale
-  const sdnnVals = sdnnDays.map(d => d.sdnn);
-  const rawMn = Math.min(...sdnnVals), rawMx = Math.max(...sdnnVals);
-  const mn = Math.floor(rawMn / 10) * 10, mx = Math.ceil(rawMx / 10) * 10, rng = mx - mn || 10;
+  const hrvTop = 0, calTop = hrvTop + hrvH + gap, stressTop = calTop + calH + gap, axTop = stressTop + stressH;
+  const totalH = axTop + axH;
 
-  const px = i => PDL + (i / Math.max(days.length - 1, 1)) * plotW;
-  const py = v => PDY + (1 - (v - mn) / rng) * (H - 2 * PDY);
+  // Alternating day bands tie the three rows together
+  const bands = days.map((d, i) => i % 2 ? '' :
+    `<rect x="${(PDL + colW * i).toFixed(1)}" y="0" width="${colW.toFixed(1)}" height="${axTop}" fill="#f9f9fb"/>`).join('');
 
-  // Y-axis ticks
-  const tickCount = 5;
-  const yTicks = Array.from({length: tickCount}, (_, k) => {
-    const v = mn + k * (mx - mn) / (tickCount - 1);
-    const y = py(v).toFixed(1);
-    return `<line x1="${PDL}" y1="${y}" x2="${PDL + plotW}" y2="${y}" stroke="#f2f2f7" stroke-width="1"/>
-            <text x="${PDL - 6}" y="${y}" font-size="9" fill="#aeaeb2" text-anchor="end" dominant-baseline="middle">${Math.round(v)}</text>`;
+  const sep = y => `<line x1="${PDL}" y1="${y}" x2="${W - PDR}" y2="${y}" stroke="#e5e5ea" stroke-width="1"/>`;
+  const rowLabel = (txt, y0, h) =>
+    `<text x="${PDL - 10}" y="${(y0 + h/2).toFixed(1)}" font-size="${fs}" font-weight="600" fill="#8e8e93" text-anchor="end" dominant-baseline="middle">${txt}</text>`;
+
+  // HRV dots — area proportional to value (√-scale between min and max in period)
+  const vals = days.map(d => d.sdnn).filter(v => v != null);
+  const mn = Math.min(...vals), mx = Math.max(...vals), rng = mx - mn || 1;
+  const rOf = v => Math.sqrt(rMin*rMin + (v - mn) / rng * (rMax*rMax - rMin*rMin));
+  const hrvCy = hrvTop + hrvH/2 - fs * 0.5;
+  const hrv = days.map((d, i) => {
+    if (d.sdnn == null) return `<text x="${px(i).toFixed(1)}" y="${hrvCy.toFixed(1)}" font-size="${fs}" fill="#c7c7cc" text-anchor="middle" dominant-baseline="middle">–</text>`;
+    return `<circle cx="${px(i).toFixed(1)}" cy="${hrvCy.toFixed(1)}" r="${rOf(d.sdnn).toFixed(1)}" fill="#007aff" opacity="0.85"><title>${fmtDate(d.date)}: Dag HRV = ${d.sdnn} ms</title></circle>` +
+      `<text x="${px(i).toFixed(1)}" y="${(hrvCy + rMax + fs + 1).toFixed(1)}" font-size="${fs}" font-weight="600" fill="#3a3a3c" text-anchor="middle">${d.sdnn}</text>`;
   }).join('');
 
-  const axisLabel = `<text x="12" y="${H/2}" font-size="9" fill="#8e8e93" text-anchor="middle" transform="rotate(-90 12 ${H/2})">Dag HRV (ms)</text>`;
-
-  // SDNN line — colored by stress, only connect consecutive dates
-  const segments = days.map((d, i) => {
-    if (i === 0 || d.sdnn == null || days[i-1].sdnn == null || !consecutive(days[i-1].date, d.date)) return '';
-    const col = STRESS_COLORS[d.stress] ?? '#007aff';
-    return `<line x1="${px(i-1).toFixed(1)}" y1="${py(days[i-1].sdnn).toFixed(1)}" x2="${px(i).toFixed(1)}" y2="${py(d.sdnn).toFixed(1)}" stroke="${col}" stroke-width="2.2" stroke-linecap="round"/>`;
+  // Calendar — one block per event, stacked bottom-up, coloured by category
+  const events = d => d.cal ? CAT_KEYS.flatMap(k => {
+    const titles = d.cal[k + 'Titles'] ?? [];
+    const n = Math.max(d.cal[k] ?? 0, titles.length);
+    return Array.from({ length: n }, (_, j) => [k, titles[j] ?? '']);
+  }) : [];
+  const dayEvents = days.map(events);
+  const maxEv = Math.max(1, ...dayEvents.map(e => e.length));
+  const blockH = (calH - 8) / maxEv;
+  const bw = Math.min(colW * 0.62, 44);
+  const cal = dayEvents.map((evs, i) => {
+    let y = calTop + calH - 4;
+    return evs.map(([k, title]) => {
+      y -= blockH;
+      const g = Math.min(2, blockH * 0.15);
+      return `<rect x="${(px(i) - bw/2).toFixed(1)}" y="${(y + g/2).toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(1, blockH - g).toFixed(1)}" rx="2.5" fill="${CAT_META[k].color}" opacity="0.85"><title>${fmtDate(days[i].date)}: ${CAT_META[k].label}${title ? ' — ' + title : ''}</title></rect>`;
+    }).join('');
   }).join('');
 
-  const sdnnDots = days.map((d, i) => {
-    if (d.sdnn == null) return '';
-    const col = STRESS_COLORS[d.stress] ?? '#007aff';
-    return `<circle cx="${px(i).toFixed(1)}" cy="${py(d.sdnn).toFixed(1)}" r="3.5" fill="${col}" stroke="#fff" stroke-width="1.5"><title>${fmtDate(d.date)}: Dag HRV=${d.sdnn} ms, Stress=${STRESS_LABELS[d.stress] ?? '–'}</title></circle>`;
+  // Stress pills
+  const pillH = Math.min(22, stressH - 10), pw = Math.min(colW * 0.86, 70);
+  const stress = days.map((d, i) => {
+    const x = px(i) - pw/2, y = stressTop + (stressH - pillH) / 2;
+    if (d.stress == null)
+      return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${pw.toFixed(1)}" height="${pillH}" rx="${pillH/2}" fill="none" stroke="#d1d1d6" stroke-dasharray="3 3"><title>${fmtDate(d.date)}: Ingen stress-data</title></rect>`;
+    const lbl = colW > 60 ? STRESS_LABELS[d.stress] : colW > 34 ? STRESS_SHORT[d.stress] : '';
+    return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${pw.toFixed(1)}" height="${pillH}" rx="${pillH/2}" fill="${STRESS_COLORS[d.stress]}" opacity="0.85"><title>${fmtDate(d.date)}: Stress = ${STRESS_LABELS[d.stress]}</title></rect>` +
+      (lbl ? `<text x="${px(i).toFixed(1)}" y="${(y + pillH/2).toFixed(1)}" font-size="${fs - 1}" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central" pointer-events="none">${lbl}</text>` : '');
   }).join('');
 
-  // Stress bars below the line chart
-  const barW = Math.max(2, (plotW / days.length) * 0.7);
-  const stressTop = H + 8;
-  const stressBars = days.map((d, i) => {
-    if (d.stress == null) return '';
-    const bh = (d.stress / 4) * (stressH - 8);
-    const col = STRESS_COLORS[d.stress];
-    return `<rect x="${(px(i) - barW/2).toFixed(1)}" y="${(stressTop + stressH - 8 - bh).toFixed(1)}" width="${barW.toFixed(1)}" height="${bh.toFixed(1)}" rx="2" fill="${col}" opacity="0.7"><title>${fmtDate(d.date)}: Stress=${STRESS_LABELS[d.stress]}</title></rect>`;
-  }).join('');
-
-  // Stress Y-label
-  const stressLabel = `<text x="12" y="${stressTop + (stressH-8)/2}" font-size="9" fill="#8e8e93" text-anchor="middle" transform="rotate(-90 12 ${stressTop + (stressH-8)/2})">Stress</text>`;
-
-  // Divider line between SDNN and stress
-  const divider = `<line x1="${PDL}" y1="${stressTop}" x2="${PDL + plotW}" y2="${stressTop}" stroke="#f2f2f7" stroke-width="1"/>`;
-
-  // X-axis labels (shared)
-  const step = Math.max(1, Math.floor(days.length / 8));
   const xLabels = days.map((d, i) => {
-    if (i % step !== 0 && i !== days.length - 1) return '';
     const dd = new Date(d.date + 'T12:00:00');
-    return `<text x="${px(i).toFixed(1)}" y="${totalH - 3}" font-size="9" fill="#aeaeb2" text-anchor="middle">${dd.getDate()}/${dd.getMonth()+1}</text>`;
+    return `<text x="${px(i).toFixed(1)}" y="${totalH - 5}" font-size="${fs}" fill="#aeaeb2" text-anchor="middle">${colW > 40 ? DAYS_S[dd.getDay()] + ' ' : ''}${dd.getDate()}/${dd.getMonth()+1}</text>`;
   }).join('');
 
   return `
-    <div class="legend">
-      <div class="legend-item"><span style="font-size:10px">Linje/prikker farvet efter dagsstress:</span></div>
-      <div class="legend-item"><div class="legend-dot" style="background:#30d158"></div>Lav</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#ff9f0a"></div>Moderat</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#ff3b30"></div>Høj</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#bf5af2"></div>Meget høj</div>
-    </div>
     <div class="chart-wrap">
-      <svg viewBox="0 0 ${W} ${totalH}" width="100%" style="overflow:visible">
-        ${yTicks}${axisLabel}${segments}${sdnnDots}
-        ${divider}${stressBars}${stressLabel}
-        ${xLabels}
+      <svg viewBox="0 0 ${W} ${totalH}" width="100%">
+        ${bands}${sep(calTop - gap/2)}${sep(stressTop - gap/2)}
+        ${rowLabel('Dag HRV', hrvTop, hrvH)}${rowLabel('Kalender', calTop, calH)}${rowLabel('Stress', stressTop, stressH)}
+        ${hrv}${cal}${stress}${xLabels}
       </svg>
     </div>`;
 }
@@ -871,7 +790,7 @@ function render(data, sportData) {
 
   const kpiColor = v => v == null ? 'neutral' : v >= 65 ? 'green' : v >= 45 ? 'yellow' : 'red';
 
-  const s10 = series.slice(-10);
+  const s7 = series.slice(-7);
 
   const tsbCol = latest.tsb != null && latest.tsb >= 0 ? 'green' : 'yellow';
 
@@ -898,34 +817,26 @@ function render(data, sportData) {
 
     <div class="row row-full">
       <div class="card">
-        <div class="card-title">Form — 10 dage</div>
-        ${fitnessCheckinChart(s10)}
+        <div class="card-title">Form</div>
+        ${fitnessCheckinChart(s7)}
       </div>
     </div>
 
     <div class="row row-full">
       <div class="card">
-        <div class="card-title">Kalender-belastning & Dag HRV</div>
-        <div class="card-subtitle" style="margin-bottom:10px">Søjler = events pr. kategori — sort linje = Dag HRV næste morgen</div>
-        ${calendarLoadChart(s10)}
-      </div>
-    </div>
-
-    <div class="row row-full">
-      <div class="card">
-        <div class="card-title">Dag HRV & Stress — 10 dage</div>
-        ${sdnnStressChart(s10)}
+        <div class="card-title">Dag HRV · Kalender · Stress</div>
+        ${hrvCalStressChart(series.slice(-5))}
       </div>
     </div>
 
     <div class="row row-2">
       <div class="card">
         <div class="card-title">HRV over tid</div>
-        ${hrvCheckinChart(s10)}
+        ${hrvCheckinChart(s7)}
       </div>
       <div class="card">
         <div class="card-title">Søvn over tid</div>
-        ${sleepMoodChart(s10)}
+        ${sleepMoodChart(s7)}
       </div>
     </div>
   `;
