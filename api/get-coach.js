@@ -5,7 +5,7 @@ export default async () => {
   const athleteId = process.env.INTERVALS_ATHLETE_ID;
 
   if (!apiKey || !athleteId) {
-    return json({ error: 'Intervals API ikke konfigureret' }, 500);
+    return json({ error: 'Intervals API not configured' }, 500);
   }
 
   const today = new Date();
@@ -20,7 +20,7 @@ export default async () => {
   ]);
 
   if (!wellnessRes.ok) {
-    return json({ error: 'Intervals wellness API fejl', status: wellnessRes.status }, 502);
+    return json({ error: 'Intervals wellness API error', status: wellnessRes.status }, 502);
   }
 
   const rawWellness   = await wellnessRes.json();

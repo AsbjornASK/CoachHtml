@@ -79,7 +79,7 @@
   <div class="topbar-title">Data</div>
   <div class="topbar-nav">
     <a href="/">← Coach</a>
-    <a href="/dashboard.html">Mobil</a>
+    <a href="/dashboard.html">Mobile</a>
   </div>
   <div class="topbar-date" id="topbar-date"></div>
 </div>
@@ -109,7 +109,7 @@ const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov
 const MOOD_LABELS  = ['','Great','Good','Avg','Low'];
 const SOR_LABELS   = ['','Low','Avg','High','Extreme'];
 const FAT_LABELS   = ['','Low','Avg','High','Extreme'];
-const MOT_LABELS   = ['','Extreme','High','Middel','Low'];
+const MOT_LABELS   = ['','Extreme','High','Medium','Low'];
 const CHECKIN_COLORS = {1:'#30d158',2:'#ff9f0a',3:'#ff3b30',4:'#bf5af2'};
 
 function chipClass(v) { return v ? `chip chip-${v}` : 'chip chip-null'; }
@@ -134,7 +134,7 @@ function kpiCard(title, value, unit, sub, colorClass, badge = '') {
 
 function fitnessCheckinChart(series) {
   const days = series.filter(d => d.ctl != null || d.atl != null);
-  if (days.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Ikke nok data</p>';
+  if (days.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Not enough data</p>';
   const W = 900, H = 220, axH = 22, PDL = 38, PDR = 38, PDY = 8;
   const plotW = W - PDL - PDR;
   const allVals = [...days.map(d => d.ctl), ...days.map(d => d.atl)].filter(v => v != null);
@@ -164,7 +164,7 @@ function fitnessCheckinChart(series) {
     if (!d.mood && !d.fatigue) return '';
     const col = CHECKIN_COLORS[d.mood ?? d.fatigue] ?? '#aeaeb2';
     const yPos = d.ctl != null ? py(d.ctl) : d.atl != null ? py(d.atl) : H / 2;
-    return `<circle cx="${px(i).toFixed(1)}" cy="${(yPos - 10).toFixed(1)}" r="5" fill="${col}" opacity="0.85" stroke="#fff" stroke-width="1.5"><title>${fmtDate(d.date)}: Humør=${MOOD_LABELS[d.mood] ?? '–'}</title></circle>`;
+    return `<circle cx="${px(i).toFixed(1)}" cy="${(yPos - 10).toFixed(1)}" r="5" fill="${col}" opacity="0.85" stroke="#fff" stroke-width="1.5"><title>${fmtDate(d.date)}: Mood=${MOOD_LABELS[d.mood] ?? '–'}</title></circle>`;
   }).join('');
   const step = Math.max(1, Math.floor(days.length / 8));
   const xLabels = days.map((d, i) => {
@@ -196,7 +196,7 @@ function fitnessCheckinChart(series) {
 }
 
 function sportFitnessChart(days) {
-  if (!days || days.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Ikke nok data</p>';
+  if (!days || days.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Not enough data</p>';
   const W = 440, H = 180, axH = 22, PDL = 34, PDR = 34, PDY = 8;
   const plotW = W - PDL - PDR;
   const allVals = [...days.map(d => d.ctl), ...days.map(d => d.atl)].filter(v => v != null);
@@ -247,7 +247,7 @@ function sportFitnessChart(days) {
 
 function hrvCheckinChart(series) {
   const days = series.filter(d => d.hrv != null);
-  if (days.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Ikke nok HRV data</p>';
+  if (days.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Not enough HRV data</p>';
   const W = 500, H = 180, axH = 18, PDL = 36, PDR = 10, PDY = 8;
   const plotW = W - PDL - PDR;
   const vals = days.map(d => d.hrv);
@@ -277,7 +277,7 @@ function hrvCheckinChart(series) {
   }).join('');
   return `
     <div class="legend">
-      <div class="legend-item"><span style="font-size:10px">Farvet efter fatigue:</span></div>
+      <div class="legend-item"><span style="font-size:10px">Coloured by fatigue:</span></div>
       <div class="legend-item"><div class="legend-dot" style="background:#30d158"></div>Low</div>
       <div class="legend-item"><div class="legend-dot" style="background:#ff9f0a"></div>Avg</div>
       <div class="legend-item"><div class="legend-dot" style="background:#ff3b30"></div>High</div>
@@ -292,7 +292,7 @@ function hrvCheckinChart(series) {
 
 function sleepMoodChart(series) {
   const days = series.filter(d => d.sleep != null);
-  if (days.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Ikke nok søvn data</p>';
+  if (days.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Not enough sleep data</p>';
   const W = 500, H = 180, axH = 18, PDL = 36, PDR = 10, PDY = 8;
   const plotW = W - PDL - PDR;
   const vals = days.map(d => d.sleep);
@@ -312,7 +312,7 @@ function sleepMoodChart(series) {
     return `<line x1="${px(i-1).toFixed(1)}" y1="${py(prev.sleep).toFixed(1)}" x2="${px(i).toFixed(1)}" y2="${py(d.sleep).toFixed(1)}" stroke="${CHECKIN_COLORS[d.mood] ?? '#007aff'}" stroke-width="2.2" stroke-linecap="round"/>`;
   }).join('');
   const dots = days.map((d, i) =>
-    `<circle cx="${px(i).toFixed(1)}" cy="${py(d.sleep).toFixed(1)}" r="3.5" fill="${CHECKIN_COLORS[d.mood] ?? '#007aff'}" stroke="#fff" stroke-width="1.5"><title>${fmtDate(d.date)}: Søvn=${d.sleep}t, Humør=${MOOD_LABELS[d.mood] ?? '–'}</title></circle>`
+    `<circle cx="${px(i).toFixed(1)}" cy="${py(d.sleep).toFixed(1)}" r="3.5" fill="${CHECKIN_COLORS[d.mood] ?? '#007aff'}" stroke="#fff" stroke-width="1.5"><title>${fmtDate(d.date)}: Sleep=${d.sleep}h, Mood=${MOOD_LABELS[d.mood] ?? '–'}</title></circle>`
   ).join('');
   const step = Math.max(1, Math.floor(days.length / 6));
   const xLabels = days.map((d, i) => {
@@ -322,21 +322,21 @@ function sleepMoodChart(series) {
   }).join('');
   return `
     <div class="legend">
-      <div class="legend-item"><span style="font-size:10px">Farvet efter humør:</span></div>
+      <div class="legend-item"><span style="font-size:10px">Coloured by mood:</span></div>
       <div class="legend-item"><div class="legend-dot" style="background:#30d158"></div>Great</div>
       <div class="legend-item"><div class="legend-dot" style="background:#ff9f0a"></div>Good</div>
       <div class="legend-item"><div class="legend-dot" style="background:#ff3b30"></div>Avg/Low</div>
     </div>
     <div class="chart-wrap">
       <svg viewBox="0 0 ${W} ${H + axH}" width="100%" style="overflow:visible">
-        ${hourTicks.join('')}<text x="10" y="${H/2}" font-size="9" fill="#8e8e93" text-anchor="middle" transform="rotate(-90 10 ${H/2})">Søvn (t)</text>${segments}${dots}${xLabels}
+        ${hourTicks.join('')}<text x="10" y="${H/2}" font-size="9" fill="#8e8e93" text-anchor="middle" transform="rotate(-90 10 ${H/2})">Sleep (h)</text>${segments}${dots}${xLabels}
       </svg>
     </div>`;
 }
 
 function tsbMoodScatter(series) {
   const pts = series.filter(d => d.tsb != null && d.mood != null);
-  if (pts.length < 4) return '<p style="color:#aeaeb2;font-size:13px">Ikke nok data</p>';
+  if (pts.length < 4) return '<p style="color:#aeaeb2;font-size:13px">Not enough data</p>';
   const W = 300, H = 200, PD = 24, axH = 28;
   const tsbMn = Math.floor(Math.min(...pts.map(d => d.tsb)) / 5) * 5;
   const tsbMx = Math.ceil(Math.max(...pts.map(d => d.tsb)) / 5) * 5;
@@ -350,10 +350,10 @@ function tsbMoodScatter(series) {
             <text x="${x}" y="${H - PD + 14}" font-size="9" fill="#aeaeb2" text-anchor="middle">${Math.round(v)}</text>`;
   }).join('');
   const zeroLine = (tsbMn <= 0 && tsbMx >= 0) ? `<line x1="${px(0).toFixed(1)}" y1="${PD}" x2="${px(0).toFixed(1)}" y2="${H - PD}" stroke="#aeaeb2" stroke-width="1" stroke-dasharray="4,3"/>` : '';
-  const dots = pts.map(d => `<circle cx="${px(d.tsb).toFixed(1)}" cy="${py(d.mood).toFixed(1)}" r="5" fill="${CHECKIN_COLORS[d.mood]}" opacity="0.75" stroke="#fff" stroke-width="1.5"><title>${fmtDate(d.date)}: TSB=${d.tsb}, Humør=${MOOD_LABELS[d.mood]}</title></circle>`).join('');
+  const dots = pts.map(d => `<circle cx="${px(d.tsb).toFixed(1)}" cy="${py(d.mood).toFixed(1)}" r="5" fill="${CHECKIN_COLORS[d.mood]}" opacity="0.75" stroke="#fff" stroke-width="1.5"><title>${fmtDate(d.date)}: TSB=${d.tsb}, Mood=${MOOD_LABELS[d.mood]}</title></circle>`).join('');
   const yLabels = [1,2,3,4].map(v => `<text x="${PD - 4}" y="${py(v).toFixed(1)}" font-size="9" fill="#aeaeb2" text-anchor="end" dominant-baseline="middle">${MOOD_LABELS[v]}</text>`).join('');
   return `
-    <div class="card-subtitle" style="margin-bottom:10px">Hvert punkt = én dag</div>
+    <div class="card-subtitle" style="margin-bottom:10px">Each dot = one day</div>
     <div class="chart-wrap">
       <svg viewBox="0 0 ${W} ${H + axH}" width="100%" style="overflow:visible">
         ${xTicks}${zeroLine}${dots}${yLabels}
@@ -364,7 +364,7 @@ function tsbMoodScatter(series) {
 
 function sleepMoodScatter(series) {
   const pts = series.filter(d => d.sleep != null && d.mood != null);
-  if (pts.length < 4) return '<p style="color:#aeaeb2;font-size:13px">Ikke nok data</p>';
+  if (pts.length < 4) return '<p style="color:#aeaeb2;font-size:13px">Not enough data</p>';
   const W = 300, H = 200, PD = 24, axH = 28;
   const sleepMn = Math.max(0, Math.floor(Math.min(...pts.map(d => d.sleep)) - 0.5));
   const sleepMx = Math.ceil(Math.max(...pts.map(d => d.sleep)) + 0.5);
@@ -378,14 +378,14 @@ function sleepMoodScatter(series) {
             <text x="${x}" y="${H - PD + 14}" font-size="9" fill="#aeaeb2" text-anchor="middle">${v.toFixed(1)}t</text>`;
   }).join('');
   const refLine = (sleepMn <= 7 && sleepMx >= 7) ? `<line x1="${px(7).toFixed(1)}" y1="${PD}" x2="${px(7).toFixed(1)}" y2="${H - PD}" stroke="#aeaeb2" stroke-width="1" stroke-dasharray="4,3"/>` : '';
-  const dots = pts.map(d => `<circle cx="${px(d.sleep).toFixed(1)}" cy="${py(d.mood).toFixed(1)}" r="5" fill="${CHECKIN_COLORS[d.mood]}" opacity="0.75" stroke="#fff" stroke-width="1.5"><title>${fmtDate(d.date)}: Søvn=${d.sleep}t, Humør=${MOOD_LABELS[d.mood]}</title></circle>`).join('');
+  const dots = pts.map(d => `<circle cx="${px(d.sleep).toFixed(1)}" cy="${py(d.mood).toFixed(1)}" r="5" fill="${CHECKIN_COLORS[d.mood]}" opacity="0.75" stroke="#fff" stroke-width="1.5"><title>${fmtDate(d.date)}: Sleep=${d.sleep}h, Mood=${MOOD_LABELS[d.mood]}</title></circle>`).join('');
   const yLabels = [1,2,3,4].map(v => `<text x="${PD - 4}" y="${py(v).toFixed(1)}" font-size="9" fill="#aeaeb2" text-anchor="end" dominant-baseline="middle">${MOOD_LABELS[v]}</text>`).join('');
   return `
-    <div class="card-subtitle" style="margin-bottom:10px">Hvert punkt = én dag</div>
+    <div class="card-subtitle" style="margin-bottom:10px">Each dot = one day</div>
     <div class="chart-wrap">
       <svg viewBox="0 0 ${W} ${H + axH}" width="100%" style="overflow:visible">
         ${xTicks}${refLine}${dots}${yLabels}
-        <text x="${W/2}" y="${H + axH}" font-size="9" fill="#8e8e93" text-anchor="middle">Søvn (timer)</text>
+        <text x="${W/2}" y="${H + axH}" font-size="9" fill="#8e8e93" text-anchor="middle">Sleep (hours)</text>
       </svg>
     </div>`;
 }
@@ -398,7 +398,7 @@ function computeInsights(series) {
     const lowHrvMood = recent.filter(d => d.hrv != null && d.hrv < 60 && d.mood != null).map(d => d.mood);
     if (lowHrvMood.length >= 2) {
       const avg = lowHrvMood.reduce((a,b) => a+b,0) / lowHrvMood.length;
-      if (avg > 2.5) insights.push(`<strong>HRV ↔ Humør:</strong> På dage med lav HRV (&lt;60 ms) er dit humør gennemsnitligt <em>${MOOD_LABELS[Math.round(avg)]}</em>.`);
+      if (avg > 2.5) insights.push(`<strong>HRV ↔ Mood:</strong> On days with low HRV (&lt;60 ms) your mood averages <em>${MOOD_LABELS[Math.round(avg)]}</em>.`);
     }
     const sleepMood = recent.filter(d => d.sleep != null && d.mood != null);
     if (sleepMood.length >= 4) {
@@ -406,7 +406,7 @@ function computeInsights(series) {
       const b = sleepMood.filter(d => d.sleep < 7).map(d => d.mood);
       if (g.length >= 2 && b.length >= 2) {
         const gA = g.reduce((a,v)=>a+v,0)/g.length, bA = b.reduce((a,v)=>a+v,0)/b.length;
-        if (gA < bA - 0.5) insights.push(`<strong>Søvn ↔ Humør:</strong> Med ≥7,5t søvn er dit humør typisk <em>${MOOD_LABELS[Math.round(gA)]}</em>. Under 7t: <em>${MOOD_LABELS[Math.round(bA)]}</em>.`);
+        if (gA < bA - 0.5) insights.push(`<strong>Sleep ↔ Mood:</strong> With ≥7.5h sleep your mood is typically <em>${MOOD_LABELS[Math.round(gA)]}</em>. Under 7h: <em>${MOOD_LABELS[Math.round(bA)]}</em>.`);
       }
     }
   }
@@ -416,8 +416,8 @@ function computeInsights(series) {
 
 function checkinTable(series) {
   const rows = series.slice(-21).reverse().filter(d => d.mood || d.fatigue || d.soreness || d.motivation || d.hrv || d.sleep);
-  if (!rows.length) return '<p style="color:#aeaeb2;font-size:13px">Ingen check-in data endnu</p>';
-  const head = `<thead><tr><th>Dato</th><th>Humør</th><th>Soreness</th><th>Fatigue</th><th>Motivation</th><th>HRV</th><th>Søvn</th><th>CTL</th><th>TSB</th><th>Note</th></tr></thead>`;
+  if (!rows.length) return '<p style="color:#aeaeb2;font-size:13px">No check-in data yet</p>';
+  const head = `<thead><tr><th>Date</th><th>Mood</th><th>Soreness</th><th>Fatigue</th><th>Motivation</th><th>HRV</th><th>Sleep</th><th>CTL</th><th>TSB</th><th>Note</th></tr></thead>`;
   const body = rows.map(d => `<tr>
     <td style="font-size:11px;white-space:nowrap">${fmtDate(d.date)}</td>
     <td><span class="${chipClass(d.mood)}">${MOOD_LABELS[d.mood] ?? '–'}</span></td>
@@ -434,18 +434,18 @@ function checkinTable(series) {
 }
 
 const CAT_META = {
-  training:     { label: 'Træning',    color: '#bf5af2' },
-  work:         { label: 'Arbejde',    color: '#ff9f0a' },
+  training:     { label: 'Training',    color: '#bf5af2' },
+  work:         { label: 'Work',    color: '#ff9f0a' },
   social:       { label: 'Social',     color: '#30d158' },
   relationship: { label: 'Dating',     color: '#ff2d55' },
-  interests:    { label: 'Interesser', color: '#007aff' },
+  interests:    { label: 'Interests', color: '#007aff' },
 };
 const CAT_KEYS = Object.keys(CAT_META);
 
 function calendarLoadChart(series) {
   const days = series;
   const hasCalData = days.some(d => d.cal != null);
-  if (!hasCalData && !days.some(d => d.sdnn != null)) return '<p style="color:#aeaeb2;font-size:13px">Ingen kalender-data endnu</p>';
+  if (!hasCalData && !days.some(d => d.sdnn != null)) return '<p style="color:#aeaeb2;font-size:13px">No calendar data yet</p>';
 
   const W = 900, H_cal = 160, H_stress = 50, axH = 22, PDL = 36, PDR = 46, PDY = 8;
   const plotW = W - PDL - PDR;
@@ -490,7 +490,7 @@ function calendarLoadChart(series) {
       const prev = sdnnDays[j - 1];
       return `<line x1="${px(prev.i).toFixed(1)}" y1="${pySD(prev.sdnn).toFixed(1)}" x2="${px(d.i).toFixed(1)}" y2="${pySD(d.sdnn).toFixed(1)}" stroke="#1c1c1e" stroke-width="2" stroke-linecap="round" opacity="0.7"/>`;
     }).join('');
-    sdDots = sdnnDays.map(d => `<circle cx="${px(d.i).toFixed(1)}" cy="${pySD(d.sdnn).toFixed(1)}" r="3" fill="#1c1c1e" opacity="0.7"><title>${fmtDate(d.date)}: SDNN næste morgen = ${d.sdnn} ms</title></circle>`).join('');
+    sdDots = sdnnDays.map(d => `<circle cx="${px(d.i).toFixed(1)}" cy="${pySD(d.sdnn).toFixed(1)}" r="3" fill="#1c1c1e" opacity="0.7"><title>${fmtDate(d.date)}: SDNN next morning = ${d.sdnn} ms</title></circle>`).join('');
     sdTicks = [sdMn, Math.round(sdMn + sdRng / 2), sdMx].map(v =>
       `<text x="${W - PDR + 8}" y="${pySD(v).toFixed(1)}" font-size="9" fill="#8e8e93" dominant-baseline="middle">${v}</text>`
     ).join('');
@@ -514,10 +514,10 @@ function calendarLoadChart(series) {
   }).join('');
 
   const legend = CAT_KEYS.map(k => `<div class="legend-item"><div class="legend-dot" style="background:${CAT_META[k].color}"></div>${CAT_META[k].label}</div>`).join('') +
-    `<div class="legend-item"><div class="legend-line" style="background:#1c1c1e;opacity:0.7"></div>SDNN næste morgen</div>` +
-    `<div class="legend-item"><div class="legend-dot" style="background:#30d158"></div>Stress: Lav</div>` +
-    `<div class="legend-item"><div class="legend-dot" style="background:#ff9f0a"></div>Moderat</div>` +
-    `<div class="legend-item"><div class="legend-dot" style="background:#ff3b30"></div>Høj</div>`;
+    `<div class="legend-item"><div class="legend-line" style="background:#1c1c1e;opacity:0.7"></div>SDNN next morning</div>` +
+    `<div class="legend-item"><div class="legend-dot" style="background:#30d158"></div>Stress: Low</div>` +
+    `<div class="legend-item"><div class="legend-dot" style="background:#ff9f0a"></div>Moderate</div>` +
+    `<div class="legend-item"><div class="legend-dot" style="background:#ff3b30"></div>High</div>`;
 
   return `
     <div class="legend">${legend}</div>
@@ -541,7 +541,7 @@ function calHrvScatter(series) {
     const dom = CAT_KEYS.reduce((best, k) => (d.cal[k] ?? 0) > (d.cal[best] ?? 0) ? k : best, CAT_KEYS[0]);
     pts.push({ date: d.date, total, dom, sdnn: next.sdnn });
   }
-  if (pts.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Ikke nok data endnu</p>';
+  if (pts.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Not enough data yet</p>';
   const W = 400, H = 200, PD = 30, axH = 28;
   const maxTotal = Math.max(...pts.map(p => p.total));
   const sdMn = Math.floor(Math.min(...pts.map(p => p.sdnn))/10)*10;
@@ -561,22 +561,22 @@ function calHrvScatter(series) {
     `<circle cx="${px(p.total).toFixed(1)}" cy="${py(p.sdnn).toFixed(1)}" r="5.5" fill="${CAT_META[p.dom].color}" opacity="0.75" stroke="#fff" stroke-width="1.5"><title>${fmtDate(p.date)}: ${p.total} events → SDNN ${p.sdnn} ms</title></circle>`
   ).join('');
   return `
-    <div class="card-subtitle" style="margin-bottom:10px">Farve = dominerende kategori</div>
+    <div class="card-subtitle" style="margin-bottom:10px">Colour = dominant category</div>
     <div class="chart-wrap">
       <svg viewBox="0 0 ${W} ${H+axH}" width="100%" style="overflow:visible">
         ${xTicks}${yTicks}${dots}
-        <text x="${W/2}" y="${H+axH}" font-size="9" fill="#8e8e93" text-anchor="middle">Antal events i dag</text>
-        <text x="10" y="${H/2}" font-size="9" fill="#8e8e93" text-anchor="middle" transform="rotate(-90 10 ${H/2})">SDNN næste morgen (ms)</text>
+        <text x="${W/2}" y="${H+axH}" font-size="9" fill="#8e8e93" text-anchor="middle">Number of events that day</text>
+        <text x="10" y="${H/2}" font-size="9" fill="#8e8e93" text-anchor="middle" transform="rotate(-90 10 ${H/2})">SDNN next morning (ms)</text>
       </svg>
     </div>`;
 }
 
 const STRESS_COLORS = {1:'#30d158',2:'#ff9f0a',3:'#ff3b30',4:'#bf5af2'};
-const STRESS_LABELS = ['','Lav','Moderat','Høj','Meget høj'];
+const STRESS_LABELS = ['','Low','Moderate','High','Very high'];
 
 function sdnnStressChart(series) {
   const days = series.filter(d => d.sdnn != null || d.stress != null);
-  if (days.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Ikke nok SDNN/stress data</p>';
+  if (days.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Not enough SDNN/stress data</p>';
   const sdnnDays = days.filter(d => d.sdnn != null);
   const W = 900, H = 180, stressH = 40, axH = 22, PDL = 40, PDR = 10, PDY = 8;
   const plotW = W - PDL - PDR;
@@ -615,11 +615,11 @@ function sdnnStressChart(series) {
   }).join('');
   return `
     <div class="legend">
-      <div class="legend-item"><span style="font-size:10px">Farvet efter stress:</span></div>
-      <div class="legend-item"><div class="legend-dot" style="background:#30d158"></div>Lav</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#ff9f0a"></div>Moderat</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#ff3b30"></div>Høj</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#bf5af2"></div>Meget høj</div>
+      <div class="legend-item"><span style="font-size:10px">Coloured by stress:</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:#30d158"></div>Low</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ff9f0a"></div>Moderate</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ff3b30"></div>High</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#bf5af2"></div>Very high</div>
     </div>
     <div class="chart-wrap">
       <svg viewBox="0 0 ${W} ${totalH}" width="100%" style="overflow:visible">
@@ -642,7 +642,7 @@ function render(data, sportData) {
     const d = new Date(today + 'T12:00:00');
     return `${DAYS_S[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
   })();
-  document.getElementById('topbar-date').innerHTML = `${todayFmt}<br>Opdateret ${new Date().toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Copenhagen' })}`;
+  document.getElementById('topbar-date').innerHTML = `${todayFmt}<br>Updated ${new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Copenhagen' })}`;
 
   function tsbLabel(t) {
     if (t == null) return ['–', ''];
@@ -667,15 +667,15 @@ function render(data, sportData) {
   const app = document.getElementById('app');
   app.innerHTML = `
     <div class="row row-4">
-      ${kpiCard('Fitness (CTL)', fmtN(latest.ctl), '', '60-dages gennemsnit', 'blue')}
-      ${kpiCard('Fatigue (ATL)', fmtN(latest.atl), '', '7-dages gennemsnit', 'yellow')}
+      ${kpiCard('Fitness (CTL)', fmtN(latest.ctl), '', '60-day average', 'blue')}
+      ${kpiCard('Fatigue (ATL)', fmtN(latest.atl), '', '7-day average', 'yellow')}
       ${kpiCard('Form (TSB)', fmtN(latest.tsb, 1), '', tsbZone, latest.tsb != null && latest.tsb >= 0 ? 'green' : 'yellow')}
-      ${kpiCard('HRV', fmtN(latest.hrv), 'ms', `Seneste: ${latestCheckin.date ? fmtDate(latestCheckin.date) : '–'}`, kpiColor(latest.hrv))}
+      ${kpiCard('HRV', fmtN(latest.hrv), 'ms', `Latest: ${latestCheckin.date ? fmtDate(latestCheckin.date) : '–'}`, kpiColor(latest.hrv))}
     </div>
 
     <div class="row row-full">
       <div class="card">
-        <div class="card-title">Fitness & Form — 30 dage <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#aeaeb2;font-size:10px">Prikker = dagens check-in humør</span></div>
+        <div class="card-title">Fitness & Form: 30 days <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#aeaeb2;font-size:10px">Dots = the day's check-in mood</span></div>
         ${fitnessCheckinChart(series)}
         ${computeInsights(series)}
       </div>
@@ -683,46 +683,46 @@ function render(data, sportData) {
 
     <div class="row row-2">
       <div class="card">
-        <div class="card-title">Løb — Fitness & Form</div>
+        <div class="card-title">Run: Fitness & Form</div>
         ${sportFitnessChart(sportSeries.map(d => ({ date: d.date, ...d.run })))}
       </div>
       <div class="card">
-        <div class="card-title">Styrke — Fitness & Form</div>
+        <div class="card-title">Strength: Fitness & Form</div>
         ${sportFitnessChart(sportSeries.map(d => ({ date: d.date, ...d.strength })))}
       </div>
     </div>
 
     <div class="row row-full">
       <div class="card">
-        <div class="card-title">Kalender-belastning & SDNN restitution</div>
-        <div class="card-subtitle" style="margin-bottom:10px">Søjler = antal events pr. kategori — sort linje = SDNN næste morgen</div>
+        <div class="card-title">Calendar load & SDNN recovery</div>
+        <div class="card-subtitle" style="margin-bottom:10px">Bars = number of events per category; black line = SDNN next morning</div>
         ${calendarLoadChart(series)}
       </div>
     </div>
 
     <div class="row row-2">
       <div class="card">
-        <div class="card-title">HRV over tid</div>
+        <div class="card-title">HRV over time</div>
         ${hrvCheckinChart(series)}
       </div>
       <div class="card">
-        <div class="card-title">Søvn over tid</div>
+        <div class="card-title">Sleep over time</div>
         ${sleepMoodChart(series)}
       </div>
     </div>
 
     <div class="row row-2-1">
       <div class="card" style="overflow:auto">
-        <div class="card-title">Check-in historik — seneste 21 dage</div>
+        <div class="card-title">Check-in history: last 21 days</div>
         ${checkinTable(series)}
       </div>
       <div style="display:flex;flex-direction:column;gap:16px">
         <div class="card">
-          <div class="card-title">TSB vs Humør</div>
+          <div class="card-title">TSB vs Mood</div>
           ${tsbMoodScatter(series)}
         </div>
         <div class="card">
-          <div class="card-title">Søvn vs Humør</div>
+          <div class="card-title">Sleep vs Mood</div>
           ${sleepMoodScatter(series)}
         </div>
       </div>
@@ -739,14 +739,14 @@ function render(data, sportData) {
       fetch('/api/get-dashboard'),
       fetch('/api/get-sport-load').catch(() => null),
     ]);
-    if (!res.ok) throw new Error('API fejl: ' + res.status);
+    if (!res.ok) throw new Error('API error: ' + res.status);
     const data = await res.json();
     const sportData = sportRes?.ok ? await sportRes.json() : null;
     render(data, sportData);
   } catch (e) {
     document.getElementById('loading').style.display = 'none';
     document.getElementById('error-wrap').style.display = '';
-    document.getElementById('error-msg').textContent = 'Kunne ikke hente data: ' + e.message;
+    document.getElementById('error-msg').textContent = 'Could not load data: ' + e.message;
   }
 })();
 </script>

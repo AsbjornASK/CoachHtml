@@ -12,7 +12,7 @@ export default async () => {
   const athleteId = process.env.INTERVALS_ATHLETE_ID;
 
   if (!apiKey || !athleteId) {
-    return json({ error: 'Intervals API ikke konfigureret' }, 500);
+    return json({ error: 'Intervals API not configured' }, 500);
   }
 
   const today = new Date();
@@ -28,7 +28,7 @@ export default async () => {
   );
 
   if (!res.ok) {
-    return json({ error: 'Intervals activities API fejl', status: res.status }, 502);
+    return json({ error: 'Intervals activities API error', status: res.status }, 502);
   }
 
   const activities = await res.json();

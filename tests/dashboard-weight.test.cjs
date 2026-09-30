@@ -11,7 +11,7 @@ const ctx = {};
 vm.runInNewContext(src, ctx);
 
 test('too few measurements shows the window length in days', () => {
-  assert.match(ctx.weightGraph([], '2026-09-30'), /de seneste 21 dage/);
+  assert.match(ctx.weightGraph([], '2026-09-30'), /in the last 21 days/);
 });
 
 test('graph only includes weights inside the 21-day window', () => {

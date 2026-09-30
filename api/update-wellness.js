@@ -12,19 +12,19 @@ export default async (req) => {
   const athleteId = process.env.INTERVALS_ATHLETE_ID;
 
   if (!apiKey || !athleteId) {
-    return json({ error: 'Intervals API ikke konfigureret på serveren' }, 500);
+    return json({ error: 'Intervals API not configured on the server' }, 500);
   }
 
   let body;
   try {
     body = await req.json();
   } catch {
-    return json({ error: 'Ugyldigt JSON' }, 400);
+    return json({ error: 'Invalid JSON' }, 400);
   }
 
   const { date, ...fields } = body;
   if (!date) {
-    return json({ error: 'Dato mangler' }, 400);
+    return json({ error: 'Date is missing' }, 400);
   }
 
   const payload  = { id: date, ...fields };
@@ -43,7 +43,7 @@ export default async (req) => {
   const responseText = await response.text();
 
   if (!response.ok) {
-    return json({ error: 'Intervals API fejl', details: responseText }, response.status);
+    return json({ error: 'Intervals API error', details: responseText }, response.status);
   }
 
   return json({ ok: true });

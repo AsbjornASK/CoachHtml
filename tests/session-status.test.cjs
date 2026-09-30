@@ -55,3 +55,11 @@ test('sportOf maps titles to run / strength / ride, else null', () => {
   assert.equal(sportOf('Cykeltur'), 'ride');
   assert.equal(sportOf('Yoga'), null);
 });
+
+test('sportOf matches sport words at a word start, not inside other words', () => {
+  const { sportOf } = require('../static/js/session-status.js');
+  assert.equal(sportOf('Crunches & core'), null);
+  assert.equal(sportOf('Strides'), null);
+  assert.equal(sportOf('Running intervals'), 'run');
+  assert.equal(sportOf('Cykeltur'), 'ride');
+});

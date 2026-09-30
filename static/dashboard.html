@@ -144,7 +144,7 @@ const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov
 const MOOD_LABELS  = ['','Great','Good','Avg','Low'];
 const SOR_LABELS   = ['','Low','Avg','High','Extreme'];
 const FAT_LABELS   = ['','Low','Avg','High','Extreme'];
-const MOT_LABELS   = ['','Extreme','High','Middel','Low'];
+const MOT_LABELS   = ['','Extreme','High','Medium','Low'];
 
 const CHECKIN_COLORS = {1:'#30d158',2:'#ff9f0a',3:'#ff3b30',4:'#bf5af2'};
 
@@ -177,7 +177,7 @@ function kpiCard(title, value, unit, sub, colorClass, badge = '') {
 // ── Main fitness chart with check-in overlay ──────────────────────────────
 function fitnessCheckinChart(series) {
   const days = series.filter(d => d.ctl != null || d.atl != null);
-  if (days.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Ikke nok data</p>';
+  if (days.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Not enough data</p>';
 
   const W = 900, H = 220, axH = 22, PDL = 38, PDR = 38, PDY = 8;
   const plotW = W - PDL - PDR;
@@ -236,7 +236,7 @@ function fitnessCheckinChart(series) {
     const field = d.mood ?? d.fatigue;
     const col = CHECKIN_COLORS[field] ?? '#aeaeb2';
     const yPos = d.ctl != null ? py(d.ctl) : d.atl != null ? py(d.atl) : H / 2;
-    return `<circle cx="${px(i).toFixed(1)}" cy="${(yPos - 10).toFixed(1)}" r="5" fill="${col}" opacity="0.85" stroke="#fff" stroke-width="1.5"><title>${fmtDate(d.date)}: Humør=${MOOD_LABELS[d.mood] ?? '–'}, Fatigue=${FAT_LABELS[d.fatigue] ?? '–'}</title></circle>`;
+    return `<circle cx="${px(i).toFixed(1)}" cy="${(yPos - 10).toFixed(1)}" r="5" fill="${col}" opacity="0.85" stroke="#fff" stroke-width="1.5"><title>${fmtDate(d.date)}: Mood=${MOOD_LABELS[d.mood] ?? '–'}, Fatigue=${FAT_LABELS[d.fatigue] ?? '–'}</title></circle>`;
   }).join('');
 
   // X-axis labels
@@ -272,7 +272,7 @@ function fitnessCheckinChart(series) {
 
 // ── Sport-specific Fitness & Form chart (CTL/ATL/TSB derived from activity load) ──
 function sportFitnessChart(days) {
-  if (!days || days.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Ikke nok data</p>';
+  if (!days || days.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Not enough data</p>';
 
   const W = 440, H = 180, axH = 22, PDL = 34, PDR = 34, PDY = 8;
   const plotW = W - PDL - PDR;
@@ -345,7 +345,7 @@ function sportFitnessChart(days) {
 function hrvCheckinChart(series) {
   const days = series;
   const hrvDays = days.filter(d => d.hrv != null);
-  if (hrvDays.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Ikke nok HRV data</p>';
+  if (hrvDays.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Not enough HRV data</p>';
 
   const W = 500, H = 180, axH = 18, PDL = 36, PDR = 10, PDY = 8;
   const plotW = W - PDL - PDR;
@@ -386,7 +386,7 @@ function hrvCheckinChart(series) {
 
   return `
     <div class="legend">
-      <div class="legend-item"><span style="font-size:10px">Linje farvet efter dagens fatigue:</span></div>
+      <div class="legend-item"><span style="font-size:10px">Line coloured by the day's fatigue:</span></div>
       <div class="legend-item"><div class="legend-dot" style="background:#30d158"></div>Low</div>
       <div class="legend-item"><div class="legend-dot" style="background:#ff9f0a"></div>Avg</div>
       <div class="legend-item"><div class="legend-dot" style="background:#ff3b30"></div>High</div>
@@ -403,7 +403,7 @@ function hrvCheckinChart(series) {
 function sleepMoodChart(series) {
   const days = series;
   const sleepDays = days.filter(d => d.sleep != null);
-  if (sleepDays.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Ikke nok søvn data</p>';
+  if (sleepDays.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Not enough sleep data</p>';
 
   const W = 500, H = 180, axH = 18, PDL = 36, PDR = 10, PDY = 8;
   const plotW = W - PDL - PDR;
@@ -424,7 +424,7 @@ function sleepMoodChart(series) {
     );
   }
 
-  const axisLabel = `<text x="10" y="${H / 2}" font-size="9" fill="#8e8e93" text-anchor="middle" transform="rotate(-90 10 ${H / 2})">Søvn (t)</text>`;
+  const axisLabel = `<text x="10" y="${H / 2}" font-size="9" fill="#8e8e93" text-anchor="middle" transform="rotate(-90 10 ${H / 2})">Sleep (h)</text>`;
 
   // 7-hour reference line
   const y7 = py(7).toFixed(1);
@@ -439,7 +439,7 @@ function sleepMoodChart(series) {
   const dots = days.map((d, i) => {
     if (d.sleep == null) return '';
     const col = CHECKIN_COLORS[d.mood] ?? '#007aff';
-    return `<circle cx="${px(i).toFixed(1)}" cy="${py(d.sleep).toFixed(1)}" r="3.5" fill="${col}" stroke="#fff" stroke-width="1.5"><title>${fmtDate(d.date)}: Søvn=${d.sleep}t, Humør=${MOOD_LABELS[d.mood] ?? '–'}</title></circle>`;
+    return `<circle cx="${px(i).toFixed(1)}" cy="${py(d.sleep).toFixed(1)}" r="3.5" fill="${col}" stroke="#fff" stroke-width="1.5"><title>${fmtDate(d.date)}: Sleep=${d.sleep}h, Mood=${MOOD_LABELS[d.mood] ?? '–'}</title></circle>`;
   }).join('');
 
   const step = Math.max(1, Math.floor(days.length / 6));
@@ -451,7 +451,7 @@ function sleepMoodChart(series) {
 
   return `
     <div class="legend">
-      <div class="legend-item"><span style="font-size:10px">Linje farvet efter dagens humør:</span></div>
+      <div class="legend-item"><span style="font-size:10px">Line coloured by the day's mood:</span></div>
       <div class="legend-item"><div class="legend-dot" style="background:#30d158"></div>Great</div>
       <div class="legend-item"><div class="legend-dot" style="background:#ff9f0a"></div>Good</div>
       <div class="legend-item"><div class="legend-dot" style="background:#ff3b30"></div>Avg/Low</div>
@@ -466,7 +466,7 @@ function sleepMoodChart(series) {
 // ── TSB vs Mood scatter ───────────────────────────────────────────────────
 function tsbMoodScatter(series) {
   const pts = series.filter(d => d.tsb != null && d.mood != null);
-  if (pts.length < 4) return '<p style="color:#aeaeb2;font-size:13px">Ikke nok data til scatter</p>';
+  if (pts.length < 4) return '<p style="color:#aeaeb2;font-size:13px">Not enough data for a scatter plot</p>';
 
   const W = 300, H = 200, PD = 24, axH = 28;
   const rawTsbVals = pts.map(d => d.tsb);
@@ -492,14 +492,14 @@ function tsbMoodScatter(series) {
 
   const dots = pts.map(d => {
     const col = CHECKIN_COLORS[d.mood];
-    return `<circle cx="${px(d.tsb).toFixed(1)}" cy="${py(d.mood).toFixed(1)}" r="5" fill="${col}" opacity="0.75" stroke="#fff" stroke-width="1.5"><title>${fmtDate(d.date)}: TSB=${d.tsb}, Humør=${MOOD_LABELS[d.mood]}</title></circle>`;
+    return `<circle cx="${px(d.tsb).toFixed(1)}" cy="${py(d.mood).toFixed(1)}" r="5" fill="${col}" opacity="0.75" stroke="#fff" stroke-width="1.5"><title>${fmtDate(d.date)}: TSB=${d.tsb}, Mood=${MOOD_LABELS[d.mood]}</title></circle>`;
   }).join('');
 
   const yLabels = [1,2,3,4].map(v => `<text x="${PD - 4}" y="${py(v).toFixed(1)}" font-size="9" fill="#aeaeb2" text-anchor="end" dominant-baseline="middle">${MOOD_LABELS[v]}</text>`).join('');
   const xLabel = `<text x="${W/2}" y="${H + axH}" font-size="9" fill="#8e8e93" text-anchor="middle">TSB (form)</text>`;
 
   return `
-    <div class="card-subtitle" style="margin-bottom:10px">Hvert punkt = én dag. Ser du et mønster?</div>
+    <div class="card-subtitle" style="margin-bottom:10px">Each dot = one day. Do you see a pattern?</div>
     <div class="chart-wrap">
       <svg viewBox="0 0 ${W} ${H + axH}" width="100%" style="overflow:visible">
         ${xTicks}${zeroLine}${dots}${yLabels}${xLabel}
@@ -510,7 +510,7 @@ function tsbMoodScatter(series) {
 // ── Sleep vs Mood scatter ─────────────────────────────────────────────────
 function sleepMoodScatter(series) {
   const pts = series.filter(d => d.sleep != null && d.mood != null);
-  if (pts.length < 4) return '<p style="color:#aeaeb2;font-size:13px">Ikke nok data til scatter</p>';
+  if (pts.length < 4) return '<p style="color:#aeaeb2;font-size:13px">Not enough data for a scatter plot</p>';
 
   const W = 300, H = 200, PD = 24, axH = 28;
   const rawVals = pts.map(d => d.sleep);
@@ -535,14 +535,14 @@ function sleepMoodScatter(series) {
 
   const dots = pts.map(d => {
     const col = CHECKIN_COLORS[d.mood];
-    return `<circle cx="${px(d.sleep).toFixed(1)}" cy="${py(d.mood).toFixed(1)}" r="5" fill="${col}" opacity="0.75" stroke="#fff" stroke-width="1.5"><title>${fmtDate(d.date)}: Søvn=${d.sleep}t, Humør=${MOOD_LABELS[d.mood]}</title></circle>`;
+    return `<circle cx="${px(d.sleep).toFixed(1)}" cy="${py(d.mood).toFixed(1)}" r="5" fill="${col}" opacity="0.75" stroke="#fff" stroke-width="1.5"><title>${fmtDate(d.date)}: Sleep=${d.sleep}h, Mood=${MOOD_LABELS[d.mood]}</title></circle>`;
   }).join('');
 
   const yLabels = [1,2,3,4].map(v => `<text x="${PD - 4}" y="${py(v).toFixed(1)}" font-size="9" fill="#aeaeb2" text-anchor="end" dominant-baseline="middle">${MOOD_LABELS[v]}</text>`).join('');
-  const xLabel = `<text x="${W/2}" y="${H + axH}" font-size="9" fill="#8e8e93" text-anchor="middle">Søvn (timer)</text>`;
+  const xLabel = `<text x="${W/2}" y="${H + axH}" font-size="9" fill="#8e8e93" text-anchor="middle">Sleep (hours)</text>`;
 
   return `
-    <div class="card-subtitle" style="margin-bottom:10px">Hvert punkt = én dag. Ser du et mønster?</div>
+    <div class="card-subtitle" style="margin-bottom:10px">Each dot = one day. Do you see a pattern?</div>
     <div class="chart-wrap">
       <svg viewBox="0 0 ${W} ${H + axH}" width="100%" style="overflow:visible">
         ${xTicks}${refLine}${dots}${yLabels}${xLabel}
@@ -561,14 +561,14 @@ function computeInsights(series) {
     const lowHrvMoodAvg = recent.filter(d => d.hrv != null && d.hrv < 60 && d.mood != null).map(d => d.mood);
     if (lowHrvMoodAvg.length >= 2) {
       const avg = lowHrvMoodAvg.reduce((a,b) => a+b,0) / lowHrvMoodAvg.length;
-      if (avg > 2.5) insights.push(`<strong>HRV ↔ Humør:</strong> På dage med lav HRV (&lt;60 ms) er dit humør gennemsnitligt <em>${MOOD_LABELS[Math.round(avg)]}</em> — der ser ud til at være en sammenhæng.`);
+      if (avg > 2.5) insights.push(`<strong>HRV ↔ Mood:</strong> On days with low HRV (&lt;60 ms) your mood averages <em>${MOOD_LABELS[Math.round(avg)]}</em>, which suggests a link.`);
     }
 
     // High ATL days → soreness
     const highAtlSore = recent.filter(d => d.atl != null && d.atl > 50 && d.soreness != null).map(d => d.soreness);
     if (highAtlSore.length >= 2) {
       const avg = highAtlSore.reduce((a,b) => a+b,0) / highAtlSore.length;
-      if (avg > 2) insights.push(`<strong>Fatigue load ↔ Soreness:</strong> Når ATL er høj (&gt;50) er din soreness typisk <em>${SOR_LABELS[Math.round(avg)]}</em>.`);
+      if (avg > 2) insights.push(`<strong>Fatigue load ↔ Soreness:</strong> When ATL is high (&gt;50) your soreness is typically <em>${SOR_LABELS[Math.round(avg)]}</em>.`);
     }
 
     // Sleep vs mood
@@ -579,7 +579,7 @@ function computeInsights(series) {
       if (goodSleep.length >= 2 && badSleep.length >= 2) {
         const gAvg = goodSleep.reduce((a,b)=>a+b,0)/goodSleep.length;
         const bAvg = badSleep.reduce((a,b)=>a+b,0)/badSleep.length;
-        if (gAvg < bAvg - 0.5) insights.push(`<strong>Søvn ↔ Humør:</strong> Med ≥7,5t søvn er dit humør typisk <em>${MOOD_LABELS[Math.round(gAvg)]}</em>. Under 7t: <em>${MOOD_LABELS[Math.round(bAvg)]}</em>.`);
+        if (gAvg < bAvg - 0.5) insights.push(`<strong>Sleep ↔ Mood:</strong> With ≥7.5h sleep your mood is typically <em>${MOOD_LABELS[Math.round(gAvg)]}</em>. Under 7h: <em>${MOOD_LABELS[Math.round(bAvg)]}</em>.`);
       }
     }
 
@@ -591,7 +591,7 @@ function computeInsights(series) {
       if (freshDays.length >= 2 && fatDays.length >= 2) {
         const fAvg = freshDays.reduce((a,b)=>a+b,0)/freshDays.length;
         const tAvg = fatDays.reduce((a,b)=>a+b,0)/fatDays.length;
-        if (fAvg < tAvg - 0.5) insights.push(`<strong>TSB ↔ Motivation:</strong> Friske dage (TSB&gt;5): motivation typisk <em>${MOT_LABELS[Math.round(fAvg)]}</em>. Hårde dage (TSB&lt;-5): <em>${MOT_LABELS[Math.round(tAvg)]}</em>.`);
+        if (fAvg < tAvg - 0.5) insights.push(`<strong>TSB ↔ Motivation:</strong> Fresh days (TSB&gt;5): motivation typically <em>${MOT_LABELS[Math.round(fAvg)]}</em>. Hard days (TSB&lt;-5): <em>${MOT_LABELS[Math.round(tAvg)]}</em>.`);
       }
     }
   }
@@ -603,11 +603,11 @@ function computeInsights(series) {
 // ── Recent check-in table ─────────────────────────────────────────────────
 function checkinTable(series) {
   const rows = series.slice(-21).reverse().filter(d => d.mood || d.fatigue || d.soreness || d.motivation || d.hrv || d.sleep);
-  if (!rows.length) return '<p style="color:#aeaeb2;font-size:13px">Ingen check-in data endnu</p>';
+  if (!rows.length) return '<p style="color:#aeaeb2;font-size:13px">No check-in data yet</p>';
 
   const head = `<thead><tr>
-    <th>Dato</th><th>Humør</th><th>Soreness</th><th>Fatigue</th><th>Motivation</th>
-    <th>HRV</th><th>Søvn</th><th>CTL</th><th>TSB</th><th>Note</th>
+    <th>Date</th><th>Mood</th><th>Soreness</th><th>Fatigue</th><th>Motivation</th>
+    <th>HRV</th><th>Sleep</th><th>CTL</th><th>TSB</th><th>Note</th>
   </tr></thead>`;
 
   const body = rows.map(d => `<tr>
@@ -628,11 +628,11 @@ function checkinTable(series) {
 
 // ── Kalender kategorier ───────────────────────────────────────────────────
 const CAT_META = {
-  training:     { label: 'Træning',       color: '#bf5af2' },
-  work:         { label: 'Arbejde',       color: '#ff9f0a' },
+  training:     { label: 'Training',       color: '#bf5af2' },
+  work:         { label: 'Work',       color: '#ff9f0a' },
   social:       { label: 'Social',        color: '#30d158' },
   relationship: { label: 'Dating',         color: '#ff2d55' },
-  interests:    { label: 'Interesser',    color: '#007aff' },
+  interests:    { label: 'Interests',    color: '#007aff' },
 };
 const CAT_KEYS = Object.keys(CAT_META);
 
@@ -649,7 +649,7 @@ function calHrvScatter(series) {
     const dom = CAT_KEYS.reduce((best, k) => (d.cal[k] ?? 0) > (d.cal[best] ?? 0) ? k : best, CAT_KEYS[0]);
     pts.push({ date: d.date, total, dom, sdnn: next.sdnn });
   }
-  if (pts.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Ikke nok data endnu</p>';
+  if (pts.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Not enough data yet</p>';
 
   const W = 400, H = 200, PD = 30, axH = 28;
   const maxTotal = Math.max(...pts.map(p => p.total));
@@ -675,11 +675,11 @@ function calHrvScatter(series) {
     `<circle cx="${px(p.total).toFixed(1)}" cy="${py(p.sdnn).toFixed(1)}" r="5.5" fill="${CAT_META[p.dom].color}" opacity="0.75" stroke="#fff" stroke-width="1.5"><title>${fmtDate(p.date)}: ${p.total} events (${CAT_META[p.dom].label}) → Dag HRV ${p.sdnn} ms</title></circle>`
   ).join('');
 
-  const xLabel = `<text x="${W/2}" y="${H+axH}" font-size="9" fill="#8e8e93" text-anchor="middle">Antal events i dag</text>`;
-  const yLabel = `<text x="10" y="${H/2}" font-size="9" fill="#8e8e93" text-anchor="middle" transform="rotate(-90 10 ${H/2})">Dag HRV næste morgen (ms)</text>`;
+  const xLabel = `<text x="${W/2}" y="${H+axH}" font-size="9" fill="#8e8e93" text-anchor="middle">Number of events that day</text>`;
+  const yLabel = `<text x="10" y="${H/2}" font-size="9" fill="#8e8e93" text-anchor="middle" transform="rotate(-90 10 ${H/2})">Day HRV next morning (ms)</text>`;
 
   return `
-    <div class="card-subtitle" style="margin-bottom:10px">Farve = dominerende kalenderkategori. Ser du et mønster?</div>
+    <div class="card-subtitle" style="margin-bottom:10px">Colour = dominant calendar category. Do you see a pattern?</div>
     <div class="chart-wrap">
       <svg viewBox="0 0 ${W} ${H+axH}" width="100%" style="overflow:visible">
         ${xTicks}${yTicks}${dots}${xLabel}${yLabel}
@@ -689,12 +689,12 @@ function calHrvScatter(series) {
 
 // ── Dag HRV · Kalender · Stress (swimlanes) ──────────────────────────────
 const STRESS_COLORS = {1:'#30d158',2:'#ff9f0a',3:'#ff3b30',4:'#bf5af2'};
-const STRESS_LABELS = ['','Lav','Moderat','Høj','Meget høj'];
-const STRESS_SHORT  = ['','Lav','Mod.','Høj','M. høj'];
+const STRESS_LABELS = ['','Low','Moderate','High','Very high'];
+const STRESS_SHORT  = ['','Low','Mod.','High','V. high'];
 
 function hrvCalStressChart(series) {
   const days = series;
-  if (!days.some(d => d.sdnn != null || d.stress != null || d.cal)) return '<p style="color:#aeaeb2;font-size:13px">Ingen HRV-, kalender- eller stress-data endnu</p>';
+  if (!days.some(d => d.sdnn != null || d.stress != null || d.cal)) return '<p style="color:#aeaeb2;font-size:13px">No HRV, calendar or stress data yet</p>';
 
   // Narrow screens get a smaller viewBox so text and dots stay readable
   const narrow = window.innerWidth < 600;
@@ -724,7 +724,7 @@ function hrvCalStressChart(series) {
   const hrvCy = hrvTop + hrvH/2 - fs * 0.5;
   const hrv = days.map((d, i) => {
     if (d.sdnn == null) return `<text x="${px(i).toFixed(1)}" y="${hrvCy.toFixed(1)}" font-size="${fs}" fill="#c7c7cc" text-anchor="middle" dominant-baseline="middle">–</text>`;
-    return `<circle cx="${px(i).toFixed(1)}" cy="${hrvCy.toFixed(1)}" r="${rOf(d.sdnn).toFixed(1)}" fill="#007aff" opacity="0.85"><title>${fmtDate(d.date)}: Dag HRV = ${d.sdnn} ms</title></circle>` +
+    return `<circle cx="${px(i).toFixed(1)}" cy="${hrvCy.toFixed(1)}" r="${rOf(d.sdnn).toFixed(1)}" fill="#007aff" opacity="0.85"><title>${fmtDate(d.date)}: Day HRV = ${d.sdnn} ms</title></circle>` +
       `<text x="${px(i).toFixed(1)}" y="${(hrvCy + rMax + fs + 1).toFixed(1)}" font-size="${fs}" font-weight="600" fill="#3a3a3c" text-anchor="middle">${d.sdnn}</text>`;
   }).join('');
 
@@ -752,7 +752,7 @@ function hrvCalStressChart(series) {
   const stress = days.map((d, i) => {
     const x = px(i) - pw/2, y = stressTop + (stressH - pillH) / 2;
     if (d.stress == null)
-      return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${pw.toFixed(1)}" height="${pillH}" rx="${pillH/2}" fill="none" stroke="#d1d1d6" stroke-dasharray="3 3"><title>${fmtDate(d.date)}: Ingen stress-data</title></rect>`;
+      return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${pw.toFixed(1)}" height="${pillH}" rx="${pillH/2}" fill="none" stroke="#d1d1d6" stroke-dasharray="3 3"><title>${fmtDate(d.date)}: No stress data</title></rect>`;
     const lbl = colW > 60 ? STRESS_LABELS[d.stress] : colW > 34 ? STRESS_SHORT[d.stress] : '';
     return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${pw.toFixed(1)}" height="${pillH}" rx="${pillH/2}" fill="${STRESS_COLORS[d.stress]}" opacity="0.85"><title>${fmtDate(d.date)}: Stress = ${STRESS_LABELS[d.stress]}</title></rect>` +
       (lbl ? `<text x="${px(i).toFixed(1)}" y="${(y + pillH/2).toFixed(1)}" font-size="${fs - 1}" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central" pointer-events="none">${lbl}</text>` : '');
@@ -767,7 +767,7 @@ function hrvCalStressChart(series) {
     <div class="chart-wrap">
       <svg viewBox="0 0 ${W} ${totalH}" width="100%">
         ${bands}${sep(calTop - gap/2)}${sep(stressTop - gap/2)}
-        ${rowLabel('Dag HRV', hrvTop, hrvH)}${rowLabel('Kalender', calTop, calH)}${rowLabel('Stress', stressTop, stressH)}
+        ${rowLabel('Day HRV', hrvTop, hrvH)}${rowLabel('Calendar', calTop, calH)}${rowLabel('Stress', stressTop, stressH)}
         ${hrv}${cal}${stress}${xLabels}
       </svg>
     </div>`;
@@ -777,16 +777,16 @@ function hrvCalStressChart(series) {
 const PARTNER_COL = '#ff2d55', ALONE_COL = '#8e8e93';
 const PARTNER_WINDOW = 5; // nights per group in the moving average
 const PARTNER_METRICS = [
-  { key: 'hrv',   label: 'Nat HRV',   unit: 'ms',  dec: 0, higherIsBetter: true  },
-  { key: 'rhr',   label: 'Hvilepuls', unit: 'bpm', dec: 0, higherIsBetter: false },
-  { key: 'sleep', label: 'Søvn',      unit: 't',   dec: 1, higherIsBetter: true  },
+  { key: 'hrv',   label: 'Night HRV', unit: 'ms',  dec: 0, higherIsBetter: true  },
+  { key: 'rhr',   label: 'Resting HR', unit: 'bpm', dec: 0, higherIsBetter: false },
+  { key: 'sleep', label: 'Sleep',     unit: 'h',   dec: 1, higherIsBetter: true  },
 ];
 
 function partnerCompare(series) {
   const nights = series.filter(d => d.partner === 1 || d.partner === 2);
   const withP = nights.filter(d => d.partner === 1), alone = nights.filter(d => d.partner === 2);
   if (!withP.length || !alone.length)
-    return `<p style="color:#aeaeb2;font-size:13px">Ikke nok data endnu — kræver mindst én nat med og én uden partner (${withP.length} med, ${alone.length} uden). Udfyld „Partner“ i morgen-check-in.</p>`;
+    return `<p style="color:#aeaeb2;font-size:13px">Not enough data yet: needs at least one night with and one without a partner (${withP.length} with, ${alone.length} without). Fill in “Partner” in the morning check-in.</p>`;
 
   const avg = arr => arr.length ? arr.reduce((s, v) => s + v, 0) / arr.length : null;
   const narrow = window.innerWidth < 600;
@@ -814,7 +814,7 @@ function partnerCompare(series) {
     return `<div class="pc-tile">
       <div class="pc-label">${m.label}</div>
       <div class="pc-vals"><span style="color:${PARTNER_COL}">${fmtN(a, m.dec)}</span><span class="pc-vs">vs</span><span style="color:${ALONE_COL}">${fmtN(b, m.dec)}</span><span class="pc-unit">${m.unit}</span></div>
-      <div class="pc-diff" style="color:${diffCol}">${diff == null ? '–' : (diff > 0 ? '+' : '') + fmtN(diff, m.dec) + ' ' + m.unit} med partner</div>
+      <div class="pc-diff" style="color:${diffCol}">${diff == null ? '–' : (diff > 0 ? '+' : '') + fmtN(diff, m.dec) + ' ' + m.unit} with partner</div>
     </div>`;
   }).join('');
 
@@ -828,7 +828,7 @@ function partnerCompare(series) {
     const line = (pts, col) => pts.length > 1
       ? `<polyline points="${pts.map(d => `${px(d.date).toFixed(1)},${py(d.ma).toFixed(1)}`).join(' ')}" fill="none" stroke="${col}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>` : '';
     const dots = (pts, col, who) => pts.map(d =>
-      `<circle cx="${px(d.date).toFixed(1)}" cy="${py(d.raw).toFixed(1)}" r="2.5" fill="${col}" opacity="0.35"><title>${fmtDate(d.date)} (${who}): ${fmtN(d.raw, m.dec)} ${m.unit} — gns. ${fmtN(d.ma, m.dec)}</title></circle>`).join('');
+      `<circle cx="${px(d.date).toFixed(1)}" cy="${py(d.raw).toFixed(1)}" r="2.5" fill="${col}" opacity="0.35"><title>${fmtDate(d.date)} (${who}): ${fmtN(d.raw, m.dec)} ${m.unit}, avg ${fmtN(d.ma, m.dec)}</title></circle>`).join('');
     const ticks = [lo, hi].map(v =>
       `<text x="${PDL - 6}" y="${py(v).toFixed(1)}" font-size="${fs}" fill="#aeaeb2" text-anchor="end" dominant-baseline="middle">${fmtN(v, m.dec)}</text>`).join('');
     const step = Math.max(1, Math.floor(range.length / (narrow ? 4 : 8)));
@@ -839,12 +839,12 @@ function partnerCompare(series) {
     }).join('');
     return `<div class="pc-chart-label">${m.label}</div>
       <div class="chart-wrap"><svg viewBox="0 0 ${W} ${H + axH}" width="100%">
-        ${ticks}${dots(q, ALONE_COL, 'alene')}${dots(p, PARTNER_COL, 'partner')}${line(q, ALONE_COL)}${line(p, PARTNER_COL)}${xl}
+        ${ticks}${dots(q, ALONE_COL, 'alone')}${dots(p, PARTNER_COL, 'partner')}${line(q, ALONE_COL)}${line(p, PARTNER_COL)}${xl}
       </svg></div>`;
   }).join('');
 
   return `
-    <div class="card-subtitle" style="margin-bottom:12px">Glidende gennemsnit over de seneste ${PARTNER_WINDOW} nætter i hver gruppe — <span style="color:${PARTNER_COL};font-weight:600">med partner</span> (${withP.length} nætter) vs. <span style="color:${ALONE_COL};font-weight:600">alene</span> (${alone.length} nætter)</div>
+    <div class="card-subtitle" style="margin-bottom:12px">Moving average over the last ${PARTNER_WINDOW} nights in each group: <span style="color:${PARTNER_COL};font-weight:600">with partner</span> (${withP.length} nights) vs. <span style="color:${ALONE_COL};font-weight:600">alone</span> (${alone.length} nights)</div>
     <div class="pc-tiles">${tiles}</div>
     ${charts}`;
 }
@@ -854,7 +854,7 @@ const WEIGHT_WINDOW = 21;
 function weightGraph(series, today) {
   const from = new Date(Date.parse(today) - WEIGHT_WINDOW * 86_400_000).toISOString().slice(0, 10);
   const pts = series.filter(d => d.weight != null && d.date >= from);
-  if (pts.length < 2) return `<div style="color:#aeaeb2;font-size:13px">For få vægtmålinger de seneste ${WEIGHT_WINDOW} dage</div>`;
+  if (pts.length < 2) return `<div style="color:#aeaeb2;font-size:13px">Too few weight entries in the last ${WEIGHT_WINDOW} days</div>`;
   const W = 320, H = 72, PD = 6, AX = 24;
   const ws = pts.map(p => p.weight);
   const mn = Math.min(...ws), mx = Math.max(...ws), rng = mx - mn || 0.5;
@@ -935,32 +935,32 @@ function render(data, sportData) {
 
     <div class="row row-full">
       <div class="card">
-        <div class="card-title">Dag HRV · Kalender · Stress</div>
+        <div class="card-title">Day HRV · Calendar · Stress</div>
         ${hrvCalStressChart(series.slice(-5))}
       </div>
     </div>
 
     <div class="row row-2">
       <div class="card">
-        <div class="card-title">HRV over tid</div>
+        <div class="card-title">HRV over time</div>
         ${hrvCheckinChart(s7)}
       </div>
       <div class="card">
-        <div class="card-title">Søvn over tid</div>
+        <div class="card-title">Sleep over time</div>
         ${sleepMoodChart(s7)}
       </div>
     </div>
 
     <div class="row row-full">
       <div class="card">
-        <div class="card-title">Partner vs. alene</div>
+        <div class="card-title">Partner vs. alone</div>
         ${partnerCompare(series)}
       </div>
     </div>
 
     <div class="row row-full">
       <div class="card">
-        <div class="card-title">Vægt over tid</div>
+        <div class="card-title">Weight over time</div>
         ${weightGraph(series, today)}
       </div>
     </div>
@@ -977,14 +977,14 @@ function render(data, sportData) {
       fetch('/api/get-dashboard'),
       fetch('/api/get-sport-load').catch(() => null),
     ]);
-    if (!res.ok) throw new Error('API fejl: ' + res.status);
+    if (!res.ok) throw new Error('API error: ' + res.status);
     const data = await res.json();
     const sportData = sportRes?.ok ? await sportRes.json() : null;
     render(data, sportData);
   } catch (e) {
     document.getElementById('loading').style.display = 'none';
     document.getElementById('error-wrap').style.display = '';
-    document.getElementById('error-msg').textContent = 'Kunne ikke hente data: ' + e.message;
+    document.getElementById('error-msg').textContent = 'Could not load data: ' + e.message;
   }
 })();
 </script>

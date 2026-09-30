@@ -75,8 +75,8 @@ test('before check-in: night physiology stays hidden', async () => {
 test('warnings for stale weight and missing body composition', async () => {
   const { els } = runPage(jsonFetch(vitals({ lastWeightDate: daysAgo(10), lastBodyCompDate: null })));
   await settle();
-  assert.match(els['warnings'].innerHTML, /Vægt ikke registreret i 10 dage/);
-  assert.match(els['warnings'].innerHTML, /Body composition ikke målt i over 3 uger/);
+  assert.match(els['warnings'].innerHTML, /Weight not logged for 10 days/);
+  assert.match(els['warnings'].innerHTML, /Body composition not measured for over 3 weeks/);
 });
 
 test('no warnings when everything is fresh', async () => {
@@ -115,10 +115,10 @@ test('saveWeight posts today\'s weight and clears the weight warning', async () 
   };
   const { els, ctx } = runPage(fetchImpl);
   await settle();
-  assert.match(els['warnings'].innerHTML, /Vægt ikke registreret/);
+  assert.match(els['warnings'].innerHTML, /Weight not logged/);
   await ctx.saveWeight('78,2');
   assert.deepEqual(posts.at(-1), { date: TODAY, weight: 78.2 });
-  assert.doesNotMatch(els['warnings'].innerHTML, /Vægt ikke registreret/);
+  assert.doesNotMatch(els['warnings'].innerHTML, /Weight not logged/);
   assert.match(els['weight-cell'].innerHTML, /78,2 kg/);
 });
 
@@ -132,5 +132,5 @@ test('saveWeight rejects an invalid weight without posting', async () => {
   await settle();
   await ctx.saveWeight('7');
   assert.equal(posts.length, 0);
-  assert.match(els['weight-status'].textContent, /Ugyldig vægt/);
+  assert.match(els['weight-status'].textContent, /Invalid weight/);
 });

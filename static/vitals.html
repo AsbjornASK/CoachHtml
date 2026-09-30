@@ -187,7 +187,7 @@ function render(data){
   // Use dedicated yesterday endpoint data; fall back to healthMarkers if unavailable
   const yw=yesterdayWellness??{};
 
-  const SQ=[{lbl:'HØJ',c:'c-green'},{lbl:'GOD',c:'c-yellow'},{lbl:'GNS',c:'c-red'},{lbl:'DÅRLIG',c:'c-purple'}];
+  const SQ=[{lbl:'HIGH',c:'c-green'},{lbl:'GOOD',c:'c-yellow'},{lbl:'AVG',c:'c-red'},{lbl:'POOR',c:'c-purple'}];
   const sqVal=(yw.sleepQuality??hm.sleepQuality)??null;
   const sqBtns=SQ.map((s,i)=>{
     const v=i+1;
@@ -196,7 +196,7 @@ function render(data){
   }).join('');
 
   // Stress check-in: 1-4 scale
-  const STRESS=[{lbl:'LAV',c:'c-green'},{lbl:'MODERAT',c:'c-yellow'},{lbl:'HØJ',c:'c-red'},{lbl:'MEGET HØJ',c:'c-purple'}];
+  const STRESS=[{lbl:'LOW',c:'c-green'},{lbl:'MODERATE',c:'c-yellow'},{lbl:'HIGH',c:'c-red'},{lbl:'VERY HIGH',c:'c-purple'}];
   const rawStress=(yw.stress??hm.stress)??null;
   const stressVal=(rawStress!=null&&rawStress>=1&&rawStress<=4)?rawStress:null;
   const stressBtns=STRESS.map((s,i)=>{
@@ -205,8 +205,8 @@ function render(data){
     return`<button class="${sel}" data-val="${v}" data-color="${s.c}">${s.lbl}</button>`;
   }).join('');
 
-  const SLBLS={mood:['Great','Good','Avg','Low'],soreness:['Low','Avg','High','Extreme'],fatigue:['Low','Avg','High','Extreme'],motivation:['Extreme','High','Middel','Low']};
-  const SLBLS_DA={mood:'Humør',soreness:'Soreness',fatigue:'Fatigue',motivation:'Motivation'};
+  const SLBLS={mood:['Great','Good','Avg','Low'],soreness:['Low','Avg','High','Extreme'],fatigue:['Low','Avg','High','Extreme'],motivation:['Extreme','High','Medium','Low']};
+  const SLBL_NAMES={mood:'Mood',soreness:'Soreness',fatigue:'Fatigue',motivation:'Motivation'};
 
   function subjItem(label,val,labels,colorClass){
     return`<div class="subj-item ${colorClass}"><div class="subj-label">${label}</div><div class="subj-value">${val!=null?labels[val-1]:'-'}</div></div>`;
@@ -216,8 +216,8 @@ function render(data){
   const sqColorClass=v=>v==null?'s2':v===1?'s1':v===2?'s2':v===3?'s3':'s4';
 
   const gridItems=[
-    ...['mood','soreness','fatigue','motivation'].map(f=>{const v=(yw[f]??hm[f])??null;return subjItem(SLBLS_DA[f],v,SLBLS[f],`s${v??2}`);}),
-    `<div class="subj-item ${sqColorClass(sqVal)}" id="sq-grid-item"><div class="subj-label">Søvnkvalitet<span style="font-size:9px;opacity:0.6"> auto</span></div><div class="subj-value">${sqVal!=null?SQ[sqVal-1].lbl:'-'}</div></div>`,
+    ...['mood','soreness','fatigue','motivation'].map(f=>{const v=(yw[f]??hm[f])??null;return subjItem(SLBL_NAMES[f],v,SLBLS[f],`s${v??2}`);}),
+    `<div class="subj-item ${sqColorClass(sqVal)}" id="sq-grid-item"><div class="subj-label">Sleep quality<span style="font-size:9px;opacity:0.6"> auto</span></div><div class="subj-value">${sqVal!=null?SQ[sqVal-1].lbl:'-'}</div></div>`,
     `<div class="subj-item ${stressColorClass(stressVal)}" id="stress-grid-item"><div class="subj-label">Stress</div><div class="subj-value">${stressVal!=null?STRESS[stressVal-1].lbl:'-'}</div></div>`,
   ];
 
@@ -243,7 +243,7 @@ function render(data){
     return` <span class="${down?'trend-up':'trend-down'}">${down?'↓':'↑'} ${fmtN(Math.abs(d))}</span>`;
   }
   const ibPrev=inBody?.prev;
-  const weightCardHTML=`<div class="card"><div class="card-title">Body composition</div>${inBody?`<div class="inbody-grid"><div><div class="inbody-item-label">Weight</div><div class="inbody-item-value">${fmtN(inBody.weight)} kg${ibDelta(inBody.weight,ibPrev?.weight)}</div></div><div><div class="inbody-item-label">Body fat %</div><div class="inbody-item-value">${fmtN(inBody.fatPct)} %${ibDelta(inBody.fatPct,ibPrev?.fatPct)}</div></div><div><div class="inbody-item-label">Fat mass</div><div class="inbody-item-value">${fmtN(inBody.fatMass)} kg${ibDelta(inBody.fatMass,ibPrev?.fatMass)}</div></div><div><div class="inbody-item-label">BMI</div><div class="inbody-item-value">${fmtN(inBody.bmi)}${ibDelta(inBody.bmi,ibPrev?.bmi)}</div></div><div><div class="inbody-item-label">Height</div><div class="inbody-item-value">175,5 cm</div></div><div><div class="inbody-item-label">Measured</div><div class="inbody-item-value" style="font-size:13px;color:#8e8e93">${inBody.date??'-'}</div></div></div>${ibPrev?`<div style="font-size:11px;color:#aeaeb2;margin-top:10px">vs. ${ibPrev.date} (${fmtN(ibPrev.weight)} kg, ${fmtN(ibPrev.fatPct)} %)</div>`:''}`:'<div style="color:#aeaeb2;font-size:14px">Ingen måling</div>'}</div>`;
+  const weightCardHTML=`<div class="card"><div class="card-title">Body composition</div>${inBody?`<div class="inbody-grid"><div><div class="inbody-item-label">Weight</div><div class="inbody-item-value">${fmtN(inBody.weight)} kg${ibDelta(inBody.weight,ibPrev?.weight)}</div></div><div><div class="inbody-item-label">Body fat %</div><div class="inbody-item-value">${fmtN(inBody.fatPct)} %${ibDelta(inBody.fatPct,ibPrev?.fatPct)}</div></div><div><div class="inbody-item-label">Fat mass</div><div class="inbody-item-value">${fmtN(inBody.fatMass)} kg${ibDelta(inBody.fatMass,ibPrev?.fatMass)}</div></div><div><div class="inbody-item-label">BMI</div><div class="inbody-item-value">${fmtN(inBody.bmi)}${ibDelta(inBody.bmi,ibPrev?.bmi)}</div></div><div><div class="inbody-item-label">Height</div><div class="inbody-item-value">175,5 cm</div></div><div><div class="inbody-item-label">Measured</div><div class="inbody-item-value" style="font-size:13px;color:#8e8e93">${inBody.date??'-'}</div></div></div>${ibPrev?`<div style="font-size:11px;color:#aeaeb2;margin-top:10px">vs. ${ibPrev.date} (${fmtN(ibPrev.weight)} kg, ${fmtN(ibPrev.fatPct)} %)</div>`:''}`:'<div style="color:#aeaeb2;font-size:14px">No measurement</div>'}</div>`;
 
   document.getElementById('topbar-date').innerHTML=`${todayStr}<br>Updated ${timeStr}`;
 
@@ -255,7 +255,7 @@ function render(data){
     <div class="card">
       <div class="card-title">Night physiology</div>
       <div class="metrics-grid">
-        <div><div class="metric-label">Nat HRV (rMSSD)</div><div class="metric-value ${vc}">${fmtN(latest.hrv)} ms <span class="${hrv_t.c}">${hrv_t.a==='up'?'↑':hrv_t.a==='down'?'↓':'→'}</span></div>${sparkSVG(trends.hrv,tC(hrv_t.c))}</div>
+        <div><div class="metric-label">Night HRV (rMSSD)</div><div class="metric-value ${vc}">${fmtN(latest.hrv)} ms <span class="${hrv_t.c}">${hrv_t.a==='up'?'↑':hrv_t.a==='down'?'↓':'→'}</span></div>${sparkSVG(trends.hrv,tC(hrv_t.c))}</div>
         <div><div class="metric-label">Resting HR</div><div class="metric-value ${vc}">${fmtN(latest.restingHR)} bpm <span class="${rhr_t.c}">${rhr_t.a==='up'?'↑':rhr_t.a==='down'?'↓':'→'}</span></div>${sparkSVG(trends.rhr,tC(rhr_t.c))}</div>
         <div><div class="metric-label">Sleep</div><div class="metric-value ${vc}">${fmtN(latest.sleepHours)} h <span class="${slp_t.c}">${slp_t.a==='up'?'↑':slp_t.a==='down'?'↓':'→'}</span></div>${sparkSVG(trends.sleep,tC(slp_t.c))}</div>
         <div><div class="metric-label">Sleep score</div><div class="metric-value ${vc}">${fmtN(latest.sleepScore)} <span class="${slpScore_t.c}">${slpScore_t.a==='up'?'↑':slpScore_t.a==='down'?'↓':'→'}</span></div>${sparkSVG(trends.sleepScore,tC(slpScore_t.c))}</div>
@@ -282,7 +282,7 @@ function render(data){
       b.className='';
       if(parseInt(b.dataset.val,10)===val){b.classList.add('selected');if(b.dataset.color)b.classList.add(b.dataset.color);}
     });
-    stressSaveStatus.textContent='Gemmer…';
+    stressSaveStatus.textContent='Saving…';
     stressSaveStatus.className='checkin-status';
     stressGroup.querySelectorAll('button').forEach(b=>b.disabled=true);
     const yesterday=new Date(Date.now()-86400000).toISOString().slice(0,10);
@@ -296,12 +296,12 @@ function render(data){
         }
       }else{
         const er=await r.json().catch(()=>({}));
-        stressSaveStatus.textContent='Fejl: '+(er.error||r.status);
+        stressSaveStatus.textContent='Error: '+(er.error||r.status);
         stressSaveStatus.className='checkin-status err';
         stressGroup.querySelectorAll('button').forEach(b=>b.disabled=false);
       }
     }catch(e){
-      stressSaveStatus.textContent='Fejl: '+e.message;
+      stressSaveStatus.textContent='Error: '+e.message;
       stressSaveStatus.className='checkin-status err';
       stressGroup.querySelectorAll('button').forEach(b=>b.disabled=false);
     }

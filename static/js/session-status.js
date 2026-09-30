@@ -2,10 +2,11 @@
 // Loaded as a classic <script> in the browser and required by the Node tests.
 // The activity-type side mirrors categoryOf() in api/get-sport-load.js; keep them in sync.
 (function (root) {
+  // Title words must start a word ("Running", "Cykeltur") so "Crunches" or "Strides" don't match
   const SPORT_RULES = [
-    { sport: 'run',      title: /run/i,        type: t => /Run/.test(t) },
-    { sport: 'strength', title: /strength/i,   type: t => t === 'WeightTraining' },
-    { sport: 'ride',     title: /cykel|ride/i, type: t => /Ride/.test(t) },
+    { sport: 'run',      title: /\brun/i,           type: t => /Run/.test(t) },
+    { sport: 'strength', title: /\bstrength/i,      type: t => t === 'WeightTraining' },
+    { sport: 'ride',     title: /\b(cykel|ride)/i,  type: t => /Ride/.test(t) },
   ];
 
   const ruleFor = title => SPORT_RULES.find(r => r.title.test(title)) ?? null;
