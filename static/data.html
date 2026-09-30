@@ -103,14 +103,16 @@
   <div style="background:#ffe5e5;border-radius:16px;padding:20px;color:#c0392b;font-size:14px" id="error-msg"></div>
 </div>
 
+<script src="/js/wellness-labels.js"></script>
 <script>
 const DAYS_S = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-const MOOD_LABELS  = ['','Great','Good','Avg','Low'];
-const SOR_LABELS   = ['','Low','Avg','High','Extreme'];
-const FAT_LABELS   = ['','Low','Avg','High','Extreme'];
-const MOT_LABELS   = ['','Extreme','High','Medium','Low'];
-const CHECKIN_COLORS = {1:'#30d158',2:'#ff9f0a',3:'#ff3b30',4:'#bf5af2'};
+// 1-based label arrays (index = wellness value) from the shared wellness labels
+const MOOD_LABELS  = ['', ...WELLNESS.mood.labels];
+const SOR_LABELS   = ['', ...WELLNESS.soreness.labels];
+const FAT_LABELS   = ['', ...WELLNESS.fatigue.labels];
+const MOT_LABELS   = ['', ...WELLNESS.motivation.labels];
+const CHECKIN_COLORS = Object.fromEntries(WELLNESS_COLORS.map((c, i) => [i + 1, c]));
 
 function chipClass(v) { return v ? `chip chip-${v}` : 'chip chip-null'; }
 function fmtDate(iso) {
@@ -571,8 +573,8 @@ function calHrvScatter(series) {
     </div>`;
 }
 
-const STRESS_COLORS = {1:'#30d158',2:'#ff9f0a',3:'#ff3b30',4:'#bf5af2'};
-const STRESS_LABELS = ['','Low','Moderate','High','Very high'];
+const STRESS_COLORS = CHECKIN_COLORS;
+const STRESS_LABELS = ['', ...WELLNESS.stress.labels];
 
 function sdnnStressChart(series) {
   const days = series.filter(d => d.sdnn != null || d.stress != null);

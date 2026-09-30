@@ -1,6 +1,9 @@
 import { intervalsClient, notConfigured, parseDays, rhrOf, tsbOf, sleepHours } from './_lib/intervals.mjs';
-import { json, fmt, daysAgo, r1 } from './_lib/util.mjs';
+import { json, fmt, daysAgo, r1, quartiles } from './_lib/util.mjs';
 import { activeCalendars, fetchCalendarEvents } from './_lib/calendar.mjs';
+
+// HRV level bands are quartiles of this many days; the returned series stays at 90 days
+const BANDS_DAYS = 180;
 
 export async function GET() {
   const intervals = intervalsClient();
@@ -11,7 +14,7 @@ export async function GET() {
   const start = daysAgo(90, today); // 90 days so partner comparison has enough nights
 
   const [wellnessRes, events] = await Promise.all([
-    intervals.get(`/wellness?oldest=${start}&newest=${end}`),
+    intervals.get(`/wellness?oldest=${daysAgo(BANDS_DAYS, today)}&newest=${end}`),
     fetchCalendarEvents(activeCalendars()),
   ]);
 
@@ -31,8 +34,12 @@ export async function GET() {
   }
 
   const days = parseDays(await wellnessRes.json());
+  const hrvBands = {
+    night: quartiles(days.map(d => d.hrv)),
+    day:   quartiles(days.map(d => d.sdnn ?? d.hrvSDNN)),
+  };
 
-  const series = days.map(d => ({
+  const series = days.filter(d => d.date >= start).map(d => ({
     date:       d.date,
     ctl:        r1(d.ctl),
     atl:        r1(d.atl),
@@ -50,10 +57,11 @@ export async function GET() {
     comments:   d.comments   ?? null,
     sdnn:       r1(d.sdnn ?? d.hrvSDNN ?? null),
     weight:     r1(d.weight),
+    vo2max:     r1(d.vo2max ?? d.vo2Max ?? null),
     bodyFat:    r1(d.bodyFat ?? d.fatMass ?? null),
     steps:      d.steps ?? null,
     cal:        calByDate[d.date] ?? null,
   }));
 
-  return json({ today: end, series });
+  return json({ today: end, series, hrvBands });
 }

@@ -7,6 +7,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const { freshnessWarnings } = require('../static/js/data-freshness.js');
 const { checkinKey, hasCheckinValues } = require('../static/js/checkin-state.js');
+const wellness = require('../static/js/wellness-labels.js');
 
 const html = fs.readFileSync(path.join(__dirname, '../static/checkin.html'), 'utf8');
 const script = html.match(/<script>([\s\S]*?)<\/script>/)[1];
@@ -27,7 +28,7 @@ function runPage(fetchImpl, timeoutMs = 5) {
   };
   // Timeout signals abort after timeoutMs, so the test doesn't wait for the page's real timeout.
   const AbortSignalStub = { timeout: () => { const c = new AbortController(); setTimeout(() => c.abort(new Error('timeout')), timeoutMs); return c.signal; } };
-  const ctx = { document, fetch: fetchImpl, localStorage: { getItem: () => null, setItem() {} }, location: {}, AbortSignal: AbortSignalStub, freshnessWarnings, checkinKey, hasCheckinValues, setTimeout, clearTimeout, console };
+  const ctx = { document, fetch: fetchImpl, localStorage: { getItem: () => null, setItem() {} }, location: {}, AbortSignal: AbortSignalStub, freshnessWarnings, checkinKey, hasCheckinValues, ...wellness, setTimeout, clearTimeout, console };
   vm.runInNewContext(script, ctx);
   return { els, ctx };
 }
@@ -133,4 +134,14 @@ test('saveWeight rejects an invalid weight without posting', async () => {
   await ctx.saveWeight('7');
   assert.equal(posts.length, 0);
   assert.match(els['weight-status'].textContent, /Invalid weight/);
+});
+
+test('form buttons are rendered from the shared wellness labels', () => {
+  const { ctx } = runPage(hangingFetch, 1);
+  const stress = ctx.checkinButtonsHTML('stress');
+  assert.match(stress, /data-val="1" data-color="c-green">LOW</);
+  assert.match(stress, /data-val="2" data-color="c-yellow">MODERATE</);
+  assert.match(stress, /data-val="4" data-color="c-purple">VERY HIGH</);
+  assert.match(ctx.checkinButtonsHTML('motivation'), /data-val="3" data-color="c-red">MEDIUM</);
+  assert.match(ctx.checkinButtonsHTML('mood'), /data-val="1" data-color="c-green">GREAT</);
 });
