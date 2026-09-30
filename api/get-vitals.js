@@ -5,7 +5,7 @@ export default async () => {
   const athleteId = process.env.INTERVALS_ATHLETE_ID;
 
   if (!apiKey || !athleteId) {
-    return json({ error: 'Intervals API ikke konfigureret' }, 500);
+    return json({ error: 'Intervals API not configured' }, 500);
   }
 
   const today     = new Date();
@@ -21,7 +21,7 @@ export default async () => {
   ]);
 
   if (!wellnessRes.ok) {
-    return json({ error: 'Intervals wellness API fejl', status: wellnessRes.status }, 502);
+    return json({ error: 'Intervals wellness API error', status: wellnessRes.status }, 502);
   }
 
   const rawWellness    = await wellnessRes.json();
@@ -31,6 +31,7 @@ export default async () => {
   const last7          = days.slice(-7);
   const latest         = findLatest(days, d => d.restingHR && d.restingHR < 65);
   const yesterdayEntry = days.find(d => d.date === yesterday) ?? {};
+  const todayEntry     = days.find(d => d.date === end) ?? {};
 
   const HEIGHT = 1.755;
   const bodyCompEntries = days.filter(d => d.weight && (d.fatMass || d.bodyFat));
@@ -81,8 +82,19 @@ export default async () => {
       sleepQuality: yw.sleepQuality ?? yesterdayEntry.sleepQuality ?? null,
       comments:     yw.comments     ?? yesterdayEntry.comments     ?? null,
     },
+    todayWellness: {
+      date:       end,
+      mood:       todayEntry.mood       ?? null,
+      soreness:   todayEntry.soreness   ?? null,
+      fatigue:    todayEntry.fatigue    ?? null,
+      motivation: todayEntry.motivation ?? null,
+      comments:   todayEntry.comments   ?? null,
+      weight:     round1(todayEntry.weight ?? null),
+    },
     inBody: bodyComp ? { ...toInBody(bodyComp), prev: toInBody(prevBodyComp) } : null,
-    weightHistory: days.filter(d => d.weight && d.date >= fmt(new Date(today - 21 * 86_400_000))).map(d => ({ date: d.date, weight: round1(d.weight) })),
+    // Last logged dates inside the 21-day window; null means nothing logged in the window
+    lastWeightDate:   days.findLast(d => d.weight)?.date ?? null,
+    lastBodyCompDate: bodyComp?.date ?? null,
   });
 };
 

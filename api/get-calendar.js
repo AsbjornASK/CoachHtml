@@ -18,7 +18,7 @@ export default async () => {
   })).filter(s => s.url);
 
   if (!activeSources.length) {
-    return json({ error: 'Ingen kalender-URLs konfigureret' }, 500);
+    return json({ error: 'No calendar URLs configured' }, 500);
   }
 
   const texts = await Promise.all(
