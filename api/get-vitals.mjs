@@ -1,23 +1,18 @@
-export const config = { runtime: 'edge' };
+import { intervalsClient, notConfigured, parseDays, findLatest, rhrOf, tsbOf, sleepHours } from './_lib/intervals.mjs';
+import { json, fmt, daysAgo, r1 } from './_lib/util.mjs';
 
-export default async () => {
-  const apiKey    = process.env.INTERVALS_API_KEY;
-  const athleteId = process.env.INTERVALS_ATHLETE_ID;
-
-  if (!apiKey || !athleteId) {
-    return json({ error: 'Intervals API not configured' }, 500);
-  }
+export async function GET() {
+  const intervals = intervalsClient();
+  if (!intervals) return notConfigured();
 
   const today     = new Date();
   const end       = fmt(today);
-  const yesterday = fmt(new Date(today - 86_400_000));
-  const start     = fmt(new Date(today - 21 * 86_400_000));
-  const auth      = 'Basic ' + btoa('API_KEY:' + apiKey);
-  const base      = `https://intervals.icu/api/v1/athlete/${athleteId}`;
+  const yesterday = daysAgo(1, today);
+  const start     = daysAgo(21, today);
 
   const [wellnessRes, ywRes] = await Promise.all([
-    fetch(`${base}/wellness?oldest=${start}&newest=${end}`, { headers: { Authorization: auth } }),
-    fetch(`${base}/wellness/${yesterday}`,                  { headers: { Authorization: auth } }),
+    intervals.get(`/wellness?oldest=${start}&newest=${end}`),
+    intervals.get(`/wellness/${yesterday}`),
   ]);
 
   if (!wellnessRes.ok) {
@@ -29,7 +24,7 @@ export default async () => {
 
   const days           = parseDays(rawWellness);
   const last7          = days.slice(-7);
-  const latest         = findLatest(days, d => d.restingHR && d.restingHR < 65);
+  const latest         = findLatest(days, d => rhrOf(d) != null);
   const yesterdayEntry = days.find(d => d.date === yesterday) ?? {};
   const todayEntry     = days.find(d => d.date === end) ?? {};
 
@@ -40,7 +35,7 @@ export default async () => {
   const toInBody = e => {
     if (!e) return null;
     const fp = e.bodyFat ?? null;
-    return { date: e.date, weight: round1(e.weight), fatPct: round1(fp), fatMass: (e.weight && fp) ? round1(e.weight * fp / 100) : null, bmi: round1(e.weight / (HEIGHT * HEIGHT)) };
+    return { date: e.date, weight: r1(e.weight), fatPct: r1(fp), fatMass: (e.weight && fp) ? r1(e.weight * fp / 100) : null, bmi: r1(e.weight / (HEIGHT * HEIGHT)) };
   };
 
   return json({
@@ -49,28 +44,28 @@ export default async () => {
       date:         latest?.date         ?? null,
       hrv:          latest?.hrv          ?? null,
       restingHR:    latest?.restingHR    ?? null,
-      sleepHours:   latest?.sleepSecs    ? round1(latest.sleepSecs / 3600) : null,
+      sleepHours:   sleepHours(latest),
       sleepScore:   latest?.sleepScore   ?? null,
       sleepQuality: latest?.sleepQuality ?? null,
-      ctl:          round1(latest?.ctl   ?? null),
-      atl:          round1(latest?.atl   ?? null),
-      tsb:          latest?.ctl != null && latest?.atl != null ? round1(latest.ctl - latest.atl) : null,
-      rampRate:     round1(latest?.rampRate ?? null),
+      ctl:          r1(latest?.ctl),
+      atl:          r1(latest?.atl),
+      tsb:          tsbOf(latest),
+      rampRate:     r1(latest?.rampRate),
     },
     trends: {
       hrv:        last7.map(d => d.hrv ?? null),
-      rhr:        last7.map(d => (d.restingHR && d.restingHR < 65) ? d.restingHR : null),
-      sleep:      last7.map(d => d.sleepSecs ? round1(d.sleepSecs / 3600) : null),
+      rhr:        last7.map(d => rhrOf(d)),
+      sleep:      last7.map(d => sleepHours(d)),
       sleepScore: last7.map(d => d.sleepScore ?? null),
       dates:      last7.map(d => d.date),
     },
-    sleep8: days.slice(-8).map(d => d.sleepSecs ? round1(d.sleepSecs / 3600) : null),
+    sleep8: days.slice(-8).map(d => sleepHours(d)),
     healthMarkers: {
       date:   yesterday,
-      sdnn:   round1(yesterdayEntry.sdnn   ?? yesterdayEntry.hrvSDNN ?? null),
+      sdnn:   r1(yesterdayEntry.sdnn   ?? yesterdayEntry.hrvSDNN ?? null),
       steps:  yesterdayEntry.steps  ?? null,
-      spo2:   round1(yesterdayEntry.spO2   ?? yesterdayEntry.spo2   ?? null),
-      vo2max: round1(yesterdayEntry.vo2max ?? yesterdayEntry.vo2Max  ?? null),
+      spo2:   r1(yesterdayEntry.spO2   ?? yesterdayEntry.spo2   ?? null),
+      vo2max: r1(yesterdayEntry.vo2max ?? yesterdayEntry.vo2Max  ?? null),
     },
     yesterdayWellness: {
       date:         yesterday,
@@ -89,31 +84,11 @@ export default async () => {
       fatigue:    todayEntry.fatigue    ?? null,
       motivation: todayEntry.motivation ?? null,
       comments:   todayEntry.comments   ?? null,
-      weight:     round1(todayEntry.weight ?? null),
+      weight:     r1(todayEntry.weight),
     },
     inBody: bodyComp ? { ...toInBody(bodyComp), prev: toInBody(prevBodyComp) } : null,
     // Last logged dates inside the 21-day window; null means nothing logged in the window
     lastWeightDate:   days.findLast(d => d.weight)?.date ?? null,
     lastBodyCompDate: bodyComp?.date ?? null,
   });
-};
-
-function parseDays(raw) {
-  return (Array.isArray(raw) ? raw : Object.entries(raw).map(([k, v]) => ({ id: k, ...v })))
-    .map(d => ({ ...d, date: d.id ?? d.date }))
-    .sort((a, b) => a.date.localeCompare(b.date));
-}
-
-function json(body, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
-  });
-}
-
-function fmt(d) { return d.toISOString().slice(0, 10); }
-function round1(v) { return v != null ? Math.round(v * 10) / 10 : null; }
-function findLatest(days, pred) {
-  for (let i = days.length - 1; i >= 0; i--) if (pred(days[i])) return days[i];
-  return days[days.length - 1] ?? null;
 }

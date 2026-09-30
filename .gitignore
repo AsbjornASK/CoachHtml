@@ -3,14 +3,11 @@
 *.suo
 *.user
 
-# Local dev / scratch
+# Local dev / secrets
 .claude/
 .env
 .env.*
-Code/logs/
-Code/.netlify/
-Code/reference-images/
 .vercel/
 
-# Third-party clones (kept locally, not deployed)
+# Local clone of the Intervals MCP server (not part of the app)
 intervals-mcp-server/

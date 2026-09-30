@@ -1,6 +1,6 @@
 // Matches today's calendar training sessions to Intervals.icu activities.
 // Loaded as a classic <script> in the browser and required by the Node tests.
-// The activity-type side mirrors categoryOf() in api/get-sport-load.js; keep them in sync.
+// The activity-type side mirrors categoryOf() in api/get-sport-load.mjs; keep them in sync.
 (function (root) {
   // Title words must start a word ("Running", "Cykeltur") so "Crunches" or "Strides" don't match
   const SPORT_RULES = [

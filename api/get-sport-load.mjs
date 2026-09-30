@@ -1,4 +1,6 @@
-export const config = { runtime: 'edge' };
+import { intervalsClient, notConfigured } from './_lib/intervals.mjs';
+import { json, fmt, daysAgo, r1, DAY_MS } from './_lib/util.mjs';
+import { ewma, baselineOf } from './_lib/sport-load.mjs';
 
 // We need enough history before the displayed window for the CTL (42-day)
 // EWMA to converge close to its steady-state value.
@@ -6,28 +8,16 @@ const LOOKBACK_DAYS = 200;
 const DISPLAY_DAYS  = 30;
 const TAU_CTL = 42;
 const TAU_ATL = 7;
-// Per-sport TSB is judged against its own recent norm; 42 days = one CTL time constant
-const BASELINE_DAYS = 42;
 
-export default async () => {
-  const apiKey    = process.env.INTERVALS_API_KEY;
-  const athleteId = process.env.INTERVALS_ATHLETE_ID;
-
-  if (!apiKey || !athleteId) {
-    return json({ error: 'Intervals API not configured' }, 500);
-  }
+export async function GET() {
+  const intervals = intervalsClient();
+  if (!intervals) return notConfigured();
 
   const today = new Date();
   const end   = fmt(today);
-  const start = fmt(new Date(today - LOOKBACK_DAYS * 86_400_000));
+  const start = daysAgo(LOOKBACK_DAYS, today);
 
-  const auth    = 'Basic ' + btoa('API_KEY:' + apiKey);
-  const baseUrl = `https://intervals.icu/api/v1/athlete/${athleteId}`;
-
-  const res = await fetch(
-    `${baseUrl}/activities?oldest=${start}&newest=${end}`,
-    { headers: { Authorization: auth } }
-  );
+  const res = await intervals.get(`/activities?oldest=${start}&newest=${end}`);
 
   if (!res.ok) {
     return json({ error: 'Intervals activities API error', status: res.status }, 502);
@@ -51,7 +41,7 @@ export default async () => {
   const startMs = Date.parse(start + 'T00:00:00Z');
   const endMs   = Date.parse(end   + 'T00:00:00Z');
   const days = [];
-  for (let t = startMs; t <= endMs; t += 86_400_000) {
+  for (let t = startMs; t <= endMs; t += DAY_MS) {
     const date = fmt(new Date(t));
     const d = loadByDay[date];
     days.push({ date, run: d?.run ?? 0, strength: d?.strength ?? 0 });
@@ -84,7 +74,7 @@ export default async () => {
   };
 
   return json({ today: end, series, baseline });
-};
+}
 
 // ── helpers ───────────────────────────────────────────────
 function categoryOf(type) {
@@ -92,31 +82,4 @@ function categoryOf(type) {
   if (type === 'Run' || type.includes('Run')) return 'run';
   if (type === 'WeightTraining') return 'strength';
   return null;
-}
-
-// Exponentially weighted moving average with the same time-constant model
-// Intervals.icu uses for its own CTL/ATL (Banister/Coggan PMC).
-function ewma(values, tau) {
-  const alpha = 1 - Math.exp(-1 / tau);
-  let prev = 0;
-  return values.map(v => { prev = prev + (v - prev) * alpha; return prev; });
-}
-
-function json(body, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
-  });
-}
-
-function fmt(d) { return d.toISOString().slice(0, 10); }
-function r1(v)  { return v != null ? Math.round(v * 10) / 10 : null; }
-function r2(v)  { return v != null ? Math.round(v * 100) / 100 : null; }
-
-// Mean and SD of TSB over the BASELINE_DAYS before today (today excluded, so it isn't compared with itself)
-function baselineOf(tsb) {
-  const win = tsb.slice(-BASELINE_DAYS - 1, -1);
-  const mean = win.reduce((a, b) => a + b, 0) / win.length;
-  const sd = Math.sqrt(win.reduce((a, b) => a + (b - mean) ** 2, 0) / win.length);
-  return { mean: r1(mean), sd: r2(sd), days: win.length };
 }
