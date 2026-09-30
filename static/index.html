@@ -231,6 +231,7 @@ function fitnessGraph(hist){
   const days=hist.filter(d=>d.ctl!=null||d.atl!=null);
   if(days.length<2)return'';
   const all=[...days.map(d=>d.ctl),...days.map(d=>d.atl)].filter(v=>v!=null&&v>0);
+  if(!all.length)return''; // no load in the whole lookback (e.g. a sport never trained)
   const mn=Math.min(...all),mx=Math.max(...all),rng=mx-mn||1;
   const W=300,H=88,axH=20,pd=10,pdY=4;
   const px=i=>pd+i*(W-2*pd)/(days.length-1);

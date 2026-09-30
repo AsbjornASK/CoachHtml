@@ -76,33 +76,23 @@
     <div class="card-title">Morning Check-in</div>
     <div class="checkin-row">
       <div class="checkin-label">Soreness<small>Pre-workout</small></div>
-      <div class="btn-group" data-field="soreness">
-        <button data-val="1" data-color="c-green">LOW</button><button data-val="2" data-color="c-yellow">AVG</button><button data-val="3" data-color="c-red">HIGH</button><button data-val="4" data-color="c-purple">EXTREME</button>
-      </div>
+      <div class="btn-group" data-field="soreness"></div>
     </div>
     <div class="checkin-row">
       <div class="checkin-label">Fatigue<small>Pre-workout</small></div>
-      <div class="btn-group" data-field="fatigue">
-        <button data-val="1" data-color="c-green">LOW</button><button data-val="2" data-color="c-yellow">AVG</button><button data-val="3" data-color="c-red">HIGH</button><button data-val="4" data-color="c-purple">EXTREME</button>
-      </div>
+      <div class="btn-group" data-field="fatigue"></div>
     </div>
     <div class="checkin-row">
       <div class="checkin-label">Mood</div>
-      <div class="btn-group" data-field="mood">
-        <button data-val="1" data-color="c-green">GREAT</button><button data-val="2" data-color="c-yellow">GOOD</button><button data-val="3" data-color="c-red">AVG</button><button data-val="4" data-color="c-purple">LOW</button>
-      </div>
+      <div class="btn-group" data-field="mood"></div>
     </div>
     <div class="checkin-row">
       <div class="checkin-label">Motivation</div>
-      <div class="btn-group" data-field="motivation">
-        <button data-val="1" data-color="c-green">EXTREME</button><button data-val="2" data-color="c-yellow">HIGH</button><button data-val="3" data-color="c-red">MEDIUM</button><button data-val="4" data-color="c-purple">LOW</button>
-      </div>
+      <div class="btn-group" data-field="motivation"></div>
     </div>
     <div class="checkin-row">
       <div class="checkin-label">Stress<small>Yesterday</small></div>
-      <div class="btn-group" data-field="stress">
-        <button data-val="1" data-color="c-green">LOW</button><button data-val="2" data-color="c-yellow">MODERATE</button><button data-val="3" data-color="c-red">HIGH</button><button data-val="4" data-color="c-purple">VERY HIGH</button>
-      </div>
+      <div class="btn-group" data-field="stress"></div>
     </div>
     <div class="checkin-row">
       <div class="checkin-label">Partner<small>Slept together last night</small></div>
@@ -138,14 +128,21 @@
 
 <script src="/js/data-freshness.js"></script>
 <script src="/js/checkin-state.js"></script>
+<script src="/js/wellness-labels.js"></script>
 <script>
 const EN_DAYS_S=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const EN_MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const TODAY=new Date().toISOString().slice(0,10);
 const YESTERDAY=new Date(Date.now()-86400000).toISOString().slice(0,10);
 const LS=checkinKey(TODAY);
-const SLBLS={mood:['Great','Good','Avg','Low'],soreness:['Low','Avg','High','Extreme'],fatigue:['Low','Avg','High','Extreme'],motivation:['Extreme','High','Medium','Low']};
-const SLBL_NAMES={mood:'Mood',soreness:'Soreness',fatigue:'Fatigue',motivation:'Motivation'};
+const SLBLS=Object.fromEntries(Object.entries(WELLNESS).map(([k,w])=>[k,w.labels]));
+const SLBL_NAMES=Object.fromEntries(Object.entries(WELLNESS).map(([k,w])=>[k,w.name]));
+
+// Form buttons come from the shared labels: uppercase, coloured by value 1–4
+function checkinButtonsHTML(field){
+  return WELLNESS[field].labels.map((l,i)=>`<button data-val="${i+1}" data-color="${WELLNESS_BTN_CLASSES[i]}">${l.toUpperCase()}</button>`).join('');
+}
+document.querySelectorAll('#checkin-card .btn-group[data-field]').forEach(g=>{if(WELLNESS[g.dataset.field])g.innerHTML=checkinButtonsHTML(g.dataset.field);});
 
 // Last logged weight / body-comp dates; null until /api/get-vitals has answered (then no warnings are shown)
 let _fresh=null;

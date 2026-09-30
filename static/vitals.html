@@ -81,6 +81,7 @@
     <a href="/dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="20" x2="6" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="18" y1="20" x2="18" y2="14"/></svg><span>Dashboard</span></a>
   </div></div>
 
+<script src="/js/wellness-labels.js"></script>
 <script>
 const EN_DAYS   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 const EN_DAYS_S = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -187,7 +188,9 @@ function render(data){
   // Use dedicated yesterday endpoint data; fall back to healthMarkers if unavailable
   const yw=yesterdayWellness??{};
 
-  const SQ=[{lbl:'HIGH',c:'c-green'},{lbl:'GOOD',c:'c-yellow'},{lbl:'AVG',c:'c-red'},{lbl:'POOR',c:'c-purple'}];
+  // Uppercase button labels + colour class per value 1–4, from the shared wellness labels
+  const btnLabels=field=>WELLNESS[field].labels.map((l,i)=>({lbl:l.toUpperCase(),c:WELLNESS_BTN_CLASSES[i]}));
+  const SQ=btnLabels('sleepQuality');
   const sqVal=(yw.sleepQuality??hm.sleepQuality)??null;
   const sqBtns=SQ.map((s,i)=>{
     const v=i+1;
@@ -196,7 +199,7 @@ function render(data){
   }).join('');
 
   // Stress check-in: 1-4 scale
-  const STRESS=[{lbl:'LOW',c:'c-green'},{lbl:'MODERATE',c:'c-yellow'},{lbl:'HIGH',c:'c-red'},{lbl:'VERY HIGH',c:'c-purple'}];
+  const STRESS=btnLabels('stress');
   const rawStress=(yw.stress??hm.stress)??null;
   const stressVal=(rawStress!=null&&rawStress>=1&&rawStress<=4)?rawStress:null;
   const stressBtns=STRESS.map((s,i)=>{
@@ -205,8 +208,8 @@ function render(data){
     return`<button class="${sel}" data-val="${v}" data-color="${s.c}">${s.lbl}</button>`;
   }).join('');
 
-  const SLBLS={mood:['Great','Good','Avg','Low'],soreness:['Low','Avg','High','Extreme'],fatigue:['Low','Avg','High','Extreme'],motivation:['Extreme','High','Medium','Low']};
-  const SLBL_NAMES={mood:'Mood',soreness:'Soreness',fatigue:'Fatigue',motivation:'Motivation'};
+  const SLBLS=Object.fromEntries(Object.entries(WELLNESS).map(([k,w])=>[k,w.labels]));
+  const SLBL_NAMES=Object.fromEntries(Object.entries(WELLNESS).map(([k,w])=>[k,w.name]));
 
   function subjItem(label,val,labels,colorClass){
     return`<div class="subj-item ${colorClass}"><div class="subj-label">${label}</div><div class="subj-value">${val!=null?labels[val-1]:'-'}</div></div>`;
@@ -217,8 +220,8 @@ function render(data){
 
   const gridItems=[
     ...['mood','soreness','fatigue','motivation'].map(f=>{const v=(yw[f]??hm[f])??null;return subjItem(SLBL_NAMES[f],v,SLBLS[f],`s${v??2}`);}),
-    `<div class="subj-item ${sqColorClass(sqVal)}" id="sq-grid-item"><div class="subj-label">Sleep quality<span style="font-size:9px;opacity:0.6"> auto</span></div><div class="subj-value">${sqVal!=null?SQ[sqVal-1].lbl:'-'}</div></div>`,
-    `<div class="subj-item ${stressColorClass(stressVal)}" id="stress-grid-item"><div class="subj-label">Stress</div><div class="subj-value">${stressVal!=null?STRESS[stressVal-1].lbl:'-'}</div></div>`,
+    `<div class="subj-item ${sqColorClass(sqVal)}" id="sq-grid-item"><div class="subj-label">${WELLNESS.sleepQuality.name}<span style="font-size:9px;opacity:0.6"> auto</span></div><div class="subj-value">${sqVal!=null?SQ[sqVal-1].lbl:'-'}</div></div>`,
+    `<div class="subj-item ${stressColorClass(stressVal)}" id="stress-grid-item"><div class="subj-label">${WELLNESS.stress.name}</div><div class="subj-value">${stressVal!=null?STRESS[stressVal-1].lbl:'-'}</div></div>`,
   ];
 
   const yesterdayNoteHTML=(yw.comments??hm.comments)?`<div class="yesterday-note">${yw.comments??hm.comments}</div>`:'';
