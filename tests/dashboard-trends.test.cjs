@@ -6,7 +6,9 @@ const path = require('node:path');
 const vm = require('node:vm');
 
 const html = fs.readFileSync(path.join(__dirname, '../static/dashboard.html'), 'utf8');
-const grab = re => { const m = html.match(re); if (!m) throw new Error('not found: ' + re); return m[0]; };
+// Chart code lives in static/js/charts.js; page-only constants (periods) stay in dashboard.html
+const chartsSrc = fs.readFileSync(path.join(__dirname, '../static/js/charts.js'), 'utf8');
+const grab = re => { const m = chartsSrc.match(re) ?? html.match(re); if (!m) throw new Error('not found: ' + re); return m[0]; };
 const block = name => grab(new RegExp(`^function ${name}\\([\\s\\S]*?^}`, 'm'));
 // shared date helpers every dashboard function may use
 const HELPERS = [grab(/^const DAY_MS = .*$/m), block('isoDaysBefore'), block('fmtDM')].join('\n');
@@ -15,7 +17,7 @@ vm.runInNewContext([HELPERS,
   grab(/^const DAYS_S = .*$/m), grab(/^const MONTHS = .*$/m),
   block('fmtN'), block('fmtDate'),
   grab(/^const WEIGHT_WINDOW = .*$/m),
-  grab(/^const VO2_WINDOW = .*$/m),
+  grab(/^const VO2_WINDOW = .*$/m), grab(/^const VO2_COLOR = .*$/m),
   grab(/^const DOT_R = .*$/m), grab(/^const AXIS_FS = .*$/m),
   block('trendGraph'),
   block('vo2Summary'),
@@ -63,15 +65,21 @@ test('weight graph keeps its 21-day window', () => {
   assert.match(svg, /78,9/);
 });
 
-test('vo2Summary: latest value coloured by level, change since the first value in the window', () => {
+test('vo2Summary: latest value in neutral blue, change since the first value in the window', () => {
   const series = [{ date: '2026-09-08', vo2max: 59.3 }, { date: '2026-09-29', vo2max: 57.7 }];
   const h = ctx.vo2Summary(series, TODAY);
   assert.equal(ctx.VO2_WINDOW, 30);
   assert.match(h, /57,7/);
-  assert.match(h, /#30d158/); // ≥ 56 is green
+  assert.match(h, /#007aff/);
   assert.match(h, /−1,6 in 30 days/);
-  assert.match(ctx.vo2Summary([{ date: '2026-09-29', vo2max: 54 }], TODAY), /#ff9f0a/); // 53–56 is yellow
+  assert.match(ctx.vo2Summary([{ date: '2026-09-29', vo2max: 54 }], TODAY), /#007aff/); // not judged by level
+  assert.doesNotMatch(h, /#30d158|#ff9f0a|#ff3b30/);
   assert.equal(ctx.vo2Summary([], TODAY), '');
+});
+
+test('VO₂ max dots are neutral blue', () => {
+  assert.ok(/field: 'vo2max', days: VO2_WINDOW, range: VO2_RANGE, color: VO2_COLOR/.test(html));
+  assert.ok(/^const VO2_COLOR = '#007aff';/m.test(chartsSrc));
 });
 
 // ── Measurement charts: separate, larger dots and larger axis labels ───────
@@ -80,7 +88,7 @@ const charts = {};
 vm.runInNewContext([HELPERS,
   grab(/^const DAYS_S = .*$/m), grab(/^const MONTHS = .*$/m),
   grab(/^const FAT_LABELS .*$/m), grab(/^const MOOD_LABELS .*$/m), grab(/^const CHECKIN_COLORS .*$/m),
-  grab(/^const DOT_R = .*$/m), grab(/^const AXIS_FS = .*$/m), grab(/^const TIMELINE_DAYS = .*$/m), grab(/^const TL_W = .*$/m),
+  grab(/^const DOT_R = .*$/m), grab(/^const AXIS_FS = .*$/m), grab(/^const TIMELINE_DAYS = .*$/m), grab(/^const TL = .*$/m),
   block('fmtN'), block('fmtDate'), block('timelineX'), block('timelineLabels'), block('wellnessLegend'),
   block('hrvCheckinChart'), block('sleepMoodChart'), block('trendGraph'),
 ].join('\n'), Object.assign(charts, wellness));
@@ -127,11 +135,11 @@ test('a value outside the fixed range widens the axis to the next whole number',
 
 // ── Partner vs. alone: one dot per night, no moving-average lines ──────────
 test('Partner vs. alone: separate dots per night, no lines, no moving average', () => {
-  const pc = { window: { innerWidth: 400 } };
+  const pc = { window: { innerWidth: 400 }, root: { innerWidth: 400 } };
   vm.runInNewContext([HELPERS,
     grab(/^const DAYS_S = .*$/m), grab(/^const MONTHS = .*$/m),
     grab(/^const DOT_R = .*$/m), grab(/^const AXIS_FS = .*$/m),
-    grab(/^const TIMELINE_DAYS = .*$/m), grab(/^const TL_W = .*$/m),
+    grab(/^const TIMELINE_DAYS = .*$/m), grab(/^const TL = .*$/m),
     grab(/^const PARTNER_COL = .*$/m), grab(/^const PARTNER_METRICS = \[[\s\S]*?^\];/m),
     block('fmtN'), block('fmtDate'), block('lastDays'), block('timelineX'), block('timelineLabels'), block('partnerCompare'),
   ].join('\n'), pc);
@@ -183,12 +191,12 @@ test('lastDays returns the last N calendar days ending today, filling gaps', () 
 });
 
 test('HRV, Sleep and Partner charts share the same 10 dates at the same x positions', () => {
-  const tl = { window: { innerWidth: 400 } };
+  const tl = { window: { innerWidth: 400 }, root: { innerWidth: 400 } };
   vm.runInNewContext([HELPERS,
     grab(/^const DAYS_S = .*$/m), grab(/^const MONTHS = .*$/m),
     grab(/^const FAT_LABELS .*$/m), grab(/^const MOOD_LABELS .*$/m), grab(/^const CHECKIN_COLORS .*$/m),
     grab(/^const DOT_R = .*$/m), grab(/^const AXIS_FS = .*$/m), grab(/^const TIMELINE_DAYS = .*$/m),
-    grab(/^const TL_W = .*$/m), grab(/^const PARTNER_COL = .*$/m), grab(/^const PARTNER_METRICS = \[[\s\S]*?^\];/m),
+    grab(/^const TL = .*$/m), grab(/^const PARTNER_COL = .*$/m), grab(/^const PARTNER_METRICS = \[[\s\S]*?^\];/m),
     block('fmtN'), block('fmtDate'), block('lastDays'), block('timelineX'), block('timelineLabels'), block('wellnessLegend'),
     block('hrvCheckinChart'), block('sleepMoodChart'), block('partnerCompare'),
     'this.DOT_R = DOT_R;',
@@ -216,11 +224,11 @@ test('Mood legend has all four colours, matching the dot colours (Low = purple)'
 });
 
 test('Partner vs. alone: says so when no partner/alone night falls in the 10-day timeline', () => {
-  const pc = { window: { innerWidth: 400 } };
+  const pc = { window: { innerWidth: 400 }, root: { innerWidth: 400 } };
   vm.runInNewContext([HELPERS,
     grab(/^const DAYS_S = .*$/m), grab(/^const MONTHS = .*$/m),
     grab(/^const DOT_R = .*$/m), grab(/^const AXIS_FS = .*$/m),
-    grab(/^const TIMELINE_DAYS = .*$/m), grab(/^const TL_W = .*$/m),
+    grab(/^const TIMELINE_DAYS = .*$/m), grab(/^const TL = .*$/m),
     grab(/^const PARTNER_COL = .*$/m), grab(/^const PARTNER_METRICS = \[[\s\S]*?^\];/m),
     block('fmtN'), block('fmtDate'), block('lastDays'), block('timelineX'), block('timelineLabels'), block('partnerCompare'),
   ].join('\n'), pc);

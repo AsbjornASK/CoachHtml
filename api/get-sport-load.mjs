@@ -1,6 +1,6 @@
 import { intervalsClient, notConfigured } from './_lib/intervals.mjs';
 import { json, fmt, daysAgo, r1, DAY_MS } from './_lib/util.mjs';
-import { ewma, baselineOf } from './_lib/sport-load.mjs';
+import { ewma, baselineOf, sportOf, sessionsOf } from './_lib/sport-load.mjs';
 
 // We need enough history before the displayed window for the CTL (42-day)
 // EWMA to converge close to its steady-state value.
@@ -8,6 +8,8 @@ const LOOKBACK_DAYS = 200;
 const DISPLAY_DAYS  = 30;
 const TAU_CTL = 42;
 const TAU_ATL = 7;
+// Sessions list for data.html: RPE × heart rate uses all of it; the other Sessions charts show less
+const SESSION_DAYS = 150;
 
 export async function GET() {
   const intervals = intervalsClient();
@@ -28,8 +30,8 @@ export async function GET() {
   // Sum training load per day, split by sport category.
   const loadByDay = {};
   for (const a of activities) {
-    const cat = categoryOf(a.type);
-    if (!cat) continue;
+    const cat = sportOf(a.type);
+    if (cat !== 'run' && cat !== 'strength') continue;
     const date = (a.start_date_local ?? a.start_date ?? '').slice(0, 10);
     if (!date) continue;
     const load = a.icu_training_load ?? 0;
@@ -73,13 +75,5 @@ export async function GET() {
     strength: baselineOf(strTsb),
   };
 
-  return json({ today: end, series, baseline });
-}
-
-// ── helpers ───────────────────────────────────────────────
-function categoryOf(type) {
-  if (!type) return null;
-  if (type === 'Run' || type.includes('Run')) return 'run';
-  if (type === 'WeightTraining') return 'strength';
-  return null;
+  return json({ today: end, series, baseline, sessions: sessionsOf(activities, end, SESSION_DAYS) });
 }

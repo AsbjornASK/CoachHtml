@@ -22,11 +22,13 @@ test('get-dashboard reads 180 days for the bands but still returns ~90 days of s
 
 // ── Dashboard helpers ─────────────────────────────────────────────────────
 const html = fs.readFileSync(path.join(__dirname, '../static/dashboard.html'), 'utf8');
-const grab = re => { const m = html.match(re); if (!m) throw new Error('not found: ' + re); return m[0]; };
+// Chart code lives in static/js/charts.js; page-only constants (periods) stay in dashboard.html
+const chartsSrc = fs.readFileSync(path.join(__dirname, '../static/js/charts.js'), 'utf8');
+const grab = re => { const m = chartsSrc.match(re) ?? html.match(re); if (!m) throw new Error('not found: ' + re); return m[0]; };
 const block = name => grab(new RegExp(`^function ${name}\\([\\s\\S]*?^}`, 'm'));
 // shared date helpers every dashboard function may use
 const HELPERS = [grab(/^const DAY_MS = .*$/m), block('isoDaysBefore'), block('fmtDM')].join('\n');
-const ctx = Object.assign({ window: { innerWidth: 400 } }, wellness);
+const ctx = Object.assign({ window: { innerWidth: 400 }, root: { innerWidth: 400 } }, wellness);
 vm.runInNewContext([HELPERS,
   grab(/^const DAYS_S = .*$/m), grab(/^const MONTHS = .*$/m), grab(/^const CHECKIN_COLORS .*$/m), grab(/^const STRESS_COLORS = .*$/m),
   grab(/^const STRESS_LABELS = .*$/m), grab(/^const STRESS_SHORT .*$/m), grab(/^const CAT_META = \{[\s\S]*?^\};/m), grab(/^const CAT_KEYS = .*$/m),
