@@ -145,7 +145,7 @@ function chipClass(v) { return v ? `chip chip-${v}` : 'chip chip-null'; }
 
 function fitnessCheckinChart(series) {
   const days = series.filter(d => d.ctl != null || d.atl != null);
-  if (days.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Not enough data</p>';
+  if (days.length < 3) return emptyMsg('Not enough data');
   const W = 900, H = 220, axH = 22, PDL = 38, PDR = 38, PDY = 8;
   const plotW = W - PDL - PDR;
   const allVals = [...days.map(d => d.ctl), ...days.map(d => d.atl)].filter(v => v != null);
@@ -204,7 +204,7 @@ function fitnessCheckinChart(series) {
 }
 
 function sportFitnessChart(days) {
-  if (!days || days.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Not enough data</p>';
+  if (!days || days.length < 3) return emptyMsg('Not enough data');
   const W = 440, H = 180, axH = 22, PDL = 34, PDR = 34, PDY = 8;
   const plotW = W - PDL - PDR;
   const allVals = [...days.map(d => d.ctl), ...days.map(d => d.atl)].filter(v => v != null);
@@ -254,7 +254,7 @@ function sportFitnessChart(days) {
 
 function tsbMoodScatter(series) {
   const pts = series.filter(d => d.tsb != null && d.mood != null);
-  if (pts.length < 4) return '<p style="color:#aeaeb2;font-size:13px">Not enough data</p>';
+  if (pts.length < 4) return emptyMsg('Not enough data');
   const W = 300, H = 200, PD = 24, axH = 28;
   const tsbMn = Math.floor(Math.min(...pts.map(d => d.tsb)) / 5) * 5;
   const tsbMx = Math.ceil(Math.max(...pts.map(d => d.tsb)) / 5) * 5;
@@ -282,7 +282,7 @@ function tsbMoodScatter(series) {
 
 function sleepMoodScatter(series) {
   const pts = series.filter(d => d.sleep != null && d.mood != null);
-  if (pts.length < 4) return '<p style="color:#aeaeb2;font-size:13px">Not enough data</p>';
+  if (pts.length < 4) return emptyMsg('Not enough data');
   const W = 300, H = 200, PD = 24, axH = 28;
   const sleepMn = Math.max(0, Math.floor(Math.min(...pts.map(d => d.sleep)) - 0.5));
   const sleepMx = Math.ceil(Math.max(...pts.map(d => d.sleep)) + 0.5);
@@ -311,18 +311,28 @@ function sleepMoodScatter(series) {
 // Sessions cards with a sport filter; only sports with sessions the chart can show get a button
 const FILTER_SPORTS = ['all', 'run', 'ride', 'strength'];
 
+// Per card: which sessions it can show (for the buttons) and how to draw it
+const SPORT_CARDS = {
+  'load-hrv': {
+    eligible: (s, today) => longEnough(s) && s.date >= isoDaysBefore(today, DATA_DAYS - 1),
+    chart: ({ today, series }, sessions, sport) => loadHrvChart(lastDays(series, today, DATA_DAYS), sessions, series, WIDE, sport),
+  },
+  'rpe-hr': {
+    eligible: rpeEligible,
+    chart: (data, sessions, sport) => rpeHrScatter(sessions, WIDE, sport),
+  },
+  'zone-weeks': {
+    eligible: s => s.zones != null && longEnough(s),
+    chart: ({ today }, sessions, sport) => zoneWeeksChart(sessions, today, 12, WIDE, sport),
+  },
+};
+
 function sportCard(card, data, sessions, sport) {
-  const { today, series } = data;
-  const from = isoDaysBefore(today, DATA_DAYS - 1);
-  const [eligible, chart] = {
-    'load-hrv':   [s => longEnough(s) && s.date >= from, () => loadHrvChart(lastDays(series, today, DATA_DAYS), sessions, series, WIDE, sport)],
-    'rpe-hr':     [rpeEligible, () => rpeHrScatter(sessions, WIDE, sport)],
-    'zone-weeks': [s => s.zones != null && longEnough(s), () => zoneWeeksChart(sessions, today, 12, WIDE, sport)],
-  }[card];
-  const present = new Set(sessions.filter(eligible).map(s => s.sport));
+  const { eligible, chart } = SPORT_CARDS[card];
+  const present = new Set(sessions.filter(s => eligible(s, data.today)).map(s => s.sport));
   const buttons = FILTER_SPORTS.filter(k => k === 'all' || present.has(k)).map(k =>
     `<button data-card="${card}" data-sport="${k}" class="${k === sport ? 'selected' : ''}" aria-pressed="${k === sport}">${k === 'all' ? 'All' : SPORT_LABELS[k]}</button>`).join('');
-  return `<div class="tabs sport-filter">${buttons}</div>${chart()}`;
+  return `<div class="tabs sport-filter">${buttons}</div>${chart(data, sessions, sport)}`;
 }
 
 function computeInsights(series) {
@@ -345,13 +355,13 @@ function computeInsights(series) {
       }
     }
   }
-  if (insights.length === 0) return '<p style="color:#aeaeb2;font-size:13px">No clear patterns in the last 14 days yet</p>';
+  if (insights.length === 0) return emptyMsg('No clear patterns in the last 14 days yet');
   return `<div class="insight" style="margin-top:0">${insights.map(i => `<div style="margin-bottom:6px">💡 ${i}</div>`).join('')}</div>`;
 }
 
 function checkinTable(series) {
   const rows = series.slice(-21).reverse().filter(d => d.mood || d.fatigue || d.soreness || d.motivation || d.hrv || d.sleep);
-  if (!rows.length) return '<p style="color:#aeaeb2;font-size:13px">No check-in data yet</p>';
+  if (!rows.length) return emptyMsg('No check-in data yet');
   const head = `<thead><tr><th>Date</th><th>Mood</th><th>Soreness</th><th>Fatigue</th><th>Motivation</th><th>HRV</th><th>Sleep</th><th>CTL</th><th>TSB</th><th>Note</th></tr></thead>`;
   const body = rows.map(d => `<tr>
     <td style="font-size:11px;white-space:nowrap">${fmtDate(d.date)}</td>
@@ -372,7 +382,7 @@ function checkinTable(series) {
 function calendarLoadChart(series) {
   const days = series;
   const hasCalData = days.some(d => d.cal != null);
-  if (!hasCalData && !days.some(d => d.sdnn != null)) return '<p style="color:#aeaeb2;font-size:13px">No calendar data yet</p>';
+  if (!hasCalData && !days.some(d => d.sdnn != null)) return emptyMsg('No calendar data yet');
 
   const W = 900, H_cal = 160, H_stress = 50, axH = 22, PDL = 36, PDR = 46, PDY = 8;
   const plotW = W - PDL - PDR;

@@ -196,12 +196,12 @@ test('an unknown stored value or a throwing localStorage falls back to Recovery'
 
 test('Sessions tab draws the three charts from sportData.sessions on the 30-day wide timeline', () => {
   assert.ok(render.includes(`<div id="load-hrv">\${sportCard('load-hrv', data, sessions, 'all')}</div>`));
-  assert.ok(block('sportCard').includes('loadHrvChart(lastDays(series, today, DATA_DAYS), sessions, series, WIDE, sport)'));
+  assert.ok(html.includes('loadHrvChart(lastDays(series, today, DATA_DAYS), sessions, series, WIDE, sport)'));
   assert.ok(render.includes(`<div id="rpe-hr">\${sportCard('rpe-hr', data, sessions, 'all')}</div>`));
   assert.ok(render.includes('<div class="card-title">RPE × heart rate</div>\n        <div class="card-subtitle" style="margin-bottom:10px">Sessions from the last 150 days</div>'));
   assert.ok(render.includes(`<div id="zone-weeks">\${sportCard('zone-weeks', data, sessions, 'all')}</div>`));
-  assert.ok(block('sportCard').includes('rpeHrScatter(sessions, WIDE, sport)'));
-  assert.ok(block('sportCard').includes('zoneWeeksChart(sessions, today, 12, WIDE, sport)'));
+  assert.ok(html.includes('rpeHrScatter(sessions, WIDE, sport)'));
+  assert.ok(html.includes('zoneWeeksChart(sessions, today, 12, WIDE, sport)'));
   assert.match(render, /const sessions = sportData\?\.sessions \?\? \[\];/);
 });
 

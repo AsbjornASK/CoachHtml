@@ -11,7 +11,8 @@ const chartsSrc = fs.readFileSync(path.join(__dirname, '../static/js/charts.js')
 const grab = re => { const m = chartsSrc.match(re) ?? html.match(re); if (!m) throw new Error('not found: ' + re); return m[0]; };
 const block = name => grab(new RegExp(`^function ${name}\\([\\s\\S]*?^}`, 'm'));
 // shared date helpers every dashboard function may use
-const HELPERS = [grab(/^const DAY_MS = .*$/m), block('isoDaysBefore'), block('fmtDM')].join('\n');
+const HELPERS = [grab(/^const DAY_MS = .*$/m), block('isoDaysBefore'), block('fmtDM'),
+  grab(/^const emptyMsg = .*$/m), grab(/^const legendItem = .*$/m)].join('\n');
 const ctx = Object.assign({}, require('../static/js/wellness-labels.js'));
 vm.runInNewContext([HELPERS,
   grab(/^const DAYS_S = .*$/m), grab(/^const MONTHS = .*$/m),

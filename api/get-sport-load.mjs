@@ -1,6 +1,6 @@
 import { intervalsClient, notConfigured } from './_lib/intervals.mjs';
 import { json, fmt, daysAgo, r1, DAY_MS } from './_lib/util.mjs';
-import { ewma, baselineOf, sportOf, sessionsOf } from './_lib/sport-load.mjs';
+import { ewma, baselineOf, sportOf, sessionsOf, activityDate } from './_lib/sport-load.mjs';
 
 // We need enough history before the displayed window for the CTL (42-day)
 // EWMA to converge close to its steady-state value.
@@ -32,7 +32,7 @@ export async function GET() {
   for (const a of activities) {
     const cat = sportOf(a.type);
     if (cat !== 'run' && cat !== 'strength') continue;
-    const date = (a.start_date_local ?? a.start_date ?? '').slice(0, 10);
+    const date = activityDate(a);
     if (!date) continue;
     const load = a.icu_training_load ?? 0;
     if (!loadByDay[date]) loadByDay[date] = { run: 0, strength: 0 };

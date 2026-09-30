@@ -66,17 +66,19 @@ function timelineLabels(days, y, layout = TL) {
     `<text class="x-tick" x="${timelineX(i, days.length, layout).toFixed(1)}" y="${y}" font-size="${AXIS_FS}" fill="#aeaeb2" text-anchor="middle">${fmtDM(d.date)}</text>`).join('');
 }
 
+const emptyMsg = msg => `<p style="color:#aeaeb2;font-size:13px">${msg}</p>`;
+const legendItem = (color, label) => `<div class="legend-item"><div class="legend-dot" style="background:${color}"></div>${label}</div>`;
+
 // Legend for dots coloured by a wellness field (values 1–4): the same labels and colours as the dots
 function wellnessLegend(title, field) {
-  const items = WELLNESS[field].labels.map((l, i) =>
-    `<div class="legend-item"><div class="legend-dot" style="background:${WELLNESS_COLORS[i]}"></div>${l}</div>`).join('');
+  const items = WELLNESS[field].labels.map((l, i) => legendItem(WELLNESS_COLORS[i], l)).join('');
   return `<div class="legend"><div class="legend-item"><span class="legend-title">${title}</span></div>${items}</div>`;
 }
 
 // ── HRV + check-in chart ──────────────────────────────────────────────────
 function hrvCheckinChart(days, layout = TL) {
   const hrvDays = days.filter(d => d.hrv != null);
-  if (hrvDays.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Not enough HRV data</p>';
+  if (hrvDays.length < 3) return emptyMsg('Not enough HRV data');
 
   const { W, PDL, PDR } = layout, H = 180, axH = 20, PDY = 8;
   const plotW = W - PDL - PDR;
@@ -116,7 +118,7 @@ function hrvCheckinChart(days, layout = TL) {
 // ── Sleep chart coloured by mood ──────────────────────────────────────────
 function sleepMoodChart(days, layout = TL) {
   const sleepDays = days.filter(d => d.sleep != null);
-  if (sleepDays.length < 3) return '<p style="color:#aeaeb2;font-size:13px">Not enough sleep data</p>';
+  if (sleepDays.length < 3) return emptyMsg('Not enough sleep data');
 
   const { W, PDL, PDR } = layout, H = 180, axH = 20, PDY = 8;
   const plotW = W - PDL - PDR;
@@ -208,7 +210,7 @@ const STRESS_SHORT  = ['', ...WELLNESS.stress.short];
 
 // days = the columns shown; series = full history for the HRV norm; bands = 180-day HRV quartiles
 function hrvCalStressChart(days, series, bands) {
-  if (!days.some(d => d.hrv != null || d.sdnn != null || d.stress != null || d.cal)) return '<p style="color:#aeaeb2;font-size:13px">No HRV, calendar or stress data yet</p>';
+  if (!days.some(d => d.hrv != null || d.sdnn != null || d.stress != null || d.cal)) return emptyMsg('No HRV, calendar or stress data yet');
 
   // Narrow screens get a smaller viewBox so text and dots stay readable
   const narrow = (root.innerWidth ?? 1024) < 600;
@@ -302,7 +304,7 @@ function partnerCompare(series, days, layout = TL) {
   const nights = series.filter(d => d.partner === 1 || d.partner === 2);
   const withP = nights.filter(d => d.partner === 1), alone = nights.filter(d => d.partner === 2);
   if (!withP.length || !alone.length)
-    return `<p style="color:#aeaeb2;font-size:13px">Not enough data yet: needs at least one night with and one without a partner (${withP.length} with, ${alone.length} without). Fill in “Partner” in the morning check-in.</p>`;
+    return emptyMsg(`Not enough data yet: needs at least one night with and one without a partner (${withP.length} with, ${alone.length} without). Fill in “Partner” in the morning check-in.`);
 
   const avg = arr => arr.length ? arr.reduce((s, v) => s + v, 0) / arr.length : null;
   // Charts use the shared timeline (`days`); the tiles average all logged nights in each group
@@ -346,7 +348,7 @@ function partnerCompare(series, days, layout = TL) {
   return `
     <div class="card-subtitle" style="margin-bottom:12px">Each dot is one night in the last ${days.length} days: <span style="color:${PARTNER_COL};font-weight:600">with partner</span> (${withP.length} nights) vs. <span style="color:${ALONE_COL};font-weight:600">alone</span> (${alone.length} nights). The numbers above average all logged nights in each group.</div>
     <div class="pc-tiles">${tiles}</div>
-    ${charts || `<p style="color:#aeaeb2;font-size:13px">No partner or alone nights logged in the last ${days.length} days.</p>`}`;
+    ${charts || emptyMsg(`No partner or alone nights logged in the last ${days.length} days.`)}`;
 }
 
 // ── Trends over time (weight, VO₂ max) ────────────────────────────────────
@@ -412,9 +414,9 @@ function vo2Summary(series, today, days = 30) {
 const SPORT_COLORS = { run: '#007aff', ride: '#5ac8fa', strength: '#5856d6', other: '#aeaeb2' };
 const SPORT_LABELS = { run: 'Run', ride: 'Ride', strength: 'Strength', other: 'Other' };
 
-const emptyMsg = msg => `<p style="color:#aeaeb2;font-size:13px">${msg}</p>`;
-const legend = items => `<div class="legend">${items.map(([color, label]) =>
-  `<div class="legend-item"><div class="legend-dot" style="background:${color}"></div>${label}</div>`).join('')}</div>`;
+const legend = items => `<div class="legend">${items.map(([color, label]) => legendItem(color, label)).join('')}</div>`;
+// Session filter for the Sessions charts: 'all' or one sport
+const bySport = sport => s => sport === 'all' || s.sport === sport;
 const sportLegend = sessions => Object.keys(SPORT_COLORS).filter(k => sessions.some(s => s.sport === k))
   .map(k => [SPORT_COLORS[k], SPORT_LABELS[k]]);
 
@@ -423,7 +425,7 @@ const sportLegend = sessions => Object.keys(SPORT_COLORS).filter(k => sessions.s
 // sport = 'all' or one sport; the HRV dots belong to the day and stay whatever the filter
 function loadHrvChart(days, sessions, series, layout = TL, sport = 'all') {
   const byDate = new Map(days.map(d => [d.date, []]));
-  for (const s of sessions) if (longEnough(s) && (sport === 'all' || s.sport === sport)) byDate.get(s.date)?.push(s);
+  for (const s of sessions) if (longEnough(s) && bySport(sport)(s)) byDate.get(s.date)?.push(s);
   if (![...byDate.values()].some(l => l.length)) return emptyMsg(`No ${sport === 'all' ? 'training' : sport} sessions in the last ${days.length} days`);
 
   const { W, PDL, PDR } = layout, H = 200, axH = 20, PDY = 10, RAX = 48;
@@ -496,7 +498,7 @@ function rpeEligible(s) {
 }
 
 function rpeHrScatter(sessions, layout = TL, sport = 'all') {
-  const pts = sessions.filter(s => rpeEligible(s) && (sport === 'all' || s.sport === sport));
+  const pts = sessions.filter(s => rpeEligible(s) && bySport(sport)(s));
   if (pts.length < 5) return emptyMsg(`Not enough ${sport === 'all' ? '' : sport + ' '}sessions with RPE and heart rate yet`);
 
   const { W, PDL, PDR } = layout, H = 220, axH = 38, PDY = 10;
@@ -543,7 +545,7 @@ const ZONES = [['easy', 'Easy (Z1–Z2)', '#5ac8fa'], ['moderate', 'Moderate (Z3
 
 // sport = 'all' or one sport
 function zoneWeeksChart(sessions, today, weeks = 12, layout = TL, sport = 'all') {
-  sessions = sessions.filter(s => longEnough(s) && (sport === 'all' || s.sport === sport));
+  sessions = sessions.filter(s => longEnough(s) && bySport(sport)(s));
   const monday = isoDaysBefore(today, (new Date(today + 'T12:00:00Z').getUTCDay() + 6) % 7);
   const wk = Array.from({ length: weeks }, (_, k) => {
     const start = isoDaysBefore(monday, 7 * (weeks - 1 - k)), end = isoDaysBefore(start, -6);
@@ -592,7 +594,7 @@ function zoneWeeksChart(sessions, today, weeks = 12, layout = TL, sport = 'all')
     </div>`;
 }
 
-  const api = { DAYS_S, MONTHS, MOOD_LABELS, FAT_LABELS, CHECKIN_COLORS, DOT_R, AXIS_FS, TL, fmtDate, fmtN, DAY_MS, isoDaysBefore, fmtDM, lastDays, timelineX, timelineLabels, wellnessLegend, hrvCheckinChart, sleepMoodChart, CAT_META, CAT_KEYS, HRV_NORM_DAYS, hrvLevel, hrvNormMark, hrvIcon, STRESS_COLORS, STRESS_LABELS, STRESS_SHORT, hrvCalStressChart, PARTNER_COL, PARTNER_METRICS, partnerCompare, VO2_COLOR, WEIGHT_RANGE, VO2_RANGE, trendGraph, vo2Summary, ALONE_COL, SPORT_COLORS, SPORT_LABELS, rpeEligible, longEnough, loadHrvChart, rpeHrScatter, zoneWeeksChart };
+  const api = { DAYS_S, MONTHS, MOOD_LABELS, FAT_LABELS, CHECKIN_COLORS, DOT_R, AXIS_FS, TL, fmtDate, fmtN, DAY_MS, isoDaysBefore, fmtDM, lastDays, timelineX, timelineLabels, wellnessLegend, hrvCheckinChart, sleepMoodChart, CAT_META, CAT_KEYS, HRV_NORM_DAYS, hrvLevel, hrvNormMark, hrvIcon, STRESS_COLORS, STRESS_LABELS, STRESS_SHORT, hrvCalStressChart, PARTNER_COL, PARTNER_METRICS, partnerCompare, VO2_COLOR, WEIGHT_RANGE, VO2_RANGE, trendGraph, vo2Summary, emptyMsg, SPORT_COLORS, SPORT_LABELS, rpeEligible, longEnough, loadHrvChart, rpeHrScatter, zoneWeeksChart };
   Object.assign(root, api);
   if (typeof module !== 'undefined') module.exports = api;
 })(typeof window !== 'undefined' ? window : globalThis);

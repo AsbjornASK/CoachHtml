@@ -1,6 +1,6 @@
 // Pure math behind /api/get-sport-load.
 
-import { r1, r2, fmt, DAY_MS } from './util.mjs';
+import { r1, r2, daysAgo } from './util.mjs';
 
 // Per-sport TSB is judged against its own recent norm; 42 days = one CTL time constant
 export const BASELINE_DAYS = 42;
@@ -21,6 +21,11 @@ export function baselineOf(tsb) {
   return { mean: r1(mean), sd: r2(sd), days: win.length };
 }
 
+// Local calendar date (YYYY-MM-DD) of an Intervals.icu activity, '' when missing
+export function activityDate(a) {
+  return (a.start_date_local ?? a.start_date ?? '').slice(0, 10);
+}
+
 // Sport category of an Intervals.icu activity type
 export function sportOf(type) {
   if (type?.includes('Run')) return 'run';
@@ -34,9 +39,9 @@ const minutes = sec => r1(sec / 60);
 // One entry per activity in the `days` days up to and including `today` (YYYY-MM-DD), oldest first.
 // zones are minutes in easy (Z1+Z2), moderate (Z3) and hard (Z4 and above).
 export function sessionsOf(activities, today, days = 90) {
-  const first = fmt(new Date(Date.parse(today + 'T00:00:00Z') - (days - 1) * DAY_MS));
+  const first = daysAgo(days - 1, new Date(today + 'T00:00:00Z'));
   return activities
-    .map(a => ({ a, date: (a.start_date_local ?? a.start_date ?? '').slice(0, 10) }))
+    .map(a => ({ a, date: activityDate(a) }))
     .filter(({ date }) => date && date >= first && date <= today)
     .sort((x, y) => x.date.localeCompare(y.date))
     .map(({ a, date }) => {

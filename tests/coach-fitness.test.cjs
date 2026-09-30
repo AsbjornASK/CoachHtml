@@ -107,3 +107,10 @@ test('trainingCardsHTML renders both cards for the same tab', () => {
   assert.match(h, /Training Load Ratio · Run/);
   assert.match(h, /-3,7/);
 });
+
+test('fitnessGraph: a sport with no load in the lookback gives the empty state, not a NaN chart', () => {
+  const zeros = [{ date: '2026-09-28', ctl: 0, atl: 0 }, { date: '2026-09-29', ctl: 0, atl: 0 }, { date: '2026-09-30', ctl: 0, atl: 0 }];
+  const out = ctx.fitnessGraph(zeros);
+  assert.doesNotMatch(out, /NaN|Infinity/);
+  assert.equal(out, '');
+});

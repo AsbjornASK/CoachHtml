@@ -26,7 +26,7 @@ export async function fetchCalendarEvents(sources) {
 }
 
 // All-day events have allDay: true, timeStart/timeEnd null and the default 60 min duration.
-function parseICS(ics) {
+export function parseICS(ics) {
   const events = [];
   const blocks = ics.split('BEGIN:VEVENT');
   for (let i = 1; i < blocks.length; i++) {
@@ -49,8 +49,9 @@ function parseICS(ics) {
 }
 
 const SUMMARY_RE = /^SUMMARY[;:](.+)$/m;
-const DTSTART_RE = /^DTSTART[^:]*:([\dTZ]+)/m;
-const DTEND_RE   = /^DTEND[^:]*:([\dTZ]+)/m;
+// Group 1 = parameters (may hold TZID=…), group 2 = the date-time value
+const DTSTART_RE = /^DTSTART([^:]*):([\dTZ]+)/m;
+const DTEND_RE   = /^DTEND([^:]*):([\dTZ]+)/m;
 
 const DATE_FMT = new Intl.DateTimeFormat('sv-SE', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' });
 const TIME_FMT = new Intl.DateTimeFormat('da-DK', { timeZone: TZ, hour: '2-digit', minute: '2-digit', hour12: false });
@@ -63,12 +64,26 @@ function extractStr(block, re) {
 function extractDT(block, re) {
   const m = block.match(re);
   if (!m) return null;
-  const raw = m[1];
+  const raw = m[2];
   if (/^\d{8}$/.test(raw)) {
     return { date: `${raw.slice(0,4)}-${raw.slice(4,6)}-${raw.slice(6,8)}`, time: null, ms: null };
   }
-  const year = raw.slice(0,4), mo = raw.slice(4,6), day = raw.slice(6,8);
-  const hr = raw.slice(9,11), min = raw.slice(11,13);
-  const dt = new Date(`${year}-${mo}-${day}T${hr}:${min}:00${raw.endsWith('Z') ? 'Z' : ''}`);
+  const parts = [raw.slice(0,4), raw.slice(4,6) - 1, raw.slice(6,8), raw.slice(9,11), raw.slice(11,13)].map(Number);
+  const wall = Date.UTC(...parts);
+  // UTC ("Z"), otherwise wall-clock time in the TZID zone (floating times: our own zone)
+  const tz = m[1].match(/TZID=([^;]+)/)?.[1] ?? TZ;
+  const dt = new Date(raw.endsWith('Z') ? wall : wall - tzOffsetMs(tz, wall - tzOffsetMs(tz, wall)));
   return { date: DATE_FMT.format(dt), time: TIME_FMT.format(dt), ms: dt.getTime() };
+}
+
+// Offset of `tz` from UTC at instant `ms`, in ms (e.g. +2 h for Copenhagen in summer)
+function tzOffsetMs(tz, ms) {
+  let p;
+  try {
+    p = Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone: tz, hourCycle: 'h23', year: 'numeric', month: 'numeric',
+      day: 'numeric', hour: 'numeric', minute: 'numeric' }).formatToParts(ms).map(x => [x.type, +x.value]));
+  } catch {
+    return tz === TZ ? 0 : tzOffsetMs(TZ, ms); // unknown TZID: fall back to our own zone
+  }
+  return Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute) - Math.floor(ms / 60000) * 60000;
 }
