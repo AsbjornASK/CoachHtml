@@ -36,15 +36,23 @@
     .fnum-value { font-size: 24px; font-weight: 700; }
     .ramp-badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; margin-left: 6px; vertical-align: middle; }
     .ramp-badge.stable { background: #e8f8ee; color: #30d158; } .ramp-badge.rising { background: #fff3e0; color: #b86e00; } .ramp-badge.high { background: #ffe5e5; color: #ff3b30; }
+    .fit-tabs { display: flex; gap: 4px; margin-bottom: 14px; }
+    .fit-tabs button { flex: 1; padding: 6px 2px; font-size: 11px; font-weight: 700; border: 1.5px solid #e5e5ea; border-radius: 8px; background: #fff; color: #8e8e93; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .fit-tabs button.selected { background: #007aff; color: #fff; border-color: #007aff; }
+    .fit-tabs button:disabled { opacity: 0.4; cursor: default; }
+    .tlr-zone-label { text-align: center; font-size: 19px; font-weight: 800; margin-bottom: 14px; }
+    .tlr-row { display: flex; align-items: center; gap: 12px; }
+    .tlr-value { font-size: 24px; font-weight: 800; flex-shrink: 0; min-width: 50px; }
+    .tlr-bar { position: relative; flex: 1; height: 10px; border-radius: 6px; overflow: visible; display: flex; }
+    .tlr-bar-track { position: absolute; inset: 0; display: flex; border-radius: 6px; overflow: hidden; }
+    .tlr-seg { height: 100%; }
+    .tlr-dot { position: absolute; top: 50%; width: 20px; height: 20px; border-radius: 50%; background: #fff; border: 4px solid currentColor; transform: translate(-50%,-50%); box-shadow: 0 1px 3px rgba(0,0,0,0.25); }
+    .tlr-desc { font-size: 13px; color: #1c1c1e; line-height: 1.5; margin-top: 14px; }
     .graph-legend { display: flex; gap: 14px; margin-bottom: 8px; }
     .legend-item { display: flex; align-items: center; gap: 4px; font-size: 11px; color: #8e8e93; }
     .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
-    .pair-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid #f2f2f7; }
-    .pair-row:last-of-type { border-bottom: none; }
-    .pair-event { font-size: 15px; font-weight: 600; }
-    .pair-activity { font-size: 12px; color: #8e8e93; margin-top: 2px; }
-    .pair-btn { flex-shrink: 0; padding: 8px 14px; background: #007aff; color: #fff; font-size: 13px; font-weight: 700; border: none; border-radius: 10px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-    .pair-btn:disabled { background: #aeaeb2; cursor: default; }
+    .section-header { font-size: 20px; font-weight: 700; margin: 20px 16px 10px; letter-spacing: -0.3px; }
+    .session-status { font-size: 12px; font-weight: 700; flex-shrink: 0; }
     .workout-row { display: flex; justify-content: space-between; align-items: center; padding: 11px 0; border-bottom: 1px solid #f2f2f7; }
     .workout-row:last-child { border-bottom: none; }
     .workout-title { font-size: 16px; font-weight: 600; } .workout-time { font-size: 13px; color: #8e8e93; }
@@ -57,34 +65,6 @@
     .upcoming-title { font-size: 15px; font-weight: 600; } .upcoming-time { font-size: 12px; color: #8e8e93; margin-top: 1px; }
     .rec-text { font-size: 15px; line-height: 1.55; }
     .rec-bold { font-weight: 700; }
-    .subjective-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .subj-item { text-align: center; padding: 8px; border-radius: 10px; }
-    .subj-item.s1 { background: #e8f8ee; color: #1a7a33; } .subj-item.s2 { background: #fff8e1; color: #b86e00; } .subj-item.s3 { background: #ffe5e5; color: #c0392b; } .subj-item.s4 { background: #f3e8ff; color: #7a1fa2; }
-    .subj-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; opacity: 0.7; }
-    .subj-value { font-size: 14px; font-weight: 700; margin-top: 2px; }
-    .note-area { width: 100%; margin-top: 12px; padding-top: 12px; border-top: 1px solid #f2f2f7; box-sizing: border-box; }
-    .note-textarea { width: 100%; font-size: 13px; border: 1.5px solid #e5e5ea; border-radius: 10px; padding: 10px 12px; color: #1c1c1e; background: #f9f9fb; resize: none; outline: none; font-family: inherit; box-sizing: border-box; min-height: 72px; }
-    .note-textarea:focus { border-color: #007aff; background: #fff; }
-    .note-status { font-size: 11px; color: #aeaeb2; margin-top: 4px; min-height: 14px; text-align: right; }
-    .note-status.ok { color: #30d158; } .note-status.err { color: #ff3b30; }
-    .checkin-row { display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid #f2f2f7; gap: 8px; }
-    .checkin-row:last-of-type { border-bottom: none; }
-    .checkin-label { font-size: 13px; font-weight: 500; color: #1c1c1e; width: 88px; flex-shrink: 0; line-height: 1.2; }
-    .checkin-label small { display: block; font-size: 10px; font-weight: 400; color: #aeaeb2; }
-    .btn-group { display: flex; flex: 1; gap: 4px; }
-    .btn-group button { flex: 1; padding: 6px 2px; font-size: 10px; font-weight: 700; border: 1.5px solid #e5e5ea; border-radius: 8px; background: #fff; color: #8e8e93; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-    .btn-group button.selected { background: #007aff; color: #fff; border-color: #007aff; }
-    .btn-group button.selected.c-green { background: #30d158; border-color: #30d158; }
-    .btn-group button.selected.c-yellow { background: #ff9f0a; border-color: #ff9f0a; }
-    .btn-group button.selected.c-red { background: #ff3b30; border-color: #ff3b30; }
-    .btn-group button.selected.c-purple { background: #bf5af2; border-color: #bf5af2; }
-    .checkin-weight { flex: 1; min-width: 0; font-size: 15px; border: 1.5px solid #e5e5ea; border-radius: 8px; padding: 7px 10px; color: #1c1c1e; background: #f9f9fb; outline: none; font-family: inherit; }
-    .checkin-weight:focus { border-color: #007aff; background: #fff; }
-    .submit-btn { width: 100%; margin-top: 14px; padding: 13px; color: #fff; font-size: 16px; font-weight: 700; border: none; border-radius: 12px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-    .submit-btn:disabled { background: #aeaeb2 !important; cursor: default; }
-    .checkin-done-badge { display: inline-block; background: #e8f8ee; color: #30d158; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; margin-left: 6px; vertical-align: middle; }
-    .form-status { text-align: center; font-size: 13px; margin-top: 10px; min-height: 18px; }
-    .form-status.ok { color: #30d158; font-weight: 600; } .form-status.err { color: #ff3b30; }
     .skeleton { animation: pulse 1.4s ease-in-out infinite; background: #e5e5ea; border-radius: 16px; }
     @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.4} }
     .skel-header { height: 80px; margin: 24px 12px 12px; }
@@ -108,63 +88,19 @@
     <div class="skel-card skeleton"></div>
     <div class="skel-card skeleton"></div>
   </div>
-  <div class="card" id="checkin-card" style="display:none">
-    <div class="card-title">Morning Check-in <span id="checkin-done-badge" class="checkin-done-badge" style="display:none">Saved</span></div>
-    <div class="checkin-row">
-      <div class="checkin-label">Soreness<small>Pre-workout</small></div>
-      <div class="btn-group" data-field="soreness">
-        <button data-val="1" data-color="c-green">LOW</button><button data-val="2" data-color="c-yellow">AVG</button><button data-val="3" data-color="c-red">HIGH</button><button data-val="4" data-color="c-purple">EXTREME</button>
-      </div>
-    </div>
-    <div class="checkin-row">
-      <div class="checkin-label">Fatigue<small>Pre-workout</small></div>
-      <div class="btn-group" data-field="fatigue">
-        <button data-val="1" data-color="c-green">LOW</button><button data-val="2" data-color="c-yellow">AVG</button><button data-val="3" data-color="c-red">HIGH</button><button data-val="4" data-color="c-purple">EXTREME</button>
-      </div>
-    </div>
-    <div class="checkin-row">
-      <div class="checkin-label">Humør</div>
-      <div class="btn-group" data-field="mood">
-        <button data-val="1" data-color="c-green">GREAT</button><button data-val="2" data-color="c-yellow">GOOD</button><button data-val="3" data-color="c-red">AVG</button><button data-val="4" data-color="c-purple">LOW</button>
-      </div>
-    </div>
-    <div class="checkin-row">
-      <div class="checkin-label">Motivation</div>
-      <div class="btn-group" data-field="motivation">
-        <button data-val="1" data-color="c-green">EXTREME</button><button data-val="2" data-color="c-yellow">HIGH</button><button data-val="3" data-color="c-red">MIDDEL</button><button data-val="4" data-color="c-purple">LOW</button>
-      </div>
-    </div>
-    <div class="checkin-row">
-      <div class="checkin-label">Stress<small>I går</small></div>
-      <div class="btn-group" data-field="stress">
-        <button data-val="1" data-color="c-green">LAV</button><button data-val="2" data-color="c-yellow">MODERAT</button><button data-val="3" data-color="c-red">HØJ</button><button data-val="4" data-color="c-purple">MEGET HØJ</button>
-      </div>
-    </div>
-    <div class="checkin-row">
-      <div class="checkin-label">Partner<small>Sov sammen i nat</small></div>
-      <!-- Intervals custom wellness field "Partner" (select): 1 = Ja, 2 = Nej -->
-      <div class="btn-group" data-field="Partner">
-        <button data-val="1">JA</button><button data-val="2">NEJ</button>
-      </div>
-    </div>
-    <div class="checkin-row">
-      <div class="checkin-label">Vægt<small>kg</small></div>
-      <input type="number" id="checkin-weight" class="checkin-weight" placeholder="Dagens vægt (kg)" step="0.1" min="40" max="200" inputmode="decimal">
-    </div>
-    <button class="submit-btn" id="checkin-submit" style="background:#007aff">Save to Intervals</button>
-    <div class="form-status" id="checkin-status"></div>
-  </div>
-
   <div id="app" style="display:none"></div>
 
   <div class="footer" id="footer" style="display:none"></div>
 
   <div class="bottombar"><div class="bottombar-inner">
+    <a href="/checkin.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="8 12 11 15 16 9"/></svg><span>Check-in</span></a>
     <a href="/" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg><span>Coach</span></a>
     <a href="/vitals.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 12 7 12 10 19 14 5 17 12 22 12"/></svg><span>Vitals</span></a>
     <a href="/dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="20" x2="6" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="18" y1="20" x2="18" y2="14"/></svg><span>Dashboard</span></a>
   </div></div>
 
+<script src="/js/session-status.js"></script>
+<script src="/js/checkin-state.js"></script>
 <script>
 const EN_DAYS_S = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const EN_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -255,6 +191,34 @@ function ring(pct,color,label){
   return `<div class="ring-wrap"><svg width="96" height="96" viewBox="0 0 96 96"><circle cx="48" cy="48" r="${R}" fill="none" stroke="#e5e5ea" stroke-width="10"/><circle cx="48" cy="48" r="${R}" fill="none" stroke="${color}" stroke-width="10" stroke-dasharray="${C.toFixed(2)}" stroke-dashoffset="${off.toFixed(2)}" stroke-linecap="round" transform="rotate(-90 48 48)"/><text x="48" y="44" text-anchor="middle" font-size="20" font-weight="800" fill="#1c1c1e">${pct}</text><text x="48" y="58" text-anchor="middle" font-size="10" fill="#8e8e93">%</text></svg><div class="ring-label">${label}</div></div>`;
 }
 
+const TLR_ZONES=[
+  {min:-25,max:-20,color:'#ff3b30',label:'Overreaching',desc:'Training load is excessive — high risk of burnout or injury.'},
+  {min:-20,max:-10,color:'#ff9f0a',label:'Accumulated fatigue',desc:'Fatigue has built up — recovery is falling behind.'},
+  {min:-10,max:-5, color:'#bf5af2',label:'Build phase',desc:"You're building fitness with manageable fatigue."},
+  {min:-5, max:5,  color:'#007aff',label:'Maintenance',desc:'The short-term (ATL) and long-term (CTL) training loads are balanced.'},
+  {min:5,  max:10, color:'#30d158',label:'Peak form',desc:'Primed for peak performance with fresh legs.'},
+  {min:10, max:15, color:'#ffcc00',label:'Tapered',desc:"You're well rested, but may be losing fitness from reduced training."},
+];
+
+function tlrHTML(tsb){
+  const SCALE_MIN=TLR_ZONES[0].min,SCALE_MAX=TLR_ZONES[TLR_ZONES.length-1].max,total=SCALE_MAX-SCALE_MIN;
+  const segs=TLR_ZONES.map(z=>`<div class="tlr-seg" style="width:${((z.max-z.min)/total*100).toFixed(2)}%;background:${z.color}"></div>`).join('');
+  const hasVal=tsb!=null;
+  const clamped=hasVal?Math.min(SCALE_MAX,Math.max(SCALE_MIN,tsb)):0;
+  const pct=((clamped-SCALE_MIN)/total*100).toFixed(2);
+  const active=hasVal?(TLR_ZONES.find(z=>tsb>=z.min&&tsb<z.max)??(tsb>=SCALE_MAX?TLR_ZONES[TLR_ZONES.length-1]:TLR_ZONES[0])):null;
+  const color=active?active.color:'#8e8e93';
+  return `<div class="card">
+    <div class="card-title">Training Load Ratio</div>
+    <div class="tlr-zone-label" style="color:${color}">${active?active.label:'No data'}</div>
+    <div class="tlr-row">
+      <div class="tlr-value" style="color:${color}">${fmtN(tsb)}</div>
+      <div class="tlr-bar"><div class="tlr-bar-track">${segs}</div><div class="tlr-dot" style="left:${pct}%;color:${color}"></div></div>
+    </div>
+    ${active?`<div class="tlr-desc">${active.desc}</div>`:''}
+  </div>`;
+}
+
 function fitnessGraph(hist){
   const days=hist.filter(d=>d.ctl!=null||d.atl!=null);
   if(days.length<2)return'';
@@ -275,11 +239,53 @@ function fitnessGraph(hist){
     ${labs}</svg>`;
 }
 
-let _lastData=null,_lastCal=null,_checkinSaved=false;
+let _lastData=null,_lastSport=null,_fitTab=null;
 
-function render(data,cal){
-  _lastData=data;_lastCal=cal;
-  const {latest,trends,sleep8,fitnessHistory,subjective,pairSuggestions}=data;
+// Today's training sport from the calendar: first run/strength session of the day wins
+function sportToday(cal){
+  const t=(cal?.today??[]).filter(e=>e.category==='training')
+    .sort((a,b)=>(a.timeStart??'').localeCompare(b.timeStart??''));
+  for(const e of t){const sp=sportOf(e.title);if(sp==='run'||sp==='strength')return sp;}
+  return'overall';
+}
+
+function fitnessBodyHTML(tab){
+  const data=_lastData,sl=_lastSport;
+  let ctl,atl,tsb,hist,badge='';
+  if(tab!=='overall'&&sl?.series?.length){
+    const cur=sl.series[sl.series.length-1][tab];
+    ({ctl,atl,tsb}=cur);
+    hist=sl.series.map(d=>({date:d.date,...d[tab]}));
+  }else{
+    const{latest}=data;
+    ({ctl,atl,tsb}=latest);
+    hist=data.fitnessHistory;
+    const rr=latest.rampRate;
+    badge=rr!=null?`<span class="ramp-badge ${Math.abs(rr)<=1?'stable':Math.abs(rr)<=2.5?'rising':'high'}">${Math.abs(rr)<=1?'Stable':Math.abs(rr)<=2.5?'Rising':'High'} ${fmtN(rr)}</span>`:'';
+  }
+  return `${badge?`<div style="text-align:right;margin:-6px 0 8px">${badge}</div>`:''}
+      <div class="fitness-numbers">
+        <div class="fitness-num-item"><div class="fnum-label">Fitness (CTL)</div><div class="fnum-value">${fmtN(ctl)}</div></div>
+        <div class="fitness-num-item"><div class="fnum-label">Fatigue (ATL)</div><div class="fnum-value">${fmtN(atl)}</div></div>
+        <div class="fitness-num-item"><div class="fnum-label">TSB</div><div class="fnum-value" style="color:${(tsb??0)>=0?'#30d158':'#ff9f0a'}">${fmtN(tsb)}</div></div>
+      </div>
+      <div style="margin-top:12px"><div class="graph-legend"><div class="legend-item"><div class="legend-dot" style="background:#007aff"></div>CTL</div><div class="legend-item"><div class="legend-dot" style="background:#ff9f0a"></div>ATL</div></div>${fitnessGraph(hist??[])}</div>`;
+}
+
+// Checked in today if Intervals has subjective values, or this device saved a check-in
+// (Intervals can lag right after saving). Storage errors count as checked in to avoid redirect loops.
+function hasCheckinToday(subj){
+  if(hasCheckinValues(subj))return true;
+  try{return localStorage.getItem(checkinKey(new Date().toISOString().slice(0,10)))!=null;}
+  catch{return true;}
+}
+
+function render(data,cal,sl){
+  _lastData=data;_lastSport=sl;
+  const hasSport=!!sl?.series?.length;
+  const todaySport=hasSport?sportToday(cal):'overall';
+  if(_fitTab==null||(!hasSport&&_fitTab!=='overall'))_fitTab=todaySport;
+  const {latest,trends,sleep8,subjective}=data;
   const rec=calcRecovery(latest.hrv,latest.restingHR,latest.sleepHours,latest.tsb);
   const slp=calcSleep(latest.sleepHours,latest.sleepScore,sleep8);
   const ready=calcReadiness(rec,slp,subjective);
@@ -295,25 +301,20 @@ function render(data,cal){
   const rhr_t=trend(trends.rhr,true);
   const slp_t=trend(trends.sleep);
 
-  const rr=latest.rampRate;
-  const rampHTML=rr!=null?`<span class="ramp-badge ${Math.abs(rr)<=1?'stable':Math.abs(rr)<=2.5?'rising':'high'}">${Math.abs(rr)<=1?'Stable':Math.abs(rr)<=2.5?'Rising':'High'} ${fmtN(rr)}</span>`:'';
 
-  const workouts=(cal?.today??[]);
-  const wHTML=workouts.length?workouts.map(e=>`<div class="workout-row"><span class="workout-title">${e.title}</span><span class="workout-time">${e.timeStart??''}${e.timeEnd?'–'+e.timeEnd:''}</span></div>`).join(''):`<div class="workout-row"><span class="workout-title" style="color:#aeaeb2">Rest day</span></div>`;
+  const nowHHMM=hhmm(timeStr);
+  const STATUS={done:['✓ Done','#30d158'],planned:['Planned','#8e8e93'],missed:['Missed','#ff9f0a']};
+  const sessions=sessionStatuses(cal?.today??[],data.activities??null,nowHHMM);
+  const wHTML=sessions.length?sessions.map(e=>{
+    const s=STATUS[e.status];
+    return`<div class="workout-row"><div><div class="workout-title">${e.title}</div><div class="workout-time">${e.timeStart??''}${e.timeEnd?'–'+e.timeEnd:''}</div></div>${s?`<span class="session-status" style="color:${s[1]}">${s[0]}</span>`:''}</div>`;
+  }).join(''):`<div class="workout-row"><span class="workout-title" style="color:#aeaeb2">Rest day</span></div>`;
 
   const upcoming=(cal?.upcoming??[]);
   const uHTML=upcoming.length?upcoming.map(e=>{const d=new Date(e.date+'T12:00:00');return`<div class="upcoming-row"><div class="upcoming-date"><div class="udate-day">${EN_DAYS_S[d.getDay()]}</div><div class="udate-num">${d.getDate()}/${d.getMonth()+1}</div></div><div class="upcoming-info"><div class="upcoming-title">${e.title}</div><div class="upcoming-time">${e.timeStart??''}${e.timeEnd?'–'+e.timeEnd:''}</div></div></div>`;}).join(''):'';
 
-  const pairHTML=(pairSuggestions??[]).length?`<div class="card" id="pair-card"><div class="card-title">Match training</div>${pairSuggestions.map(p=>`<div class="pair-row" data-event="${p.eventId}" data-activity="${p.activityId}"><div class="pair-info"><div class="pair-event">${p.eventName}</div><div class="pair-activity">↳ matcher "${p.activityName}" (${p.activityType})</div></div><button class="pair-btn">Godkend</button></div><div class="form-status" data-pair-status="${p.eventId}"></div>`).join('')}</div>`:'';
 
 
-  const SLBLS={mood:['Great','Good','Avg','Low'],soreness:['Low','Avg','High','Extreme'],fatigue:['Low','Avg','High','Extreme'],motivation:['Extreme','High','Middel','Low']};
-  const hasSubj=subjective&&(subjective.mood||subjective.soreness||subjective.fatigue||subjective.motivation);
-  const subjHTML=`<div class="card" id="subj-card"><div class="card-title">Today's check-in</div>${
-    hasSubj
-      ? `<div class="subjective-grid">${['mood','soreness','fatigue','motivation'].map(f=>{const v=subjective[f];const lbl={mood:'Humør',soreness:'Soreness',fatigue:'Fatigue',motivation:'Motivation'}[f];return`<div class="subj-item s${v??2}"><div class="subj-label">${lbl}</div><div class="subj-value">${v?SLBLS[f][v-1]:'-'}</div></div>`;}).join('')}</div><div class="note-area"><textarea class="note-textarea" id="subj-note" placeholder="Tilføj en note til i dag…">${subjective.comments??''}</textarea><div class="note-status" id="subj-note-status"></div></div>`
-      : `<div style="color:#aeaeb2;font-size:14px;text-align:center;padding:8px 0">Complete your morning check-in above ↑</div>`
-  }</div>`;
 
   const readyHistSVG=readinessHistGraph(trends.hrv,trends.rhr,trends.sleep,trends.sleepScore,trends.tsb,trends.fatigue,trends.soreness,trends.dates);
   const readyHistHTML=readyHistSVG?`<div class="readiness-hist"><div class="readiness-hist-label">Readiness history</div>${readyHistSVG}</div>`:'';
@@ -321,127 +322,68 @@ function render(data,cal){
   document.getElementById('topbar-date').innerHTML=`${todayStr}<br>Updated ${timeStr}`;
 
   document.getElementById('app').innerHTML=`
+    <div class="section-header">Body</div>
     <div class="card">
       <div class="card-title">Scores</div>
       <div class="rings">${ring(ready,rColor,'Readiness')}${ring(rec,recColor,'Recovery')}${ring(slp,slpColor,'Sleep')}</div>
       ${readyHistHTML}
     </div>
     <div class="card">
-      <div class="card-title">Physiology</div>
+      <div class="card-title">Night physiology</div>
       <div class="physio-row">
         <div class="physio-item"><div class="metric-label">HRV</div><div class="metric-value ${vc}">${fmtN(latest.hrv)} ms <span class="${hrv_t.c}">${hrv_t.a==='up'?'↑':hrv_t.a==='down'?'↓':'→'}</span></div></div>
         <div class="physio-item"><div class="metric-label">Resting HR</div><div class="metric-value ${vc}">${fmtN(latest.restingHR)} bpm <span class="${rhr_t.c}">${rhr_t.a==='up'?'↑':rhr_t.a==='down'?'↓':'→'}</span></div></div>
         <div class="physio-item"><div class="metric-label">Sleep</div><div class="metric-value ${vc}">${fmtN(latest.sleepHours)} h <span class="${slp_t.c}">${slp_t.a==='up'?'↑':slp_t.a==='down'?'↓':'→'}</span></div></div>
       </div>
     </div>
+    <div class="section-header">Training</div>
     <div class="card">
-      <div class="card-title">Fitness ${rampHTML}</div>
-      <div class="fitness-numbers">
-        <div class="fitness-num-item"><div class="fnum-label">Fitness (CTL)</div><div class="fnum-value">${fmtN(latest.ctl)}</div></div>
-        <div class="fitness-num-item"><div class="fnum-label">Fatigue (ATL)</div><div class="fnum-value">${fmtN(latest.atl)}</div></div>
-        <div class="fitness-num-item"><div class="fnum-label">TSB</div><div class="fnum-value" style="color:${(latest.tsb??0)>=0?'#30d158':'#ff9f0a'}">${fmtN(latest.tsb)}</div></div>
-      </div>
-      <div style="margin-top:12px"><div class="graph-legend"><div class="legend-item"><div class="legend-dot" style="background:#007aff"></div>CTL</div><div class="legend-item"><div class="legend-dot" style="background:#ff9f0a"></div>ATL</div></div>${fitnessGraph(fitnessHistory)}</div>
+      <div class="card-title">Fitness</div>
+      <div class="fit-tabs" id="fit-tabs">${[['overall','Overall'],['run','Run'],['strength','Strength']].map(([k,l])=>`<button data-tab="${k}" class="${_fitTab===k?'selected':''}" ${k!=='overall'&&!hasSport?'disabled':''}>${l}${k!=='overall'&&k===todaySport?' •':''}</button>`).join('')}</div>
+      <div id="fitness-body">${fitnessBodyHTML(_fitTab)}</div>
     </div>
-    ${pairHTML}
-    ${subjHTML}
+    ${tlrHTML(latest.tsb)}
+    <div class="section-header">Today</div>
     <div class="card"><div class="card-title">Today's sessions</div>${wHTML}</div>
     ${upcoming.length?`<div class="card"><div class="card-title">Upcoming sessions</div>${uHTML}</div>`:''}
   `;
 
+  document.getElementById('fit-tabs').addEventListener('click',e=>{
+    const b=e.target.closest('button[data-tab]');
+    if(!b||b.disabled)return;
+    _fitTab=b.dataset.tab;
+    document.querySelectorAll('#fit-tabs button').forEach(x=>x.classList.toggle('selected',x===b));
+    document.getElementById('fitness-body').innerHTML=fitnessBodyHTML(_fitTab);
+  });
+
   document.getElementById('app').style.display='';
   document.getElementById('loading').style.display='none';
-  if(_checkinSaved||hasSubj){document.getElementById('checkin-card').style.display='none';}
-  else{document.getElementById('checkin-card').style.display='';}
 }
 
 
+// Loads all Coach data. On startup (gate) the check-in redirect runs as soon as get-coach
+// answers, without waiting for the calendar and sport-load calls.
+async function load(gate){
+  const coachP=fetch('/api/get-coach'),calP=fetch('/api/get-calendar').catch(()=>null),sportP=fetch('/api/get-sport-load').catch(()=>null);
+  const dR=await coachP;
+  if(!dR.ok)throw new Error('Data error: '+dR.status);
+  const data=await dR.json();
+  if(gate&&!hasCheckinToday(data.subjective)){location.replace('/checkin.html');return;}
+  const[cR,sR]=await Promise.all([calP,sportP]);
+  const cal=cR?.ok?await cR.json():null;
+  const sl=sR?.ok?await sR.json().catch(()=>null):null;
+  _fitTab=null;
+  render(data,cal,sl);
+}
+
 (async()=>{
   try{
-    const[dR,cR]=await Promise.all([fetch('/api/get-coach'),fetch('/api/get-calendar').catch(()=>null)]);
-    if(!dR.ok)throw new Error('Data error: '+dR.status);
-    const data=await dR.json();
-    const cal=cR?.ok?await cR.json():null;
-    render(data,cal);
+    await load(true);
   }catch(e){
     document.getElementById('loading').style.display='none';
     document.getElementById('app').innerHTML=`<div class="error-card">Could not load data: ${e.message}</div>`;
-    ['app','checkin-card'].forEach(id=>document.getElementById(id).style.display='');
+    document.getElementById('app').style.display='';
   }
-})();
-
-(function(){
-  const TODAY=new Date().toISOString().slice(0,10);
-  const LS=('checkin_'+TODAY);
-  const YESTERDAY=new Date(Date.now()-86400000).toISOString().slice(0,10);
-  function selectBtn(g,b){g.querySelectorAll('button').forEach(x=>{x.classList.remove('selected','c-green','c-yellow','c-red','c-purple');});b.classList.add('selected');if(b.dataset.color)b.classList.add(b.dataset.color);}
-  document.querySelectorAll('.btn-group').forEach(g=>{g.querySelectorAll('button').forEach(b=>{b.addEventListener('click',()=>selectBtn(g,b));});});
-  const sv=JSON.parse(localStorage.getItem(LS)||'null');
-  if(sv){document.getElementById('checkin-done-badge').style.display='';Object.entries(sv).forEach(([f,v])=>{const g=document.querySelector(`.btn-group[data-field="${f}"]`);if(g){const b=g.querySelector(`button[data-val="${v}"]`);if(b)selectBtn(g,b);}});if(sv.weight)document.getElementById('checkin-weight').value=sv.weight;}
-  const post=body=>fetch('/api/update-wellness',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-  document.getElementById('checkin-submit').addEventListener('click',async()=>{
-    const btn=document.getElementById('checkin-submit'),st=document.getElementById('checkin-status');
-    const p={date:TODAY};
-    document.querySelectorAll('#checkin-card .btn-group').forEach(g=>{const s=g.querySelector('button.selected');if(s)p[g.dataset.field]=+s.dataset.val;});
-    // Stress refers to yesterday (same as Vitals page) — saved separately below
-    const stress=p.stress;delete p.stress;
-    const wRaw=document.getElementById('checkin-weight').value.trim().replace(',','.');
-    if(wRaw){const w=parseFloat(wRaw);if(!w||w<40||w>200){st.textContent='Ugyldig vægt';st.className='form-status err';return;}p.weight=w;}
-    btn.disabled=true;st.textContent='Saving…';st.className='form-status';
-    try{
-    if(stress!=null){const rs=await post({date:YESTERDAY,stress});if(!rs.ok){const e=await rs.json().catch(()=>({}));throw Object.assign(new Error('Error: '+(e.error||rs.status)),{api:true});}}
-    const r=await post(p);
-    if(r.ok){
-      localStorage.setItem(LS,JSON.stringify(stress!=null?{...p,stress}:p));
-      // Update the dashboard subjective card and hide this form
-      if(_lastData){
-        _lastData.subjective={date:TODAY,...p};
-        _checkinSaved=true;
-        render(_lastData,_lastCal);
-      }
-    }
-    else{const e=await r.json().catch(()=>({}));st.textContent='Error: '+(e.error||r.status);st.className='form-status err';btn.disabled=false;}}
-    catch(err){st.textContent=err.api?err.message:'Network error';st.className='form-status err';btn.disabled=false;}
-    // btn re-enabled above in error paths; success path hides the form entirely
-  });
-
-  let _noteTimer=null;
-  document.addEventListener('input',e=>{
-    if(e.target.id!=='subj-note')return;
-    const st=document.getElementById('subj-note-status');
-    if(st)st.textContent='';
-    clearTimeout(_noteTimer);
-    _noteTimer=setTimeout(async()=>{
-      const val=e.target.value;
-      if(st)st.textContent='Gemmer…';
-      try{
-        const r=await fetch('/api/update-wellness',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:TODAY,comments:val})});
-        if(r.ok){if(st){st.textContent='Gemt';st.className='note-status ok';setTimeout(()=>{if(st)st.textContent='';},2000);}}
-        else{if(st){st.textContent='Fejl ved gemning';st.className='note-status err';}}
-      }catch(err){if(st){st.textContent='Netværksfejl';st.className='note-status err';}}
-    },1500);
-  });
-})();
-
-(function(){
-  document.addEventListener('click',async e=>{
-    const btn=e.target.closest('.pair-btn');
-    if(!btn)return;
-    const row=btn.closest('.pair-row');
-    const eventId=row.dataset.event,activityId=row.dataset.activity;
-    const st=document.querySelector(`[data-pair-status="${eventId}"]`);
-    btn.disabled=true;if(st){st.textContent='Godkender…';st.className='form-status';}
-    try{
-      const r=await fetch('/api/pair-event',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({eventId,activityId})});
-      if(r.ok){
-        if(_lastData){_lastData.pairSuggestions=(_lastData.pairSuggestions??[]).filter(p=>String(p.eventId)!==String(eventId));render(_lastData,_lastCal);}
-      }else{
-        const e2=await r.json().catch(()=>({}));
-        if(st){st.textContent='Fejl: '+(e2.error||r.status);st.className='form-status err';}
-        btn.disabled=false;
-      }
-    }catch(err){if(st){st.textContent='Netværksfejl';st.className='form-status err';}btn.disabled=false;}
-  });
 })();
 
 (function(){
@@ -471,11 +413,7 @@ function render(data,cal){
       refreshing=true;
       ptr.style.height='48px';
       try{
-        const[dR,cR]=await Promise.all([fetch('/api/get-coach'),fetch('/api/get-calendar').catch(()=>null)]);
-        if(!dR.ok)throw new Error('Data error: '+dR.status);
-        const data=await dR.json();
-        const cal=cR?.ok?await cR.json():null;
-        render(data,cal);
+        await load(false);
       }catch(e){
         document.getElementById('app').innerHTML=`<div class="error-card">Could not load data: ${e.message}</div>`;
       }finally{

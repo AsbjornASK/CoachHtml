@@ -24,31 +24,9 @@
     .metric-sub { font-size: 11px; color: #aeaeb2; margin-top: 1px; }
     .trend-up { color: #30d158; font-size: 14px; } .trend-down { color: #ff3b30; font-size: 14px; } .trend-flat { color: #aeaeb2; font-size: 14px; }
     .sparkline { margin-top: 4px; }
-    .tlr-zone-label { text-align: center; font-size: 19px; font-weight: 800; margin-bottom: 14px; }
-    .tlr-row { display: flex; align-items: center; gap: 12px; }
-    .tlr-value { font-size: 24px; font-weight: 800; flex-shrink: 0; min-width: 50px; }
-    .tlr-bar { position: relative; flex: 1; height: 10px; border-radius: 6px; overflow: visible; display: flex; }
-    .tlr-bar-track { position: absolute; inset: 0; display: flex; border-radius: 6px; overflow: hidden; }
-    .tlr-seg { height: 100%; }
-    .tlr-dot { position: absolute; top: 50%; width: 20px; height: 20px; border-radius: 50%; background: #fff; border: 4px solid currentColor; transform: translate(-50%,-50%); box-shadow: 0 1px 3px rgba(0,0,0,0.25); }
-    .tlr-desc { font-size: 13px; color: #1c1c1e; line-height: 1.5; margin-top: 14px; }
     .inbody-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .inbody-item-label { font-size: 11px; font-weight: 500; color: #8e8e93; margin-bottom: 2px; }
     .inbody-item-value { font-size: 20px; font-weight: 700; }
-    .inbody-quick-row { display: flex; gap: 8px; margin: 0 12px 4px; }
-    .inbody-url-input { flex: 1; font-size: 13px; border: 1.5px solid #e5e5ea; border-radius: 10px; padding: 10px 12px; color: #1c1c1e; background: #f9f9fb; outline: none; font-family: inherit; min-width: 0; }
-    .inbody-url-input:focus { border-color: #007aff; background: #fff; }
-    .inbody-url-btn { flex-shrink: 0; padding: 10px 16px; background: #007aff; color: #fff; font-size: 14px; font-weight: 700; border: none; border-radius: 10px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-    .inbody-url-btn:disabled { background: #aeaeb2; cursor: default; }
-    .inbody-url-status { text-align: center; font-size: 12px; margin: 4px 12px 12px; min-height: 14px; }
-    .inbody-url-status.ok { color: #30d158; font-weight: 600; } .inbody-url-status.err { color: #ff3b30; }
-    .weight-input-row { display: flex; gap: 8px; margin: 14px 0 4px; }
-    .weight-input { flex: 1; font-size: 15px; border: 1.5px solid #e5e5ea; border-radius: 10px; padding: 10px 12px; color: #1c1c1e; background: #f9f9fb; outline: none; font-family: inherit; min-width: 0; }
-    .weight-input:focus { border-color: #007aff; background: #fff; }
-    .weight-btn { flex-shrink: 0; padding: 10px 16px; background: #007aff; color: #fff; font-size: 14px; font-weight: 700; border: none; border-radius: 10px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-    .weight-btn:disabled { background: #aeaeb2; cursor: default; }
-    .weight-save-status { text-align: center; font-size: 12px; margin-top: 4px; min-height: 14px; }
-    .weight-save-status.ok { color: #30d158; font-weight: 600; } .weight-save-status.err { color: #ff3b30; }
     .checkin-row { display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid #f2f2f7; gap: 8px; }
     .checkin-row:last-of-type { border-bottom: none; }
     .checkin-label { font-size: 13px; font-weight: 500; color: #1c1c1e; width: 88px; flex-shrink: 0; line-height: 1.2; }
@@ -61,8 +39,6 @@
     .btn-group button.selected.c-red    { background: #ff3b30; border-color: #ff3b30; }
     .btn-group button.selected.c-purple { background: #bf5af2; border-color: #bf5af2; }
     .btn-group button:disabled { cursor: default; opacity: 0.85; }
-    .submit-btn { width: 100%; margin-top: 14px; padding: 13px; color: #fff; font-size: 16px; font-weight: 700; border: none; border-radius: 12px; cursor: pointer; -webkit-tap-highlight-color: transparent; background: #007aff; }
-    .submit-btn:disabled { background: #aeaeb2 !important; cursor: default; }
     .checkin-status { font-size: 12px; color: #aeaeb2; margin-top: 6px; min-height: 14px; text-align: center; }
     .checkin-status.ok { color: #30d158; font-weight: 600; }
     .checkin-status.err { color: #ff3b30; }
@@ -72,6 +48,8 @@
     .subj-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; opacity: 0.7; }
     .subj-value { font-size: 14px; font-weight: 700; margin-top: 2px; }
     .yesterday-note { font-size: 13px; color: #3a3a3c; background: #f9f9fb; border-radius: 10px; padding: 10px 12px; margin-top: 10px; line-height: 1.5; border: 1.5px solid #e5e5ea; }
+    .section-header { font-size: 20px; font-weight: 700; margin: 20px 16px 10px; letter-spacing: -0.3px; }
+    .section-header small { font-size: 12px; color: #8e8e93; font-weight: 500; margin-left: 6px; }
     .skeleton { animation: pulse 1.4s ease-in-out infinite; background: #e5e5ea; border-radius: 16px; }
     @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.4} }
     .skel-header { height: 80px; margin: 24px 12px 12px; }
@@ -97,6 +75,7 @@
   <div id="app" style="display:none"></div>
 
   <div class="bottombar"><div class="bottombar-inner">
+    <a href="/checkin.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="8 12 11 15 16 9"/></svg><span>Check-in</span></a>
     <a href="/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg><span>Coach</span></a>
     <a href="/vitals.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 12 7 12 10 19 14 5 17 12 22 12"/></svg><span>Vitals</span></a>
     <a href="/dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="20" x2="6" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="18" y1="20" x2="18" y2="14"/></svg><span>Dashboard</span></a>
@@ -141,34 +120,6 @@ function calcReadiness(r,s,subj){if(r==null||s==null)return null;const sub=calcS
 
 function verdictColor(r){return r>=65?'green':r>=45?'yellow':'red';}
 
-const TLR_ZONES=[
-  {min:-25,max:-20,color:'#ff3b30',label:'Overreaching',desc:'Training load is excessive — high risk of burnout or injury.'},
-  {min:-20,max:-10,color:'#ff9f0a',label:'Accumulated fatigue',desc:'Fatigue has built up — recovery is falling behind.'},
-  {min:-10,max:-5, color:'#bf5af2',label:'Build phase',desc:"You're building fitness with manageable fatigue."},
-  {min:-5, max:5,  color:'#007aff',label:'Maintenance',desc:'The short-term (ATL) and long-term (CTL) training loads are balanced.'},
-  {min:5,  max:10, color:'#30d158',label:'Peak form',desc:'Primed for peak performance with fresh legs.'},
-  {min:10, max:15, color:'#ffcc00',label:'Tapered',desc:"You're well rested, but may be losing fitness from reduced training."},
-];
-
-function tlrHTML(tsb){
-  const SCALE_MIN=TLR_ZONES[0].min,SCALE_MAX=TLR_ZONES[TLR_ZONES.length-1].max,total=SCALE_MAX-SCALE_MIN;
-  const segs=TLR_ZONES.map(z=>`<div class="tlr-seg" style="width:${((z.max-z.min)/total*100).toFixed(2)}%;background:${z.color}"></div>`).join('');
-  const hasVal=tsb!=null;
-  const clamped=hasVal?Math.min(SCALE_MAX,Math.max(SCALE_MIN,tsb)):0;
-  const pct=((clamped-SCALE_MIN)/total*100).toFixed(2);
-  const active=hasVal?(TLR_ZONES.find(z=>tsb>=z.min&&tsb<z.max)??(tsb>=SCALE_MAX?TLR_ZONES[TLR_ZONES.length-1]:TLR_ZONES[0])):null;
-  const color=active?active.color:'#8e8e93';
-  return `<div class="card">
-    <div class="card-title">Training Load Ratio</div>
-    <div class="tlr-zone-label" style="color:${color}">${active?active.label:'No data'}</div>
-    <div class="tlr-row">
-      <div class="tlr-value" style="color:${color}">${fmtN(tsb)}</div>
-      <div class="tlr-bar"><div class="tlr-bar-track">${segs}</div><div class="tlr-dot" style="left:${pct}%;color:${color}"></div></div>
-    </div>
-    ${active?`<div class="tlr-desc">${active.desc}</div>`:''}
-  </div>`;
-}
-
 function fmtN(n,u=''){if(n==null)return '-';return String(n).replace('.',',')+(u?' '+u:'');}
 
 function trend(arr,invert=false){
@@ -195,28 +146,11 @@ function sparkSVG(vals,color,W=60,H=24){
   return `<svg class="sparkline" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><polyline fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" points="${p}"/></svg>`;
 }
 
-function weightGraph(history){
-  if(!history||history.length<2)return'';
-  const pts=history.filter(d=>d.weight!=null);
-  if(pts.length<2)return'';
-  const W=320,H=72,PD=6,AX=24;
-  const ws=pts.map(p=>p.weight);
-  const mn=Math.min(...ws),mx=Math.max(...ws),rng=mx-mn||0.5;
-  const px=i=>PD+(i/(pts.length-1))*(W-2*PD);
-  const py=v=>PD+((mx-v)/rng)*(H-2*PD);
-  const polyPts=pts.map((p,i)=>`${px(i).toFixed(1)},${py(p.weight).toFixed(1)}`).join(' ');
-  const dots=pts.map((p,i)=>{const cx=px(i),cy=py(p.weight);const isLast=i===pts.length-1;const anchor=i===0?'start':i===pts.length-1?'end':'middle';const d=p.date.slice(5).replace('-','/');return`<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${isLast?4:3}" fill="${isLast?'#007aff':'#fff'}" stroke="#007aff" stroke-width="1.8"/><text x="${cx.toFixed(1)}" y="${(cy-8).toFixed(1)}" text-anchor="${anchor}" font-size="10" font-weight="700" fill="#007aff">${fmtN(p.weight)}</text><text x="${cx.toFixed(1)}" y="${(H+AX-2).toFixed(0)}" text-anchor="${anchor}" font-size="10" fill="#aeaeb2">${d}</text>`;}).join('');
-  return`<svg viewBox="0 0 ${W} ${H+AX}" width="100%" style="display:block;margin-top:14px;overflow:visible">
-    <polyline fill="none" stroke="#007aff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" points="${polyPts}"/>
-    ${dots}
-  </svg>`;
-}
-
 let _lastData=null;
 
 function render(data){
   _lastData=data;
-  const {latest,trends,sleep8,inBody,healthMarkers,yesterdayWellness,weightHistory}=data;
+  const {latest,trends,sleep8,inBody,healthMarkers,yesterdayWellness}=data;
   const rec=calcRecovery(latest.hrv,latest.restingHR,latest.sleepHours,latest.tsb);
   const slp=calcSleep(latest.sleepHours,latest.sleepScore,sleep8);
   const ready=calcReadiness(rec,slp);
@@ -290,7 +224,7 @@ function render(data){
   const yesterdayNoteHTML=(yw.comments??hm.comments)?`<div class="yesterday-note">${yw.comments??hm.comments}</div>`:'';
 
   const wellbeingHTML=`<div class="card" id="wellbeing-card">
-    <div class="card-title">Check-in i går</div>
+    <div class="card-title">Check-in</div>
     <div class="subjective-grid">${gridItems.join('')}</div>
     ${yesterdayNoteHTML}
     <div class="checkin-row" id="stress-checkin-row" style="margin-top:12px;border-top:1px solid #f2f2f7;padding-top:12px;${stressVal!=null?'display:none':''}">
@@ -300,6 +234,7 @@ function render(data){
     <div class="checkin-status" id="stress-save-status" style="${stressVal!=null?'display:none':''}"></div>
   </div>`;
 
+
   function ibDelta(cur,prev){
     if(cur==null||prev==null)return'';
     const d=Math.round((cur-prev)*10)/10;
@@ -308,18 +243,17 @@ function render(data){
     return` <span class="${down?'trend-up':'trend-down'}">${down?'↓':'↑'} ${fmtN(Math.abs(d))}</span>`;
   }
   const ibPrev=inBody?.prev;
-  const wGraphHTML=weightGraph(weightHistory??[]);
-  const weightCardHTML=`<div class="card"><div class="card-title">Body composition</div>${inBody?`<div class="inbody-grid"><div><div class="inbody-item-label">Weight</div><div class="inbody-item-value">${fmtN(inBody.weight)} kg${ibDelta(inBody.weight,ibPrev?.weight)}</div></div><div><div class="inbody-item-label">Body fat %</div><div class="inbody-item-value">${fmtN(inBody.fatPct)} %${ibDelta(inBody.fatPct,ibPrev?.fatPct)}</div></div><div><div class="inbody-item-label">Fat mass</div><div class="inbody-item-value">${fmtN(inBody.fatMass)} kg${ibDelta(inBody.fatMass,ibPrev?.fatMass)}</div></div><div><div class="inbody-item-label">BMI</div><div class="inbody-item-value">${fmtN(inBody.bmi)}${ibDelta(inBody.bmi,ibPrev?.bmi)}</div></div><div><div class="inbody-item-label">Height</div><div class="inbody-item-value">175,5 cm</div></div><div><div class="inbody-item-label">Measured</div><div class="inbody-item-value" style="font-size:13px;color:#8e8e93">${inBody.date??'-'}</div></div></div>${ibPrev?`<div style="font-size:11px;color:#aeaeb2;margin-top:10px">vs. ${ibPrev.date} (${fmtN(ibPrev.weight)} kg, ${fmtN(ibPrev.fatPct)} %)</div>`:''}`:''}`+
-    `${wGraphHTML?`<div style="border-top:1px solid #f2f2f7;margin-top:${inBody?'14px':'0'};padding-top:${inBody?'14px':'0'}"><div class="card-title" style="margin-bottom:0">Vægt trend</div>${wGraphHTML}</div>`:''}` +
-    `<div class="weight-input-row"><input type="number" id="weight-input" class="weight-input" placeholder="Dagens vægt (kg)" step="0.1" min="40" max="200"></div><div class="weight-save-status" id="weight-save-status"></div>` +
-    `<button id="weight-save-btn" class="submit-btn" style="margin-top:10px">Gem vægt</button></div>`;
-  const ibUrlRowHTML=`<div class="inbody-quick-row"><input type="text" id="inbody-url-input" class="inbody-url-input" placeholder="Indsæt InBody link…"><button id="inbody-url-btn" class="inbody-url-btn">Importer</button></div><div class="inbody-url-status" id="inbody-url-status"></div>`;
+  const weightCardHTML=`<div class="card"><div class="card-title">Body composition</div>${inBody?`<div class="inbody-grid"><div><div class="inbody-item-label">Weight</div><div class="inbody-item-value">${fmtN(inBody.weight)} kg${ibDelta(inBody.weight,ibPrev?.weight)}</div></div><div><div class="inbody-item-label">Body fat %</div><div class="inbody-item-value">${fmtN(inBody.fatPct)} %${ibDelta(inBody.fatPct,ibPrev?.fatPct)}</div></div><div><div class="inbody-item-label">Fat mass</div><div class="inbody-item-value">${fmtN(inBody.fatMass)} kg${ibDelta(inBody.fatMass,ibPrev?.fatMass)}</div></div><div><div class="inbody-item-label">BMI</div><div class="inbody-item-value">${fmtN(inBody.bmi)}${ibDelta(inBody.bmi,ibPrev?.bmi)}</div></div><div><div class="inbody-item-label">Height</div><div class="inbody-item-value">175,5 cm</div></div><div><div class="inbody-item-label">Measured</div><div class="inbody-item-value" style="font-size:13px;color:#8e8e93">${inBody.date??'-'}</div></div></div>${ibPrev?`<div style="font-size:11px;color:#aeaeb2;margin-top:10px">vs. ${ibPrev.date} (${fmtN(ibPrev.weight)} kg, ${fmtN(ibPrev.fatPct)} %)</div>`:''}`:'<div style="color:#aeaeb2;font-size:14px">Ingen måling</div>'}</div>`;
 
   document.getElementById('topbar-date').innerHTML=`${todayStr}<br>Updated ${timeStr}`;
 
+  const ydDate=hm.date?new Date(hm.date+'T00:00:00'):new Date(Date.now()-86400000);
+  const ydStr=`${EN_DAYS_S[ydDate.getDay()]} ${ydDate.getDate()} ${EN_MONTHS[ydDate.getMonth()]}`;
+
   document.getElementById('app').innerHTML=`
+    <div class="section-header">Yesterday <small>${ydStr}</small></div>
     <div class="card">
-      <div class="card-title">Physiology</div>
+      <div class="card-title">Night physiology</div>
       <div class="metrics-grid">
         <div><div class="metric-label">Nat HRV (rMSSD)</div><div class="metric-value ${vc}">${fmtN(latest.hrv)} ms <span class="${hrv_t.c}">${hrv_t.a==='up'?'↑':hrv_t.a==='down'?'↓':'→'}</span></div>${sparkSVG(trends.hrv,tC(hrv_t.c))}</div>
         <div><div class="metric-label">Resting HR</div><div class="metric-value ${vc}">${fmtN(latest.restingHR)} bpm <span class="${rhr_t.c}">${rhr_t.a==='up'?'↑':rhr_t.a==='down'?'↓':'→'}</span></div>${sparkSVG(trends.rhr,tC(rhr_t.c))}</div>
@@ -327,10 +261,10 @@ function render(data){
         <div><div class="metric-label">Sleep score</div><div class="metric-value ${vc}">${fmtN(latest.sleepScore)} <span class="${slpScore_t.c}">${slpScore_t.a==='up'?'↑':slpScore_t.a==='down'?'↓':'→'}</span></div>${sparkSVG(trends.sleepScore,tC(slpScore_t.c))}</div>
       </div>
     </div>
-    ${tlrHTML(latest.tsb)}
     ${hmHTML}
     ${wellbeingHTML}
-    ${weightCardHTML}${ibUrlRowHTML}
+    <div class="section-header">Today</div>
+    ${weightCardHTML}
   `;
 
   document.getElementById('app').style.display='';
@@ -387,74 +321,6 @@ function render(data){
   }
 })();
 
-(function(){
-  const HEIGHT_CM=175.5;
-  function parseIB(url){
-    const m=url.match(/[?&]IBData=([^&\s]+)/);if(!m)throw new Error('No IBData found');
-    const raw=decodeURIComponent(m[1]);const segs=raw.split('!');
-    const main=segs.find(s=>/^\d{8}[MF]\d{8}/.test(s));if(!main)throw new Error('No measurement data');
-    const ds=main.substring(9,17),ts=main.substring(17,21);
-    const fat=parseInt(main.substring(47,51))/10,w=parseInt(main.substring(115,119))/10;
-    const bmi=Math.round(w/Math.pow(HEIGHT_CM/100,2)*10)/10,fp=Math.round(fat/w*1000)/10;
-    const date=`${ds.slice(0,4)}-${ds.slice(4,6)}-${ds.slice(6,8)}`,time=`${ts.slice(0,2)}:${ts.slice(2,4)}`;
-    return{date,time,height:HEIGHT_CM,weight:w,fatMass:fat,bmi,fatPct:fp};
-  }
-  async function importInbodyUrl(){
-    const input=document.getElementById('inbody-url-input'),btn=document.getElementById('inbody-url-btn'),st=document.getElementById('inbody-url-status');
-    if(!input||!btn||!st)return;
-    const url=input.value.trim();
-    st.textContent='';st.className='inbody-url-status';
-    if(!url)return;
-    btn.disabled=true;st.textContent='Importerer…';
-    try{
-      const d=parseIB(url);
-      const r=await fetch('/api/update-wellness',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:d.date,weight:d.weight,bodyFat:d.fatPct})});
-      if(r.ok){
-        st.textContent='Gemt';st.className='inbody-url-status ok';
-        if(_lastData){_lastData.inBody={date:d.date,weight:d.weight,fatPct:d.fatPct,fatMass:d.fatMass,bmi:d.bmi,prev:_lastData.inBody?{date:_lastData.inBody.date,weight:_lastData.inBody.weight,fatPct:_lastData.inBody.fatPct,fatMass:_lastData.inBody.fatMass,bmi:_lastData.inBody.bmi}:null};render(_lastData);}
-      }else{
-        const e=await r.json().catch(()=>({}));
-        st.textContent='Fejl: '+(e.error||r.status)+(e.details?' — '+e.details:'');st.className='inbody-url-status err';
-      }
-    }catch(e){st.textContent='Fejl: '+e.message;st.className='inbody-url-status err';}
-    finally{btn.disabled=false;}
-  }
-  document.addEventListener('click',e=>{if(e.target&&e.target.id==='inbody-url-btn')importInbodyUrl();});
-  document.addEventListener('keydown',e=>{if(e.target&&e.target.id==='inbody-url-input'&&e.key==='Enter')importInbodyUrl();});
-})();
-
-(function(){
-  async function saveWeight(){
-    const input=document.getElementById('weight-input'),btn=document.getElementById('weight-save-btn'),st=document.getElementById('weight-save-status');
-    if(!input||!btn||!st)return;
-    const raw=input.value.trim().replace(',','.');
-    const val=parseFloat(raw);
-    if(!val||val<40||val>200){st.textContent='Ugyldig vægt';st.className='weight-save-status err';return;}
-    const today=new Date().toISOString().slice(0,10);
-    btn.disabled=true;st.textContent='Gemmer…';st.className='weight-save-status';
-    try{
-      const r=await fetch('/api/update-wellness',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:today,weight:val})});
-      if(r.ok){
-        st.textContent='Gemt ✓';st.className='weight-save-status ok';
-        input.value='';
-        if(_lastData){
-          const wh=_lastData.weightHistory??[];
-          const idx=wh.findIndex(d=>d.date===today);
-          if(idx>=0)wh[idx].weight=val;else wh.push({date:today,weight:val});
-          _lastData.weightHistory=wh;
-          render(_lastData);
-        }
-        setTimeout(()=>{const s=document.getElementById('weight-save-status');if(s)s.textContent='';},2500);
-      }else{
-        const e=await r.json().catch(()=>({}));
-        st.textContent='Fejl: '+(e.error||r.status);st.className='weight-save-status err';
-      }
-    }catch(e){st.textContent='Netværksfejl';st.className='weight-save-status err';}
-    finally{btn.disabled=false;}
-  }
-  document.addEventListener('click',e=>{if(e.target&&e.target.id==='weight-save-btn')saveWeight();});
-  document.addEventListener('keydown',e=>{if(e.target&&e.target.id==='weight-input'&&e.key==='Enter')saveWeight();});
-})();
 
 (function(){
   const ptr=document.getElementById('ptr-indicator');

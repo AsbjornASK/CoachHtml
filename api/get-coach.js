@@ -14,9 +14,8 @@ export default async () => {
   const auth  = 'Basic ' + btoa('API_KEY:' + apiKey);
   const base  = `https://intervals.icu/api/v1/athlete/${athleteId}`;
 
-  const [wellnessRes, eventsRes, activitiesRes] = await Promise.all([
+  const [wellnessRes, activitiesRes] = await Promise.all([
     fetch(`${base}/wellness?oldest=${start}&newest=${end}`, { headers: { Authorization: auth } }),
-    fetch(`${base}/events?oldest=${end}&newest=${end}`,     { headers: { Authorization: auth } }),
     fetch(`${base}/activities?oldest=${end}&newest=${end}`, { headers: { Authorization: auth } }),
   ]);
 
@@ -25,22 +24,15 @@ export default async () => {
   }
 
   const rawWellness   = await wellnessRes.json();
-  const rawEvents     = eventsRes.ok     ? await eventsRes.json()     : [];
-  const rawActivities = activitiesRes.ok ? await activitiesRes.json() : [];
+  const activities = activitiesRes.ok
+    ? (await activitiesRes.json()).map(a => ({ type: a.type ?? null }))
+    : null;
 
   const days   = parseDays(rawWellness);
   const last7  = days.slice(-7);
   const latest = findLatest(days, d => d.restingHR && d.restingHR < 65);
   const todayEntry = days.find(d => d.date === end) ?? {};
 
-  const unpairedEvents     = rawEvents.filter(e => e.category === 'WORKOUT' && !e.paired_activity_id);
-  const unpairedActivities = rawActivities.filter(a => !a.paired_event_id);
-  const pairSuggestions = unpairedEvents
-    .map(e => {
-      const match = unpairedActivities.find(a => a.type === e.type);
-      return match ? { eventId: e.id, eventName: e.name, eventType: e.type, activityId: match.id, activityName: match.name, activityType: match.type } : null;
-    })
-    .filter(Boolean);
 
   return json({
     today: end,
@@ -73,15 +65,12 @@ export default async () => {
       tsb:  d.ctl != null && d.atl != null ? round1(d.ctl - d.atl) : null,
     })),
     subjective: {
-      date:       todayEntry.date       ?? null,
       mood:       todayEntry.mood       ?? null,
       soreness:   todayEntry.soreness   ?? null,
       fatigue:    todayEntry.fatigue    ?? null,
       motivation: todayEntry.motivation ?? null,
-      comments:   todayEntry.comments   ?? null,
     },
-    events: rawEvents,
-    pairSuggestions,
+    activities,
   });
 };
 
