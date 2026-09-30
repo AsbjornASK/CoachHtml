@@ -47,6 +47,7 @@
     .tlr-bar-track { position: absolute; inset: 0; display: flex; border-radius: 6px; overflow: hidden; }
     .tlr-seg { height: 100%; }
     .tlr-dot { position: absolute; top: 50%; width: 20px; height: 20px; border-radius: 50%; background: #fff; border: 4px solid currentColor; transform: translate(-50%,-50%); box-shadow: 0 1px 3px rgba(0,0,0,0.25); }
+    .tlr-note { font-size: 12px; color: #8e8e93; margin-top: 12px; }
     .tlr-desc { font-size: 13px; color: #1c1c1e; line-height: 1.5; margin-top: 14px; }
     .graph-legend { display: flex; gap: 14px; margin-bottom: 8px; }
     .legend-item { display: flex; align-items: center; gap: 4px; font-size: 11px; color: #8e8e93; }
@@ -200,21 +201,29 @@ const TLR_ZONES=[
   {min:10, max:15, color:'#ffcc00',label:'Tapered',desc:"You're well rested, but may be losing fitness from reduced training."},
 ];
 
-// Inner content of the Training Load Ratio card
-function tlrHTML(tsb,title){
-  const SCALE_MIN=TLR_ZONES[0].min,SCALE_MAX=TLR_ZONES[TLR_ZONES.length-1].max,total=SCALE_MAX-SCALE_MIN;
-  const segs=TLR_ZONES.map(z=>`<div class="tlr-seg" style="width:${((z.max-z.min)/total*100).toFixed(2)}%;background:${z.color}"></div>`).join('');
-  const hasVal=tsb!=null;
-  const clamped=hasVal?Math.min(SCALE_MAX,Math.max(SCALE_MIN,tsb)):0;
+// Run/Strength: a sport's TSB swings with every session at its small CTL, so it is judged against its own
+// 42-day norm instead (z = SDs from the mean, from /api/get-sport-load baseline), using the same zone names.
+const TLR_MIN_SD=0.3;
+const TLR_Z_BOUNDS=[-2.5,-2,-1,-0.5,0.5,1,1.5];
+const TLR_Z_ZONES=TLR_ZONES.map((z,i)=>({...z,min:TLR_Z_BOUNDS[i],max:TLR_Z_BOUNDS[i+1]}));
+
+// Inner content of the Training Load Ratio card. Shows `tsb`; `pos` places the zone and dot on `zones`
+// (TSB itself, or z for a sport), and `note` adds a line above the zone description.
+function tlrHTML(tsb,title,{zones=TLR_ZONES,pos=tsb,empty='No data',note}={}){
+  const SCALE_MIN=zones[0].min,SCALE_MAX=zones[zones.length-1].max,total=SCALE_MAX-SCALE_MIN;
+  const segs=zones.map(z=>`<div class="tlr-seg" style="width:${((z.max-z.min)/total*100).toFixed(2)}%;background:${z.color}"></div>`).join('');
+  const hasVal=pos!=null;
+  const clamped=hasVal?Math.min(SCALE_MAX,Math.max(SCALE_MIN,pos)):0;
   const pct=((clamped-SCALE_MIN)/total*100).toFixed(2);
-  const active=hasVal?(TLR_ZONES.find(z=>tsb>=z.min&&tsb<z.max)??(tsb>=SCALE_MAX?TLR_ZONES[TLR_ZONES.length-1]:TLR_ZONES[0])):null;
+  const active=hasVal?(zones.find(z=>pos>=z.min&&pos<z.max)??(pos>=SCALE_MAX?zones[zones.length-1]:zones[0])):null;
   const color=active?active.color:'#8e8e93';
   return `<div class="card-title">${title}</div>
-    <div class="tlr-zone-label" style="color:${color}">${active?active.label:'No data'}</div>
+    <div class="tlr-zone-label" style="color:${color}">${active?active.label:empty}</div>
     <div class="tlr-row">
       <div class="tlr-value" style="color:${color}">${fmtN(tsb)}</div>
       <div class="tlr-bar"><div class="tlr-bar-track">${segs}</div><div class="tlr-dot" style="left:${pct}%;color:${color}"></div></div>
     </div>
+    ${note?`<div class="tlr-note">${note}</div>`:''}
     ${active?`<div class="tlr-desc">${active.desc}</div>`:''}`;
 }
 
@@ -278,7 +287,19 @@ function fitnessCardHTML(tab,d=tabData(tab)){
 // Both Training cards for one tab, from a single tabData() call; the tab control drives both
 function trainingCardsHTML(tab){
   const d=tabData(tab);
-  return `<div class="card">${fitnessCardHTML(tab,d)}</div><div class="card">${tlrHTML(d.tsb,titleFor('Training Load Ratio',tab))}</div>`;
+  return `<div class="card">${fitnessCardHTML(tab,d)}</div><div class="card">${tlrCardHTML(tab,d)}</div>`;
+}
+
+// TLR card for a tab: TSB on the fixed zones for Overall; for a sport, TSB judged by z against its
+// 42-day norm (or nothing when its TSB barely varies, e.g. no load for that sport)
+function tlrCardHTML(tab,d){
+  const title=titleFor('Training Load Ratio',tab);
+  if(tab==='overall')return tlrHTML(d.tsb,title);
+  const b=_lastSport?.baseline?.[tab];
+  if(d.tsb==null||!(b?.sd>=TLR_MIN_SD))return tlrHTML(null,title,{zones:TLR_Z_ZONES,empty:'Not enough load'});
+  const z=(d.tsb-b.mean)/b.sd,r1=v=>Math.round(v*10)/10;
+  return tlrHTML(d.tsb,title,{zones:TLR_Z_ZONES,pos:z,
+    note:`${fmtN(r1(Math.abs(z)))} SD ${z<0?'below':'above'} your ${b.days}-day norm (${fmtN(b.mean)} ± ${fmtN(r1(b.sd))})`});
 }
 
 // Checked in today if Intervals has subjective values, or this device saved a check-in

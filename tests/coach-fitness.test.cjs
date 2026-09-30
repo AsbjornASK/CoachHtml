@@ -17,6 +17,10 @@ const src = [
   grab(/^const TAB_LABELS=.*$/m),
   grab(/^const titleFor=.*$/m),
   block('tabData'),
+  grab(/^const TLR_MIN_SD=.*$/m),
+  grab(/^const TLR_Z_BOUNDS=.*$/m),
+  grab(/^const TLR_Z_ZONES=.*$/m),
+  block('tlrCardHTML'),
   block('fitnessCardHTML'),
   block('trainingCardsHTML'),
   'this.titleFor = titleFor;', // const bindings aren't put on the vm context by themselves
@@ -31,7 +35,7 @@ const ctx = {
     latest: { ctl: 40.2, atl: 52.1, tsb: -11.9, rampRate: 1.8 },
     fitnessHistory: [{ date: '2026-09-29', ctl: 40, atl: 50 }, { date: '2026-09-30', ctl: 40.2, atl: 52.1 }],
   },
-  _lastSport: { series },
+  _lastSport: { series, baseline: { run: { mean: -1.4, sd: 1.7, days: 42 }, strength: { mean: -0.8, sd: 0.8, days: 42 } } },
 };
 vm.runInNewContext(src, ctx);
 
@@ -59,14 +63,42 @@ test('Fitness card for Overall keeps the ramp badge in the title', () => {
   assert.match(ctx.fitnessCardHTML('overall'), /ramp-badge/);
 });
 
-test('TLR follows the tab: Run TSB lands in Maintenance, Overall in Accumulated fatigue', () => {
-  const run = ctx.tlrHTML(ctx.tabData('run').tsb, ctx.titleFor('Training Load Ratio', 'run'));
-  assert.match(run, /Training Load Ratio · Run/);
-  assert.match(run, /Maintenance/);
-  assert.match(run, /-3,7/);
-  const overall = ctx.tlrHTML(ctx.tabData('overall').tsb, ctx.titleFor('Training Load Ratio', 'overall'));
-  assert.match(overall, />Training Load Ratio</);
-  assert.match(overall, /Accumulated fatigue/);
+test('TLR Overall keeps TSB against the fixed zones', () => {
+  const h = ctx.trainingCardsHTML('overall');
+  assert.match(h, />Training Load Ratio</);
+  assert.match(h, /Accumulated fatigue/);
+  assert.match(h, /-11,9/);
+});
+
+test('TLR Run: zone from z vs the 42-day baseline, card shows TSB and the norm', () => {
+  const h = ctx.trainingCardsHTML('run');
+  assert.match(h, /Training Load Ratio · Run/);
+  assert.match(h, /Accumulated fatigue/); // z = (-3.7 - -1.4) / 1.7 = -1.35
+  assert.match(h, />-3,7</);
+  assert.ok(h.includes('1,4 SD below your 42-day norm (-1,4 ± 1,7)'));
+});
+
+// Renders the Run cards with a temporary Run baseline, restoring the shared one even if an assertion throws
+function runCardsWith(baseline) {
+  const saved = ctx._lastSport.baseline.run;
+  ctx._lastSport.baseline.run = baseline;
+  try { return ctx.trainingCardsHTML('run'); } finally { ctx._lastSport.baseline.run = saved; }
+}
+
+test('TLR sport zones: z within ±0.5 is Maintenance, above +1 is Tapered', () => {
+  assert.match(runCardsWith({ mean: -3.5, sd: 1.0, days: 42 }), /Maintenance/);
+  assert.match(runCardsWith({ mean: -6, sd: 1.0, days: 42 }), /Tapered/);
+});
+
+test('TLR sport shows Not enough load when its TSB barely varies', () => {
+  assert.match(runCardsWith({ mean: -1.4, sd: 0.1, days: 42 }), /Not enough load/);
+});
+
+test('TLR Strength gets a zone even at a small CTL (2.9) when its baseline is valid', () => {
+  const h = ctx.trainingCardsHTML('strength');
+  assert.match(h, /Training Load Ratio · Strength/);
+  assert.match(h, /Maintenance/); // z = (-1.0 - -0.8) / 0.8 = -0.25
+  assert.doesNotMatch(h, /Not enough load/);
 });
 
 test('trainingCardsHTML renders both cards for the same tab', () => {
