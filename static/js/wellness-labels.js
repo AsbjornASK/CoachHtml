@@ -8,6 +8,7 @@
     motivation:   { name: 'Motivation',    labels: ['Extreme', 'High', 'Medium', 'Low'] },
     stress:       { name: 'Stress',        labels: ['Low', 'Moderate', 'High', 'Very high'], short: ['Low', 'Mod.', 'High', 'V. high'] },
     sleepQuality: { name: 'Sleep quality', labels: ['High', 'Good', 'Avg', 'Poor'] },
+    sickness:     { name: 'Sick',          labels: ['No', 'Mild', 'Moderate', 'Severe'] },
   };
   const WELLNESS_COLORS = ['#30d158', '#ff9f0a', '#ff3b30', '#bf5af2'];
   const WELLNESS_BTN_CLASSES = ['c-green', 'c-yellow', 'c-red', 'c-purple'];

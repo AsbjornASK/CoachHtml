@@ -145,3 +145,13 @@ test('form buttons are rendered from the shared wellness labels', () => {
   assert.match(ctx.checkinButtonsHTML('motivation'), /data-val="3" data-color="c-red">MEDIUM</);
   assert.match(ctx.checkinButtonsHTML('mood'), /data-val="1" data-color="c-green">GREAT</);
 });
+
+test('summary shows mood from yesterday and sick from today', async () => {
+  const { els } = runPage(jsonFetch(vitals({
+    todayWellness: { mood: null, soreness: 1, fatigue: 2, motivation: 1, sickness: 2, comments: null, weight: 78.4 },
+    yesterdayWellness: { mood: 4 },
+  })));
+  await settle();
+  assert.match(els['subj-card'].innerHTML, /Mood<\/div><div class="subj-value">Low</);
+  assert.match(els['subj-card'].innerHTML, /Sick<\/div><div class="subj-value">Mild</);
+});
