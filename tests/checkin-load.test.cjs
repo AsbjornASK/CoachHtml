@@ -148,7 +148,7 @@ test('form buttons are rendered from the shared wellness labels', () => {
 
 test('summary shows mood from yesterday and sick from today', async () => {
   const { els } = runPage(jsonFetch(vitals({
-    todayWellness: { mood: null, soreness: 1, fatigue: 2, motivation: 1, sickness: 2, comments: null, weight: 78.4 },
+    todayWellness: { mood: null, soreness: 1, fatigue: 2, motivation: 1, injury: 2, comments: null, weight: 78.4 },
     yesterdayWellness: { mood: 4 },
   })));
   await settle();

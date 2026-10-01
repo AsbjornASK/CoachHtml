@@ -7,7 +7,7 @@
   }
 
   function hasCheckinValues(w) {
-    return !!(w && (w.mood || w.soreness || w.fatigue || w.motivation || w.sickness));
+    return !!(w && (w.mood || w.soreness || w.fatigue || w.motivation || w.injury));
   }
 
   root.checkinKey = checkinKey;

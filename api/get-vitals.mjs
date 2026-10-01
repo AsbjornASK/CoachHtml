@@ -83,7 +83,7 @@ export async function GET() {
       soreness:   todayEntry.soreness   ?? null,
       fatigue:    todayEntry.fatigue    ?? null,
       motivation: todayEntry.motivation ?? null,
-      sickness:   todayEntry.sickness   ?? null,
+      injury:     todayEntry.injury     ?? null,
       comments:   todayEntry.comments   ?? null,
       weight:     r1(todayEntry.weight),
     },
