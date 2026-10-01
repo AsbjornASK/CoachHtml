@@ -141,6 +141,7 @@ const YESTERDAY=new Date(Date.now()-86400000).toISOString().slice(0,10);
 const LS=checkinKey(TODAY);
 const SLBLS=Object.fromEntries(Object.entries(WELLNESS).map(([k,w])=>[k,w.labels]));
 const SLBL_NAMES=Object.fromEntries(Object.entries(WELLNESS).map(([k,w])=>[k,w.name]));
+const YESTERDAY_FIELDS=Object.keys(WELLNESS).filter(k=>WELLNESS[k].day==='yesterday');
 
 // Form buttons come from the shared labels: uppercase, coloured by value 1–4
 function checkinButtonsHTML(field){
@@ -227,9 +228,9 @@ function renderWarnings(){
   if(v)_fresh={lastWeightDate:saved?.weight!=null?TODAY:v.lastWeightDate??null,lastBodyCompDate:v.lastBodyCompDate??null};
   renderWarnings();
   if(hasCheckinValues(tw)||saved){
-    // Mood is logged for yesterday, so read it from yesterday's entry
-    const mood=v?.yesterdayWellness?.mood??saved?.mood??null;
-    showSummary(hasCheckinValues(tw)?{...tw,mood}:{...saved,mood,comments:tw?.comments??null,weight:tw?.weight??saved.weight??null});
+    // Yesterday-logged fields (mood, stress) are read from yesterday's entry
+    const yv=Object.fromEntries(YESTERDAY_FIELDS.map(f=>[f,v?.yesterdayWellness?.[f]??saved?.[f]??null]));
+    showSummary({...(hasCheckinValues(tw)?tw:{...saved,comments:tw?.comments??null,weight:tw?.weight??saved.weight??null}),...yv});
     showNight(v?.latest,v?.trends);
     document.getElementById('coach-link').style.display='';
   }
@@ -281,8 +282,8 @@ function parseIB(url){
     const btn=document.getElementById('checkin-submit'),st=document.getElementById('checkin-status');
     const p={date:TODAY};
     document.querySelectorAll('#checkin-card .btn-group').forEach(g=>{const s=g.querySelector('button.selected');if(s)p[g.dataset.field]=+s.dataset.val;});
-    // Mood and stress refer to yesterday (same as Vitals page), saved separately below
-    const y={};for(const f of ['mood','stress'])if(p[f]!=null){y[f]=p[f];delete p[f];}
+    // Yesterday-logged fields (mood, stress) are saved separately below, same as the Vitals page
+    const y={};for(const f of YESTERDAY_FIELDS)if(p[f]!=null){y[f]=p[f];delete p[f];}
     const wRaw=document.getElementById('checkin-weight').value.trim().replace(',','.');
     if(wRaw){const w=parseFloat(wRaw);if(!w||w<40||w>200){st.textContent='Invalid weight';st.className='form-status err';return;}p.weight=w;}
     btn.disabled=true;st.textContent='Saving…';st.className='form-status';
