@@ -83,7 +83,7 @@
       <div class="btn-group" data-field="fatigue"></div>
     </div>
     <div class="checkin-row">
-      <div class="checkin-label">Mood</div>
+      <div class="checkin-label">Mood<small>Yesterday</small></div>
       <div class="btn-group" data-field="mood"></div>
     </div>
     <div class="checkin-row">
@@ -93,6 +93,10 @@
     <div class="checkin-row">
       <div class="checkin-label">Stress<small>Yesterday</small></div>
       <div class="btn-group" data-field="stress"></div>
+    </div>
+    <div class="checkin-row">
+      <div class="checkin-label">Sick</div>
+      <div class="btn-group" data-field="sickness"></div>
     </div>
     <div class="checkin-row">
       <div class="checkin-label">Partner<small>Slept together last night</small></div>
@@ -137,6 +141,7 @@ const YESTERDAY=new Date(Date.now()-86400000).toISOString().slice(0,10);
 const LS=checkinKey(TODAY);
 const SLBLS=Object.fromEntries(Object.entries(WELLNESS).map(([k,w])=>[k,w.labels]));
 const SLBL_NAMES=Object.fromEntries(Object.entries(WELLNESS).map(([k,w])=>[k,w.name]));
+const YESTERDAY_FIELDS=Object.keys(WELLNESS).filter(k=>WELLNESS[k].day==='yesterday');
 
 // Form buttons come from the shared labels: uppercase, coloured by value 1–4
 function checkinButtonsHTML(field){
@@ -166,7 +171,7 @@ const arrow=t=>`<span class="${t.c}">${t.a==='up'?'↑':t.a==='down'?'↓':'→'
 function showSummary(w){
   const card=document.getElementById('subj-card');
   card.innerHTML=`<div class="card-title">Today's check-in</div>
-    <div class="subjective-grid">${['mood','soreness','fatigue','motivation'].map(f=>{const v=w[f]??null;return`<div class="subj-item s${v??2}"><div class="subj-label">${SLBL_NAMES[f]}</div><div class="subj-value">${v?SLBLS[f][v-1]:'-'}</div></div>`;}).join('')}
+    <div class="subjective-grid">${['mood','soreness','fatigue','motivation','sickness'].map(f=>{const v=w[f]??null;return`<div class="subj-item s${v??2}"><div class="subj-label">${SLBL_NAMES[f]}</div><div class="subj-value">${v?SLBLS[f][v-1]:'-'}</div></div>`;}).join('')}
       <div class="subj-item wide"><div class="subj-label">Weight</div><div class="subj-value" id="weight-cell">${w.weight!=null?fmtN(w.weight)+' kg':weightInputHTML}</div></div></div>
     <div class="note-area"><textarea class="note-textarea" id="subj-note" placeholder="Add a note for today…">${w.comments??''}</textarea><div class="note-status" id="subj-note-status"></div></div>`;
   card.style.display='';
@@ -223,7 +228,9 @@ function renderWarnings(){
   if(v)_fresh={lastWeightDate:saved?.weight!=null?TODAY:v.lastWeightDate??null,lastBodyCompDate:v.lastBodyCompDate??null};
   renderWarnings();
   if(hasCheckinValues(tw)||saved){
-    showSummary(hasCheckinValues(tw)?tw:{...saved,comments:tw?.comments??null,weight:tw?.weight??saved.weight??null});
+    // Yesterday-logged fields (mood, stress) are read from yesterday's entry
+    const yv=Object.fromEntries(YESTERDAY_FIELDS.map(f=>[f,v?.yesterdayWellness?.[f]??saved?.[f]??null]));
+    showSummary({...(hasCheckinValues(tw)?tw:{...saved,comments:tw?.comments??null,weight:tw?.weight??saved.weight??null}),...yv});
     showNight(v?.latest,v?.trends);
     document.getElementById('coach-link').style.display='';
   }
@@ -275,16 +282,16 @@ function parseIB(url){
     const btn=document.getElementById('checkin-submit'),st=document.getElementById('checkin-status');
     const p={date:TODAY};
     document.querySelectorAll('#checkin-card .btn-group').forEach(g=>{const s=g.querySelector('button.selected');if(s)p[g.dataset.field]=+s.dataset.val;});
-    // Stress refers to yesterday (same as Vitals page), saved separately below
-    const stress=p.stress;delete p.stress;
+    // Yesterday-logged fields (mood, stress) are saved separately below, same as the Vitals page
+    const y={};for(const f of YESTERDAY_FIELDS)if(p[f]!=null){y[f]=p[f];delete p[f];}
     const wRaw=document.getElementById('checkin-weight').value.trim().replace(',','.');
     if(wRaw){const w=parseFloat(wRaw);if(!w||w<40||w>200){st.textContent='Invalid weight';st.className='form-status err';return;}p.weight=w;}
     btn.disabled=true;st.textContent='Saving…';st.className='form-status';
     try{
-      if(stress!=null){const rs=await post({date:YESTERDAY,stress});if(!rs.ok){const e=await rs.json().catch(()=>({}));throw Object.assign(new Error('Error: '+(e.error||rs.status)),{api:true});}}
+      if(Object.keys(y).length){const rs=await post({date:YESTERDAY,...y});if(!rs.ok){const e=await rs.json().catch(()=>({}));throw Object.assign(new Error('Error: '+(e.error||rs.status)),{api:true});}}
       const r=await post(p);
       if(r.ok){
-        try{localStorage.setItem(LS,JSON.stringify(stress!=null?{...p,stress}:p));}catch{}
+        try{localStorage.setItem(LS,JSON.stringify({...p,...y}));}catch{}
         location.href='/';
       }
       else{const e=await r.json().catch(()=>({}));st.textContent='Error: '+(e.error||r.status);st.className='form-status err';btn.disabled=false;}
