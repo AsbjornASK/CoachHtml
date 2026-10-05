@@ -43,8 +43,6 @@ const hangingFetch = (url, opts) => new Promise((_, reject) => {
 
 const vitals = over => ({
   todayWellness: { soreness: 1, fatigue: 2, motivation: 1, comments: null, weight: 78.4 },
-  latest: { hrv: 70, restingHR: 50, sleepHours: 7.5 },
-  trends: { hrv: [60, 62, 64, 66, 68, 70, 72], rhr: [52, 52, 51, 51, 50, 50, 50], sleep: [7, 7, 7, 7, 7, 7, 7] },
   lastWeightDate: TODAY,
   lastBodyCompDate: TODAY,
   ...over,
@@ -57,20 +55,19 @@ test('form is shown when /api/get-vitals hangs', async () => {
   assert.equal(els['checkin-card']?.style.display, '', 'check-in form should be visible');
 });
 
-test('after check-in: summary shows weight and night physiology is shown', async () => {
+test('after check-in: weight is shown in Body composition, not the summary', async () => {
   const { els } = runPage(jsonFetch(vitals()));
   await settle();
-  assert.match(els['subj-card'].innerHTML, /78,4 kg/);
-  assert.equal(els['night-card']?.style.display, '');
-  assert.match(els['night-card'].innerHTML, /70 ms/);
-  assert.match(els['night-card'].innerHTML, /50 bpm/);
+  assert.equal(els['subj-card'].style.display, '');
+  assert.doesNotMatch(els['subj-card'].innerHTML, /kg/);
+  assert.equal(els['weight-cell'].innerHTML, '78,4 kg');
 });
 
-test('before check-in: night physiology stays hidden', async () => {
-  const { els } = runPage(jsonFetch(vitals({ todayWellness: { soreness: null, fatigue: null, motivation: null } })));
+test('before check-in: form is shown and Body composition offers a weight input', async () => {
+  const { els } = runPage(jsonFetch(vitals({ todayWellness: { soreness: null, fatigue: null, motivation: null, weight: null } })));
   await settle();
   assert.equal(els['checkin-card'].style.display, '');
-  assert.notEqual(els['night-card']?.style.display, '');
+  assert.match(els['weight-cell'].innerHTML, /id="weight-input"/);
 });
 
 test('warnings for stale weight and missing body composition', async () => {
@@ -96,16 +93,10 @@ test('parseIB reads date, weight and fat % from an InBody link', () => {
   assert.equal(d.fatPct, 19.4);
 });
 
-test('after check-in without weight: summary offers a weight input', async () => {
-  const { els } = runPage(jsonFetch(vitals({ todayWellness: { soreness: 1, fatigue: 2, motivation: 1, weight: null } })));
-  await settle();
-  assert.match(els['subj-card'].innerHTML, /id="weight-input"/);
-});
-
-test('after check-in with weight: no weight input', async () => {
+test('with today\'s weight logged: no weight input', async () => {
   const { els } = runPage(jsonFetch(vitals()));
   await settle();
-  assert.doesNotMatch(els['subj-card'].innerHTML, /id="weight-input"/);
+  assert.doesNotMatch(els['weight-cell'].innerHTML, /id="weight-input"/);
 });
 
 test('saveWeight posts today\'s weight and clears the weight warning', async () => {
@@ -146,9 +137,14 @@ test('form buttons are rendered from the shared wellness labels', () => {
   assert.match(ctx.checkinButtonsHTML('mood'), /data-val="1" data-color="c-green">GREAT</);
 });
 
-test('summary shows today\'s Sick/injured and yesterday\'s mood on their own rows', async () => {
-  const { els } = runPage(jsonFetch(vitals({ todayWellness: { soreness: 1, fatigue: 2, motivation: 1, injury: 3, weight: null }, yesterdayWellness: { mood: 4 } })));
+test('summary shows today\'s fields on one row and yesterday\'s on another', async () => {
+  const { els } = runPage(jsonFetch(vitals({ todayWellness: { soreness: 1, fatigue: 2, motivation: 1, injury: 3, weight: null }, yesterdayWellness: { mood: 4, stress: 2 } })));
   await settle();
-  assert.match(els['subj-card'].innerHTML, /<div class="subj-item s3 full"><div class="subj-label">Sick\/injured<\/div><div class="subj-value">Sick</);
-  assert.match(els['subj-card'].innerHTML, /<div class="subj-item s4 full"><div class="subj-label">Mood<small> yesterday<\/small><\/div><div class="subj-value">Low</);
+  const html = els['subj-card'].innerHTML;
+  const [today, yesterday] = html.split('<div class="checkin-section">Yesterday</div>');
+  assert.match(today, /<div class="checkin-section">Today<\/div>/);
+  assert.match(today, /<div class="subj-item s3"><div class="subj-label">Sick\/injured<\/div><div class="subj-value">Sick</);
+  assert.doesNotMatch(today, /Mood|Stress/);
+  assert.match(yesterday, /<div class="subj-item s2 half"><div class="subj-label">Stress<\/div><div class="subj-value">Moderate</);
+  assert.match(yesterday, /<div class="subj-item s4 half"><div class="subj-label">Mood<\/div><div class="subj-value">Low</);
 });
