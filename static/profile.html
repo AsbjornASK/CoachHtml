@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/icons/icon-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Coach">
+  <meta name="theme-color" content="#ffffff">
+  <title>Profile</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif; background: #f2f2f7; color: #1c1c1e; max-width: 430px; margin: 0 auto; padding: 0 0 calc(88px + env(safe-area-inset-bottom)); min-height: 100vh; }
+    .topbar { background: #fff; border-bottom: 1px solid #e5e5ea; padding: 0 16px; display: flex; align-items: center; justify-content: space-between; height: 52px; position: sticky; top: 0; z-index: 10; gap: 8px; margin-bottom: 12px; }
+    .topbar-title { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; flex-shrink: 0; }
+    .bottombar { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid #e5e5ea; height: calc(80px + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom); z-index: 20; }
+    .bottombar-inner { max-width: 430px; height: 80px; margin: 0 auto; display: flex; }
+    .bottombar a { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 11px; font-weight: 600; color: #8e8e93; text-decoration: none; -webkit-tap-highlight-color: transparent; padding-bottom: 10px; }
+    .bottombar a svg { width: 22px; height: 22px; }
+    .card { background: #fff; border-radius: 16px; margin: 0 12px 12px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+    .card-title { font-size: 11px; font-weight: 700; color: #8e8e93; text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 14px; }
+    .notif-status { font-size: 14px; color: #1c1c1e; line-height: 1.4; margin-bottom: 12px; }
+    .notif-btn { width: 100%; padding: 13px; font-size: 16px; font-weight: 700; border: none; border-radius: 12px; color: #fff; background: #007aff; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .notif-btn.secondary { margin-top: 8px; background: #f2f2f7; color: #007aff; }
+    .notif-btn:disabled { background: #aeaeb2; color: #fff; cursor: default; }
+    .notif-msg { text-align: center; font-size: 13px; margin-top: 8px; min-height: 18px; color: #8e8e93; }
+    .notif-msg.err { color: #ff3b30; }
+  </style>
+</head>
+<body>
+  <div class="topbar"><div class="topbar-title">Profile</div></div>
+
+  <div class="card">
+    <div class="card-title">Notifications</div>
+    <div class="notif-status" id="notif-status">Checking…</div>
+    <button class="notif-btn" id="notif-toggle" style="display:none"></button>
+    <button class="notif-btn secondary" id="notif-test" style="display:none">Send test</button>
+    <div class="notif-msg" id="notif-msg"></div>
+  </div>
+
+  <div class="bottombar"><div class="bottombar-inner">
+    <a href="/checkin.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="8 12 11 15 16 9"/></svg><span>Check-in</span></a>
+    <a href="/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg><span>Coach</span></a>
+    <a href="/vitals.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 12 7 12 10 19 14 5 17 12 22 12"/></svg><span>Vitals</span></a>
+    <a href="/dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="20" x2="6" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="18" y1="20" x2="18" y2="14"/></svg><span>Dashboard</span></a>
+  </div></div>
+
+<script src="/js/push-status.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+let _publicKey=null,_serverEndpoint=null,_status=null;
+
+function b64ToBytes(b64){const p='='.repeat((4-b64.length%4)%4);const s=atob((b64+p).replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from(s,c=>c.charCodeAt(0));}
+const supported=()=>'serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window;
+const msg=(t,err=false)=>{$('notif-msg').textContent=t;$('notif-msg').className='notif-msg'+(err?' err':'');};
+
+async function browserSubscription(){
+  if(!supported())return null;
+  const reg=await navigator.serviceWorker.ready;
+  return reg.pushManager.getSubscription();
+}
+
+async function refresh(){
+  try{
+    const r=await fetch('/api/push-subscribe');
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.error||r.status);
+    _publicKey=d.publicKey;_serverEndpoint=d.endpoint;
+  }catch(e){$('notif-status').textContent='Notifications are not set up on the server ('+e.message+').';return;}
+  const sub=await browserSubscription().catch(()=>null);
+  _status=notificationStatus({
+    supported:supported(),
+    standalone:window.navigator.standalone===true||matchMedia('(display-mode: standalone)').matches,
+    ios:/iPhone|iPad|iPod/.test(navigator.userAgent),
+    permission:'Notification' in window?Notification.permission:'default',
+    browserEndpoint:sub?.endpoint??null,
+    serverEndpoint:_serverEndpoint,
+  });
+  $('notif-status').textContent=STATUS_TEXT[_status];
+  const canToggle=_status==='on'||_status==='off';
+  $('notif-toggle').style.display=canToggle?'':'none';
+  $('notif-toggle').textContent=_status==='on'?'Turn off':'Turn on';
+  $('notif-test').style.display=_status==='on'?'':'none';
+}
+
+async function turnOn(){
+  // requestPermission must run directly in the tap on iOS
+  const perm=await Notification.requestPermission();
+  if(perm!=='granted')return;
+  const reg=await navigator.serviceWorker.ready;
+  const sub=await reg.pushManager.getSubscription()??await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64ToBytes(_publicKey)});
+  const r=await fetch('/api/push-subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(sub)});
+  if(!r.ok)throw new Error('Could not save ('+r.status+')');
+}
+
+async function turnOff(){
+  const sub=await browserSubscription();
+  if(sub)await sub.unsubscribe();
+  const r=await fetch('/api/push-subscribe',{method:'DELETE'});
+  if(!r.ok)throw new Error('Could not remove ('+r.status+')');
+}
+
+$('notif-toggle').addEventListener('click',async()=>{
+  const btn=$('notif-toggle');btn.disabled=true;msg('');
+  try{await(_status==='on'?turnOff():turnOn());}catch(e){msg(e.message,true);}
+  await refresh();btn.disabled=false;
+});
+
+$('notif-test').addEventListener('click',async()=>{
+  const btn=$('notif-test');btn.disabled=true;msg('Sending…');
+  try{
+    const r=await fetch('/api/push-test',{method:'POST'});
+    if(r.ok)msg('Sent. It should arrive in a few seconds.');
+    else{const d=await r.json().catch(()=>({}));msg('Error: '+(d.error||r.status),true);await refresh();}
+  }catch{msg('Network error',true);}
+  btn.disabled=false;
+});
+
+refresh();
+</script>
+<script src="/js/app-shell.js"></script>
+</body>
+</html>

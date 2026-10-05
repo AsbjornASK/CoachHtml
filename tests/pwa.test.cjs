@@ -6,7 +6,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 
 const read = p => fs.readFileSync(path.join(__dirname, '..', p));
-const PAGES = ['index', 'checkin', 'vitals', 'dashboard', 'data'];
+const PAGES = ['index', 'checkin', 'vitals', 'dashboard', 'data', 'profile'];
 
 test('manifest is valid and its icons exist as PNGs of the right size', () => {
   const m = JSON.parse(read('static/manifest.webmanifest'));
