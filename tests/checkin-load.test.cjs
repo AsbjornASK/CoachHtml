@@ -6,7 +6,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const { freshnessWarnings } = require('../static/js/data-freshness.js');
-const { checkinKey, hasCheckinValues } = require('../static/js/checkin-state.js');
+const { TODAY_FIELDS, checkinKey, hasCheckinValues } = require('../static/js/checkin-state.js');
 const wellness = require('../static/js/wellness-labels.js');
 
 const html = fs.readFileSync(path.join(__dirname, '../static/checkin.html'), 'utf8');
@@ -28,7 +28,7 @@ function runPage(fetchImpl, timeoutMs = 5) {
   };
   // Timeout signals abort after timeoutMs, so the test doesn't wait for the page's real timeout.
   const AbortSignalStub = { timeout: () => { const c = new AbortController(); setTimeout(() => c.abort(new Error('timeout')), timeoutMs); return c.signal; } };
-  const ctx = { document, fetch: fetchImpl, localStorage: { getItem: () => null, setItem() {} }, location: {}, AbortSignal: AbortSignalStub, freshnessWarnings, checkinKey, hasCheckinValues, ...wellness, setTimeout, clearTimeout, console };
+  const ctx = { document, fetch: fetchImpl, localStorage: { getItem: () => null, setItem() {} }, location: {}, AbortSignal: AbortSignalStub, freshnessWarnings, TODAY_FIELDS, checkinKey, hasCheckinValues, ...wellness, setTimeout, clearTimeout, console };
   vm.runInNewContext(script, ctx);
   return { els, ctx };
 }
@@ -42,9 +42,7 @@ const hangingFetch = (url, opts) => new Promise((_, reject) => {
 });
 
 const vitals = over => ({
-  todayWellness: { mood: 2, soreness: 1, fatigue: 2, motivation: 1, comments: null, weight: 78.4 },
-  latest: { hrv: 70, restingHR: 50, sleepHours: 7.5 },
-  trends: { hrv: [60, 62, 64, 66, 68, 70, 72], rhr: [52, 52, 51, 51, 50, 50, 50], sleep: [7, 7, 7, 7, 7, 7, 7] },
+  todayWellness: { soreness: 1, fatigue: 2, motivation: 1, comments: null, weight: 78.4 },
   lastWeightDate: TODAY,
   lastBodyCompDate: TODAY,
   ...over,
@@ -57,20 +55,19 @@ test('form is shown when /api/get-vitals hangs', async () => {
   assert.equal(els['checkin-card']?.style.display, '', 'check-in form should be visible');
 });
 
-test('after check-in: summary shows weight and night physiology is shown', async () => {
+test('after check-in: weight is shown in Body composition, not the summary', async () => {
   const { els } = runPage(jsonFetch(vitals()));
   await settle();
-  assert.match(els['subj-card'].innerHTML, /78,4 kg/);
-  assert.equal(els['night-card']?.style.display, '');
-  assert.match(els['night-card'].innerHTML, /70 ms/);
-  assert.match(els['night-card'].innerHTML, /50 bpm/);
+  assert.equal(els['subj-card'].style.display, '');
+  assert.doesNotMatch(els['subj-card'].innerHTML, /kg/);
+  assert.equal(els['weight-cell'].innerHTML, '78,4 kg');
 });
 
-test('before check-in: night physiology stays hidden', async () => {
-  const { els } = runPage(jsonFetch(vitals({ todayWellness: { mood: null, soreness: null, fatigue: null, motivation: null } })));
+test('before check-in: form is shown and Body composition offers a weight input', async () => {
+  const { els } = runPage(jsonFetch(vitals({ todayWellness: { soreness: null, fatigue: null, motivation: null, weight: null } })));
   await settle();
   assert.equal(els['checkin-card'].style.display, '');
-  assert.notEqual(els['night-card']?.style.display, '');
+  assert.match(els['weight-cell'].innerHTML, /id="weight-input"/);
 });
 
 test('warnings for stale weight and missing body composition', async () => {
@@ -96,23 +93,17 @@ test('parseIB reads date, weight and fat % from an InBody link', () => {
   assert.equal(d.fatPct, 19.4);
 });
 
-test('after check-in without weight: summary offers a weight input', async () => {
-  const { els } = runPage(jsonFetch(vitals({ todayWellness: { mood: 2, soreness: 1, fatigue: 2, motivation: 1, weight: null } })));
-  await settle();
-  assert.match(els['subj-card'].innerHTML, /id="weight-input"/);
-});
-
-test('after check-in with weight: no weight input', async () => {
+test('with today\'s weight logged: no weight input', async () => {
   const { els } = runPage(jsonFetch(vitals()));
   await settle();
-  assert.doesNotMatch(els['subj-card'].innerHTML, /id="weight-input"/);
+  assert.doesNotMatch(els['weight-cell'].innerHTML, /id="weight-input"/);
 });
 
 test('saveWeight posts today\'s weight and clears the weight warning', async () => {
   const posts = [];
   const fetchImpl = async (url, opts) => {
     if (opts?.method === 'POST') { posts.push(JSON.parse(opts.body)); return { ok: true, json: async () => ({}) }; }
-    return { ok: true, json: async () => vitals({ todayWellness: { mood: 2, soreness: 1, fatigue: 2, motivation: 1, weight: null }, lastWeightDate: daysAgo(10) }) };
+    return { ok: true, json: async () => vitals({ todayWellness: { soreness: 1, fatigue: 2, motivation: 1, weight: null }, lastWeightDate: daysAgo(10) }) };
   };
   const { els, ctx } = runPage(fetchImpl);
   await settle();
@@ -127,7 +118,7 @@ test('saveWeight rejects an invalid weight without posting', async () => {
   const posts = [];
   const fetchImpl = async (url, opts) => {
     if (opts?.method === 'POST') { posts.push(opts.body); return { ok: true, json: async () => ({}) }; }
-    return { ok: true, json: async () => vitals({ todayWellness: { mood: 2, soreness: 1, fatigue: 2, motivation: 1, weight: null } }) };
+    return { ok: true, json: async () => vitals({ todayWellness: { soreness: 1, fatigue: 2, motivation: 1, weight: null } }) };
   };
   const { els, ctx } = runPage(fetchImpl);
   await settle();
@@ -146,12 +137,14 @@ test('form buttons are rendered from the shared wellness labels', () => {
   assert.match(ctx.checkinButtonsHTML('mood'), /data-val="1" data-color="c-green">GREAT</);
 });
 
-test('summary shows mood from yesterday and sick from today', async () => {
-  const { els } = runPage(jsonFetch(vitals({
-    todayWellness: { mood: null, soreness: 1, fatigue: 2, motivation: 1, sickness: 2, comments: null, weight: 78.4 },
-    yesterdayWellness: { mood: 4 },
-  })));
+test('summary shows today\'s fields on one row and yesterday\'s on another', async () => {
+  const { els } = runPage(jsonFetch(vitals({ todayWellness: { soreness: 1, fatigue: 2, motivation: 1, injury: 3, weight: null }, yesterdayWellness: { mood: 4, stress: 2 } })));
   await settle();
-  assert.match(els['subj-card'].innerHTML, /Mood<\/div><div class="subj-value">Low</);
-  assert.match(els['subj-card'].innerHTML, /Sick<\/div><div class="subj-value">Mild</);
+  const html = els['subj-card'].innerHTML;
+  const [today, yesterday] = html.split('<div class="checkin-section">Yesterday</div>');
+  assert.match(today, /<div class="checkin-section">Today<\/div>/);
+  assert.match(today, /<div class="subj-item s3"><div class="subj-label">Sick\/injured<\/div><div class="subj-value">Sick</);
+  assert.doesNotMatch(today, /Mood|Stress/);
+  assert.match(yesterday, /<div class="subj-item s2"><div class="subj-label">Stress<\/div><div class="subj-value">Moderate</);
+  assert.match(yesterday, /<div class="subj-item s4"><div class="subj-label">Mood<\/div><div class="subj-value">Low</);
 });

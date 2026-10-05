@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const { WELLNESS, WELLNESS_COLORS, WELLNESS_BTN_CLASSES } = require('../static/js/wellness-labels.js');
 
 test('every wellness field has a name and 4 labels (value 1 = best)', () => {
-  assert.deepEqual(Object.keys(WELLNESS), ['mood', 'soreness', 'fatigue', 'motivation', 'stress', 'sleepQuality', 'sickness']);
+  assert.deepEqual(Object.keys(WELLNESS), ['mood', 'soreness', 'fatigue', 'motivation', 'stress', 'sleepQuality', 'injury']);
   for (const f of Object.values(WELLNESS)) {
     assert.equal(typeof f.name, 'string');
     assert.equal(f.labels.length, 4);
