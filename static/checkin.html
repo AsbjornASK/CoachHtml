@@ -198,8 +198,7 @@ function renderWarnings(){
   const el=document.getElementById('warnings');
   if(!_fresh){el.innerHTML='';return;}
   el.innerHTML=freshnessWarnings({today:TODAY,..._fresh}).map(w=>{
-    const when=w.days==null?'over 3 weeks':`${w.days} days`;
-    return`<div class="warn">⚠ ${w.kind==='weight'?`Weight not logged for ${when}`:`Body composition not measured for ${when}`}</div>`;
+    return`<div class="warn">⚠ ${warningText(w)}</div>`;
   }).join('');
 }
 

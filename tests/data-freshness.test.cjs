@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { daysSince, freshnessWarnings } = require('../static/js/data-freshness.js');
+const { daysSince, freshnessWarnings, warningText } = require('../static/js/data-freshness.js');
 
 const TODAY = '2026-09-30';
 
@@ -25,4 +25,11 @@ test('body comp warning only once 21 days are exceeded (22 days)', () => {
 
 test('missing data warns with days null, weight first', () => {
   assert.deepEqual(freshnessWarnings({ today: TODAY, lastWeightDate: null, lastBodyCompDate: null }), [{ kind: 'weight', days: null }, { kind: 'bodyComp', days: null }]);
+});
+
+test('warningText matches the Check-in banners', () => {
+  assert.equal(warningText({ kind: 'weight', days: 10 }), 'Weight not logged for 10 days');
+  assert.equal(warningText({ kind: 'weight', days: null }), 'Weight not logged for over 3 weeks');
+  assert.equal(warningText({ kind: 'bodyComp', days: 30 }), 'Body composition not measured for 30 days');
+  assert.equal(warningText({ kind: 'bodyComp', days: null }), 'Body composition not measured for over 3 weeks');
 });
