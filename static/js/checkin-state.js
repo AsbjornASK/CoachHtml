@@ -6,11 +6,13 @@
     return 'checkin_' + todayISO;
   }
 
+  // Subjective fields the check-in saves to today's date (stress and mood go to yesterday)
+  const TODAY_FIELDS = ['soreness', 'fatigue', 'motivation', 'injury'];
+
   function hasCheckinValues(w) {
-    return !!(w && (w.mood || w.soreness || w.fatigue || w.motivation));
+    return !!w && TODAY_FIELDS.some(f => w[f]);
   }
 
-  root.checkinKey = checkinKey;
-  root.hasCheckinValues = hasCheckinValues;
-  if (typeof module !== 'undefined') module.exports = { checkinKey, hasCheckinValues };
+  Object.assign(root, { TODAY_FIELDS, checkinKey, hasCheckinValues });
+  if (typeof module !== 'undefined') module.exports = { TODAY_FIELDS, checkinKey, hasCheckinValues };
 })(typeof window !== 'undefined' ? window : globalThis);

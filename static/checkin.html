@@ -20,6 +20,8 @@
     .checkin-row { display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid #f2f2f7; gap: 8px; }
     .checkin-row:last-of-type { border-bottom: none; }
     .checkin-label { font-size: 13px; font-weight: 500; color: #1c1c1e; width: 88px; flex-shrink: 0; line-height: 1.2; }
+    .checkin-section { font-size: 11px; font-weight: 700; color: #007aff; text-transform: uppercase; letter-spacing: 0.5px; margin: 6px 0 2px; }
+    .checkin-group + .checkin-section { margin-top: 14px; }
     .checkin-label small { display: block; font-size: 10px; font-weight: 400; color: #aeaeb2; }
     .btn-group { display: flex; flex: 1; gap: 4px; }
     .btn-group button { flex: 1; padding: 6px 2px; font-size: 10px; font-weight: 700; border: 1.5px solid #e5e5ea; border-radius: 8px; background: #fff; color: #8e8e93; cursor: pointer; -webkit-tap-highlight-color: transparent; }
@@ -45,6 +47,7 @@
     .note-status { font-size: 11px; color: #aeaeb2; margin-top: 4px; min-height: 14px; text-align: right; }
     .note-status.ok { color: #30d158; } .note-status.err { color: #ff3b30; }
     .coach-link { display: block; text-align: center; margin: 2px 12px 16px; font-size: 15px; font-weight: 600; color: #007aff; text-decoration: none; }
+    .subj-item.full { grid-column: 1 / -1; }
     .subj-item.wide { grid-column: 1 / -1; background: #f2f2f7; color: #1c1c1e; }
     .weight-inline { display: flex; gap: 8px; margin-top: 4px; }
     .warn { background: #fff3e0; color: #b86e00; border-radius: 12px; margin: 0 12px 10px; padding: 10px 14px; font-size: 13px; font-weight: 600; }
@@ -74,36 +77,47 @@
 
   <div class="card" id="checkin-card" style="display:none">
     <div class="card-title">Morning Check-in</div>
-    <div class="checkin-row">
-      <div class="checkin-label">Soreness<small>Pre-workout</small></div>
-      <div class="btn-group" data-field="soreness"></div>
-    </div>
-    <div class="checkin-row">
-      <div class="checkin-label">Fatigue<small>Pre-workout</small></div>
-      <div class="btn-group" data-field="fatigue"></div>
-    </div>
-    <div class="checkin-row">
-      <div class="checkin-label">Mood</div>
-      <div class="btn-group" data-field="mood"></div>
-    </div>
-    <div class="checkin-row">
-      <div class="checkin-label">Motivation</div>
-      <div class="btn-group" data-field="motivation"></div>
-    </div>
-    <div class="checkin-row">
-      <div class="checkin-label">Stress<small>Yesterday</small></div>
-      <div class="btn-group" data-field="stress"></div>
-    </div>
-    <div class="checkin-row">
-      <div class="checkin-label">Partner<small>Slept together last night</small></div>
-      <!-- Intervals custom wellness field "Partner" (select): 1 = yes, 2 = no -->
-      <div class="btn-group" data-field="Partner">
-        <button data-val="1">YES</button><button data-val="2">NO</button>
+    <div class="checkin-section">Today</div>
+    <div class="checkin-group">
+      <div class="checkin-row">
+        <div class="checkin-label">Soreness<small>Pre-workout</small></div>
+        <div class="btn-group" data-field="soreness"></div>
+      </div>
+      <div class="checkin-row">
+        <div class="checkin-label">Fatigue<small>Pre-workout</small></div>
+        <div class="btn-group" data-field="fatigue"></div>
+      </div>
+      <div class="checkin-row">
+        <div class="checkin-label">Sick/injured</div>
+        <div class="btn-group" data-field="injury"></div>
+      </div>
+      <div class="checkin-row">
+        <div class="checkin-label">Motivation</div>
+        <div class="btn-group" data-field="motivation"></div>
+      </div>
+      <div class="checkin-row">
+        <div class="checkin-label">Partner<small>Slept together last night</small></div>
+        <!-- Intervals custom wellness field "Partner" (select): 1 = yes, 2 = no -->
+        <div class="btn-group" data-field="Partner">
+          <button data-val="1">YES</button><button data-val="2">NO</button>
+        </div>
+      </div>
+      <div class="checkin-row">
+        <div class="checkin-label">Weight<small>kg</small></div>
+        <input type="number" id="checkin-weight" class="checkin-weight" placeholder="Today's weight (kg)" step="0.1" min="40" max="200" inputmode="decimal">
       </div>
     </div>
-    <div class="checkin-row">
-      <div class="checkin-label">Weight<small>kg</small></div>
-      <input type="number" id="checkin-weight" class="checkin-weight" placeholder="Today's weight (kg)" step="0.1" min="40" max="200" inputmode="decimal">
+    <div class="checkin-section">Yesterday</div>
+    <!-- Rows in this group are saved to yesterday's date -->
+    <div class="checkin-group" data-day="yesterday">
+      <div class="checkin-row">
+        <div class="checkin-label">Stress</div>
+        <div class="btn-group" data-field="stress"></div>
+      </div>
+      <div class="checkin-row">
+        <div class="checkin-label">Mood</div>
+        <div class="btn-group" data-field="mood"></div>
+      </div>
     </div>
     <button class="submit-btn" id="checkin-submit">Save to Intervals</button>
     <div class="form-status" id="checkin-status"></div>
@@ -163,10 +177,16 @@ function trend(arr,invert=false){
 }
 const arrow=t=>`<span class="${t.c}">${t.a==='up'?'↑':t.a==='down'?'↓':'→'}</span>`;
 
+// One summary tile, coloured by value 1–4
+function subjTile(f,v,cls='',suffix=''){
+  return`<div class="subj-item s${v??2}${cls}"><div class="subj-label">${SLBL_NAMES[f]}${suffix}</div><div class="subj-value">${v?SLBLS[f][v-1]:'-'}</div></div>`;
+}
+
 function showSummary(w){
   const card=document.getElementById('subj-card');
   card.innerHTML=`<div class="card-title">Today's check-in</div>
-    <div class="subjective-grid">${['mood','soreness','fatigue','motivation'].map(f=>{const v=w[f]??null;return`<div class="subj-item s${v??2}"><div class="subj-label">${SLBL_NAMES[f]}</div><div class="subj-value">${v?SLBLS[f][v-1]:'-'}</div></div>`;}).join('')}
+    <div class="subjective-grid">${TODAY_FIELDS.map(f=>subjTile(f,w[f])).join('')}
+      ${subjTile('mood',w.mood,' full','<small> yesterday</small>')}
       <div class="subj-item wide"><div class="subj-label">Weight</div><div class="subj-value" id="weight-cell">${w.weight!=null?fmtN(w.weight)+' kg':weightInputHTML}</div></div></div>
     <div class="note-area"><textarea class="note-textarea" id="subj-note" placeholder="Add a note for today…">${w.comments??''}</textarea><div class="note-status" id="subj-note-status"></div></div>`;
   card.style.display='';
@@ -223,7 +243,8 @@ function renderWarnings(){
   if(v)_fresh={lastWeightDate:saved?.weight!=null?TODAY:v.lastWeightDate??null,lastBodyCompDate:v.lastBodyCompDate??null};
   renderWarnings();
   if(hasCheckinValues(tw)||saved){
-    showSummary(hasCheckinValues(tw)?tw:{...saved,comments:tw?.comments??null,weight:tw?.weight??saved.weight??null});
+    const mood=v?.yesterdayWellness?.mood??saved?.mood??null;
+    showSummary({...(hasCheckinValues(tw)?tw:{...saved,comments:tw?.comments??null,weight:tw?.weight??saved.weight??null}),mood});
     showNight(v?.latest,v?.trends);
     document.getElementById('coach-link').style.display='';
   }
@@ -273,18 +294,17 @@ function parseIB(url){
   document.querySelectorAll('#checkin-card .btn-group').forEach(g=>{g.querySelectorAll('button').forEach(b=>{b.addEventListener('click',()=>selectBtn(g,b));});});
   document.getElementById('checkin-submit').addEventListener('click',async()=>{
     const btn=document.getElementById('checkin-submit'),st=document.getElementById('checkin-status');
-    const p={date:TODAY};
-    document.querySelectorAll('#checkin-card .btn-group').forEach(g=>{const s=g.querySelector('button.selected');if(s)p[g.dataset.field]=+s.dataset.val;});
-    // Stress refers to yesterday (same as Vitals page), saved separately below
-    const stress=p.stress;delete p.stress;
+    // Rows in the "Yesterday" group (stress, mood) are saved to yesterday's date, before today's
+    const p={date:TODAY},y={date:YESTERDAY};
+    document.querySelectorAll('#checkin-card .btn-group').forEach(g=>{const s=g.querySelector('button.selected');if(s)(g.closest('[data-day="yesterday"]')?y:p)[g.dataset.field]=+s.dataset.val;});
     const wRaw=document.getElementById('checkin-weight').value.trim().replace(',','.');
     if(wRaw){const w=parseFloat(wRaw);if(!w||w<40||w>200){st.textContent='Invalid weight';st.className='form-status err';return;}p.weight=w;}
     btn.disabled=true;st.textContent='Saving…';st.className='form-status';
     try{
-      if(stress!=null){const rs=await post({date:YESTERDAY,stress});if(!rs.ok){const e=await rs.json().catch(()=>({}));throw Object.assign(new Error('Error: '+(e.error||rs.status)),{api:true});}}
+      if(Object.keys(y).length>1){const rs=await post(y);if(!rs.ok){const e=await rs.json().catch(()=>({}));throw Object.assign(new Error('Error: '+(e.error||rs.status)),{api:true});}}
       const r=await post(p);
       if(r.ok){
-        try{localStorage.setItem(LS,JSON.stringify(stress!=null?{...p,stress}:p));}catch{}
+        try{localStorage.setItem(LS,JSON.stringify({...y,...p}));}catch{}
         location.href='/';
       }
       else{const e=await r.json().catch(()=>({}));st.textContent='Error: '+(e.error||r.status);st.className='form-status err';btn.disabled=false;}

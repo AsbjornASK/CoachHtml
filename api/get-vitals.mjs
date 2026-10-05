@@ -79,10 +79,10 @@ export async function GET() {
     },
     todayWellness: {
       date:       end,
-      mood:       todayEntry.mood       ?? null,
       soreness:   todayEntry.soreness   ?? null,
       fatigue:    todayEntry.fatigue    ?? null,
       motivation: todayEntry.motivation ?? null,
+      injury:     todayEntry.injury     ?? null,
       comments:   todayEntry.comments   ?? null,
       weight:     r1(todayEntry.weight),
     },

@@ -470,7 +470,6 @@ function render(data, sportData) {
   const sportSeries = sportData?.series ?? [];
   const sessions = sportData?.sessions ?? [];
   const latest = [...series].reverse().find(d => d.ctl != null) ?? series[series.length - 1] ?? {};
-  const latestCheckin = [...series].reverse().find(d => d.mood != null) ?? {};
   const todayFmt = (() => {
     const d = new Date(today + 'T12:00:00');
     return `${DAYS_S[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
@@ -538,7 +537,7 @@ function render(data, sportData) {
       ${kpiCard('Fitness (CTL)', fmtN(latest.ctl), '', '60-day average', 'blue')}
       ${kpiCard('Fatigue (ATL)', fmtN(latest.atl), '', '7-day average', 'yellow')}
       ${kpiCard('Form (TSB)', fmtN(latest.tsb, 1), '', tsbZone, latest.tsb != null && latest.tsb >= 0 ? 'green' : 'yellow')}
-      ${kpiCard('HRV', fmtN(latest.hrv), 'ms', `Latest: ${latestCheckin.date ? fmtDate(latestCheckin.date) : '–'}`, kpiColor(latest.hrv))}
+      ${kpiCard('HRV', fmtN(latest.hrv), 'ms', `Latest: ${latest.date ? fmtDate(latest.date) : '–'}`, kpiColor(latest.hrv))}
     </div>
 
     <div class="row row-full">

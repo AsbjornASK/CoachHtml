@@ -6,7 +6,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const { freshnessWarnings } = require('../static/js/data-freshness.js');
-const { checkinKey, hasCheckinValues } = require('../static/js/checkin-state.js');
+const { TODAY_FIELDS, checkinKey, hasCheckinValues } = require('../static/js/checkin-state.js');
 const wellness = require('../static/js/wellness-labels.js');
 
 const html = fs.readFileSync(path.join(__dirname, '../static/checkin.html'), 'utf8');
@@ -28,7 +28,7 @@ function runPage(fetchImpl, timeoutMs = 5) {
   };
   // Timeout signals abort after timeoutMs, so the test doesn't wait for the page's real timeout.
   const AbortSignalStub = { timeout: () => { const c = new AbortController(); setTimeout(() => c.abort(new Error('timeout')), timeoutMs); return c.signal; } };
-  const ctx = { document, fetch: fetchImpl, localStorage: { getItem: () => null, setItem() {} }, location: {}, AbortSignal: AbortSignalStub, freshnessWarnings, checkinKey, hasCheckinValues, ...wellness, setTimeout, clearTimeout, console };
+  const ctx = { document, fetch: fetchImpl, localStorage: { getItem: () => null, setItem() {} }, location: {}, AbortSignal: AbortSignalStub, freshnessWarnings, TODAY_FIELDS, checkinKey, hasCheckinValues, ...wellness, setTimeout, clearTimeout, console };
   vm.runInNewContext(script, ctx);
   return { els, ctx };
 }
@@ -144,4 +144,11 @@ test('form buttons are rendered from the shared wellness labels', () => {
   assert.match(stress, /data-val="4" data-color="c-purple">VERY HIGH</);
   assert.match(ctx.checkinButtonsHTML('motivation'), /data-val="3" data-color="c-red">MEDIUM</);
   assert.match(ctx.checkinButtonsHTML('mood'), /data-val="1" data-color="c-green">GREAT</);
+});
+
+test('summary shows today\'s Sick/injured and yesterday\'s mood', async () => {
+  const { els } = runPage(jsonFetch(vitals({ todayWellness: { soreness: 1, fatigue: 2, motivation: 1, injury: 3, weight: null }, yesterdayWellness: { mood: 4 } })));
+  await settle();
+  assert.match(els['subj-card'].innerHTML, /Sick\/injured<\/div><div class="subj-value">Sick</);
+  assert.match(els['subj-card'].innerHTML, /Mood<small> yesterday<\/small><\/div><div class="subj-value">Low</);
 });
