@@ -90,7 +90,10 @@ async function turnOn(){
   const perm=await Notification.requestPermission();
   if(perm!=='granted')return;
   const reg=await navigator.serviceWorker.ready;
-  const sub=await reg.pushManager.getSubscription()??await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64ToBytes(_publicKey)});
+  // A browser subscription the server doesn't have is dead (410) or tied to old VAPID keys: replace it
+  const old=await reg.pushManager.getSubscription();
+  if(old)await old.unsubscribe();
+  const sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64ToBytes(_publicKey)});
   const r=await fetch('/api/push-subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(sub)});
   if(!r.ok)throw new Error('Could not save ('+r.status+')');
 }

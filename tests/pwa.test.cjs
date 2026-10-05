@@ -66,3 +66,33 @@ test('sw.js falls back to a generic notification without or with broken data', a
     assert.equal(shown[0].title, 'Coach');
   }
 });
+
+test('sw.js takes control at once so updates and notification taps work in the Home Screen app', async () => {
+  const handlers = {};
+  let skipped = false, claimed = false;
+  const self = { addEventListener: (t, fn) => { handlers[t] = fn; }, skipWaiting: async () => { skipped = true; }, registration: {} };
+  const clients = { claim: async () => { claimed = true; } };
+  vm.runInNewContext(read('static/sw.js').toString(), { self, clients });
+  let p;
+  handlers.install({ waitUntil: x => { p = x; } }); await p;
+  handlers.activate({ waitUntil: x => { p = x; } }); await p;
+  assert.equal(skipped, true);
+  assert.equal(claimed, true);
+});
+
+test('sw.js opens a new window when the open one cannot be navigated', async () => {
+  const handlers = {};
+  const opened = [];
+  const win = { focus: async () => {}, navigate: async () => { throw new TypeError('not controlled'); } };
+  const clients = { matchAll: async () => [win], openWindow: async url => { opened.push(url); } };
+  vm.runInNewContext(read('static/sw.js').toString(), { self: { addEventListener: (t, fn) => { handlers[t] = fn; } }, clients });
+  let p;
+  handlers.notificationclick({ notification: { data: { url: '/checkin.html' }, close() {} }, waitUntil: x => { p = x; } });
+  await p;
+  assert.deepEqual(opened, ['/checkin.html']);
+});
+
+test('the cron function bundle includes the shared static/js modules', () => {
+  const v = require('../vercel.json');
+  assert.equal(v.functions?.['api/cron-morning.mjs']?.includeFiles, 'static/js/**');
+});
