@@ -36,7 +36,7 @@
     .submit-btn:disabled { background: #aeaeb2 !important; cursor: default; }
     .form-status { text-align: center; font-size: 13px; margin-top: 10px; min-height: 18px; }
     .form-status.ok { color: #30d158; font-weight: 600; } .form-status.err { color: #ff3b30; }
-    .subjective-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .subjective-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .subjective-grid .checkin-section { grid-column: 1 / -1; margin: 0; }
     .subjective-grid .checkin-section ~ .checkin-section { margin-top: 4px; }
     .subj-item { text-align: center; padding: 8px; border-radius: 10px; }
@@ -48,7 +48,6 @@
     .note-textarea:focus { border-color: #007aff; background: #fff; }
     .note-status { font-size: 11px; color: #aeaeb2; margin-top: 4px; min-height: 14px; text-align: right; }
     .note-status.ok { color: #30d158; } .note-status.err { color: #ff3b30; }
-    .subj-item.half { grid-column: span 2; }
     .weight-inline { display: flex; gap: 8px; }
     .weight-row { margin-bottom: 10px; }
     .weight-cell { flex: 1; font-size: 15px; font-weight: 700; color: #1c1c1e; }
@@ -163,8 +162,8 @@ async function postOrThrow(body){
 function fmtN(n){return n==null?'-':String(n).replace('.',',');}
 
 // One summary tile, coloured by value 1–4
-function subjTile(f,v,cls=''){
-  return`<div class="subj-item s${v??2}${cls?' '+cls:''}"><div class="subj-label">${SLBL_NAMES[f]}</div><div class="subj-value">${v?SLBLS[f][v-1]:'-'}</div></div>`;
+function subjTile(f,v){
+  return`<div class="subj-item s${v??2}"><div class="subj-label">${SLBL_NAMES[f]}</div><div class="subj-value">${v?SLBLS[f][v-1]:'-'}</div></div>`;
 }
 
 function showSummary(w){
@@ -172,7 +171,7 @@ function showSummary(w){
   card.innerHTML=`<div class="card-title">Today's check-in</div>
     <div class="subjective-grid">
       <div class="checkin-section">Today</div>${TODAY_FIELDS.map(f=>subjTile(f,w[f])).join('')}
-      <div class="checkin-section">Yesterday</div>${YESTERDAY_FIELDS.map(f=>subjTile(f,w[f],'half')).join('')}</div>
+      <div class="checkin-section">Yesterday</div>${YESTERDAY_FIELDS.map(f=>subjTile(f,w[f])).join('')}</div>
     <div class="note-area"><textarea class="note-textarea" id="subj-note" placeholder="Add a note for today…">${w.comments??''}</textarea><div class="note-status" id="subj-note-status"></div></div>`;
   card.style.display='';
 }

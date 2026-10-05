@@ -145,6 +145,6 @@ test('summary shows today\'s fields on one row and yesterday\'s on another', asy
   assert.match(today, /<div class="checkin-section">Today<\/div>/);
   assert.match(today, /<div class="subj-item s3"><div class="subj-label">Sick\/injured<\/div><div class="subj-value">Sick</);
   assert.doesNotMatch(today, /Mood|Stress/);
-  assert.match(yesterday, /<div class="subj-item s2 half"><div class="subj-label">Stress<\/div><div class="subj-value">Moderate</);
-  assert.match(yesterday, /<div class="subj-item s4 half"><div class="subj-label">Mood<\/div><div class="subj-value">Low</);
+  assert.match(yesterday, /<div class="subj-item s2"><div class="subj-label">Stress<\/div><div class="subj-value">Moderate</);
+  assert.match(yesterday, /<div class="subj-item s4"><div class="subj-label">Mood<\/div><div class="subj-value">Low</);
 });
