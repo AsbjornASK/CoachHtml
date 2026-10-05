@@ -6,11 +6,7 @@ Commit directly when the user asks. Don't run `/simplify` or `/code-review` befo
 
 ## Pull requests
 
-When the user asks to create a pull request, do this before creating it:
-
-1. Run `/simplify` on the branch's changes and apply its cleanups.
-2. Run `/code-review` on the result and fix any real bugs it finds.
-3. Tell the user what the two steps changed or found, commit any fixes, then create the pull request.
+When the user asks to create a pull request, create it directly. `/simplify` and `/code-review` are optional: run them only when the user asks for them.
 
 ## Previews and mockups
 
