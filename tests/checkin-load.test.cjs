@@ -5,7 +5,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
-const { freshnessWarnings } = require('../static/js/data-freshness.js');
+const freshness = require('../static/js/data-freshness.js');
 const { TODAY_FIELDS, checkinKey, hasCheckinValues } = require('../static/js/checkin-state.js');
 const wellness = require('../static/js/wellness-labels.js');
 
@@ -28,7 +28,7 @@ function runPage(fetchImpl, timeoutMs = 5) {
   };
   // Timeout signals abort after timeoutMs, so the test doesn't wait for the page's real timeout.
   const AbortSignalStub = { timeout: () => { const c = new AbortController(); setTimeout(() => c.abort(new Error('timeout')), timeoutMs); return c.signal; } };
-  const ctx = { document, fetch: fetchImpl, localStorage: { getItem: () => null, setItem() {} }, location: {}, AbortSignal: AbortSignalStub, freshnessWarnings, TODAY_FIELDS, checkinKey, hasCheckinValues, ...wellness, setTimeout, clearTimeout, console };
+  const ctx = { document, fetch: fetchImpl, localStorage: { getItem: () => null, setItem() {} }, location: {}, AbortSignal: AbortSignalStub, ...freshness, TODAY_FIELDS, checkinKey, hasCheckinValues, ...wellness, setTimeout, clearTimeout, console };
   vm.runInNewContext(script, ctx);
   return { els, ctx };
 }

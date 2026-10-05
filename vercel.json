@@ -2,5 +2,27 @@
   "outputDirectory": "static",
   "rewrites": [
     { "source": "/dashboard", "destination": "/dashboard.html" }
+  ],
+  "functions": {
+    "api/cron-morning.mjs": {
+      "includeFiles": "static/js/**"
+    }
+  },
+  "crons": [
+    {
+      "path": "/api/cron-morning",
+      "schedule": "0 7 * * *"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/sw.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        }
+      ]
+    }
   ]
 }

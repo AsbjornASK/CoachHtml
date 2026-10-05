@@ -3,6 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/icons/icon-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Coach">
+  <meta name="theme-color" content="#ffffff">
   <title>Coach Check-in</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -198,8 +204,7 @@ function renderWarnings(){
   const el=document.getElementById('warnings');
   if(!_fresh){el.innerHTML='';return;}
   el.innerHTML=freshnessWarnings({today:TODAY,..._fresh}).map(w=>{
-    const when=w.days==null?'over 3 weeks':`${w.days} days`;
-    return`<div class="warn">⚠ ${w.kind==='weight'?`Weight not logged for ${when}`:`Body composition not measured for ${when}`}</div>`;
+    return`<div class="warn">⚠ ${warningText(w)}</div>`;
   }).join('');
 }
 
@@ -300,5 +305,6 @@ function parseIB(url){
   });
 })();
 </script>
+<script src="/js/app-shell.js"></script>
 </body>
 </html>
