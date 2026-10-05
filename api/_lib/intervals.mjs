@@ -42,3 +42,14 @@ export function findLatest(days, pred) {
 export const rhrOf      = d => (d?.restingHR && d.restingHR < RHR_MAX) ? d.restingHR : null;
 export const tsbOf      = d => d?.ctl != null && d?.atl != null ? r1(d.ctl - d.atl) : null;
 export const sleepHours = d => d?.sleepSecs ? r1(d.sleepSecs / 3600) : null;
+
+// A day with an InBody-style measurement (weight plus fat mass or fat %).
+export const isBodyComp = d => !!(d.weight && (d.fatMass || d.bodyFat));
+
+// Last logged weight / body composition dates in the given days; null when none.
+export function freshnessDates(days) {
+  return {
+    lastWeightDate:   days.findLast(d => d.weight)?.date ?? null,
+    lastBodyCompDate: days.findLast(isBodyComp)?.date ?? null,
+  };
+}

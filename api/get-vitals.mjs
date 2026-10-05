@@ -1,4 +1,4 @@
-import { intervalsClient, notConfigured, parseDays, findLatest, rhrOf, tsbOf, sleepHours } from './_lib/intervals.mjs';
+import { intervalsClient, notConfigured, parseDays, findLatest, rhrOf, tsbOf, sleepHours, isBodyComp, freshnessDates } from './_lib/intervals.mjs';
 import { json, fmt, daysAgo, r1 } from './_lib/util.mjs';
 
 export async function GET() {
@@ -29,7 +29,7 @@ export async function GET() {
   const todayEntry     = days.find(d => d.date === end) ?? {};
 
   const HEIGHT = 1.755;
-  const bodyCompEntries = days.filter(d => d.weight && (d.fatMass || d.bodyFat));
+  const bodyCompEntries = days.filter(isBodyComp);
   const bodyComp        = bodyCompEntries[bodyCompEntries.length - 1];
   const prevBodyComp    = bodyCompEntries[bodyCompEntries.length - 2];
   const toInBody = e => {
@@ -88,7 +88,6 @@ export async function GET() {
     },
     inBody: bodyComp ? { ...toInBody(bodyComp), prev: toInBody(prevBodyComp) } : null,
     // Last logged dates inside the 21-day window; null means nothing logged in the window
-    lastWeightDate:   days.findLast(d => d.weight)?.date ?? null,
-    lastBodyCompDate: bodyComp?.date ?? null,
+    ...freshnessDates(days),
   });
 }
