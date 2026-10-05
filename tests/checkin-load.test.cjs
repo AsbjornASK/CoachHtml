@@ -42,7 +42,7 @@ const hangingFetch = (url, opts) => new Promise((_, reject) => {
 });
 
 const vitals = over => ({
-  todayWellness: { mood: 2, soreness: 1, fatigue: 2, motivation: 1, comments: null, weight: 78.4 },
+  todayWellness: { soreness: 1, fatigue: 2, motivation: 1, comments: null, weight: 78.4 },
   latest: { hrv: 70, restingHR: 50, sleepHours: 7.5 },
   trends: { hrv: [60, 62, 64, 66, 68, 70, 72], rhr: [52, 52, 51, 51, 50, 50, 50], sleep: [7, 7, 7, 7, 7, 7, 7] },
   lastWeightDate: TODAY,
@@ -67,7 +67,7 @@ test('after check-in: summary shows weight and night physiology is shown', async
 });
 
 test('before check-in: night physiology stays hidden', async () => {
-  const { els } = runPage(jsonFetch(vitals({ todayWellness: { mood: null, soreness: null, fatigue: null, motivation: null } })));
+  const { els } = runPage(jsonFetch(vitals({ todayWellness: { soreness: null, fatigue: null, motivation: null } })));
   await settle();
   assert.equal(els['checkin-card'].style.display, '');
   assert.notEqual(els['night-card']?.style.display, '');
@@ -97,7 +97,7 @@ test('parseIB reads date, weight and fat % from an InBody link', () => {
 });
 
 test('after check-in without weight: summary offers a weight input', async () => {
-  const { els } = runPage(jsonFetch(vitals({ todayWellness: { mood: 2, soreness: 1, fatigue: 2, motivation: 1, weight: null } })));
+  const { els } = runPage(jsonFetch(vitals({ todayWellness: { soreness: 1, fatigue: 2, motivation: 1, weight: null } })));
   await settle();
   assert.match(els['subj-card'].innerHTML, /id="weight-input"/);
 });
@@ -112,7 +112,7 @@ test('saveWeight posts today\'s weight and clears the weight warning', async () 
   const posts = [];
   const fetchImpl = async (url, opts) => {
     if (opts?.method === 'POST') { posts.push(JSON.parse(opts.body)); return { ok: true, json: async () => ({}) }; }
-    return { ok: true, json: async () => vitals({ todayWellness: { mood: 2, soreness: 1, fatigue: 2, motivation: 1, weight: null }, lastWeightDate: daysAgo(10) }) };
+    return { ok: true, json: async () => vitals({ todayWellness: { soreness: 1, fatigue: 2, motivation: 1, weight: null }, lastWeightDate: daysAgo(10) }) };
   };
   const { els, ctx } = runPage(fetchImpl);
   await settle();
@@ -127,7 +127,7 @@ test('saveWeight rejects an invalid weight without posting', async () => {
   const posts = [];
   const fetchImpl = async (url, opts) => {
     if (opts?.method === 'POST') { posts.push(opts.body); return { ok: true, json: async () => ({}) }; }
-    return { ok: true, json: async () => vitals({ todayWellness: { mood: 2, soreness: 1, fatigue: 2, motivation: 1, weight: null } }) };
+    return { ok: true, json: async () => vitals({ todayWellness: { soreness: 1, fatigue: 2, motivation: 1, weight: null } }) };
   };
   const { els, ctx } = runPage(fetchImpl);
   await settle();

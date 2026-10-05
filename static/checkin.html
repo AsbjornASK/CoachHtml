@@ -108,8 +108,8 @@
       </div>
     </div>
     <div class="checkin-section">Yesterday</div>
-    <!-- Rows in this group are saved to yesterday's date -->
-    <div class="checkin-group" data-day="yesterday">
+    <!-- Fields marked day: 'yesterday' in WELLNESS are saved to yesterday's date -->
+    <div class="checkin-group">
       <div class="checkin-row">
         <div class="checkin-label">Stress</div>
         <div class="btn-group" data-field="stress"></div>
@@ -151,6 +151,7 @@ const YESTERDAY=new Date(Date.now()-86400000).toISOString().slice(0,10);
 const LS=checkinKey(TODAY);
 const SLBLS=Object.fromEntries(Object.entries(WELLNESS).map(([k,w])=>[k,w.labels]));
 const SLBL_NAMES=Object.fromEntries(Object.entries(WELLNESS).map(([k,w])=>[k,w.name]));
+const YESTERDAY_FIELDS=Object.keys(WELLNESS).filter(k=>WELLNESS[k].day==='yesterday');
 
 // Form buttons come from the shared labels: uppercase, coloured by value 1–4
 function checkinButtonsHTML(field){
@@ -163,6 +164,10 @@ let _fresh=null;
 
 function readSaved(){try{return JSON.parse(localStorage.getItem(LS)||'null');}catch{return null;}}
 const post=body=>fetch('/api/update-wellness',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+async function postOrThrow(body){
+  const r=await post(body);
+  if(!r.ok){const e=await r.json().catch(()=>({}));throw Object.assign(new Error('Error: '+(e.error||r.status)),{api:true});}
+}
 function fmtN(n){return n==null?'-':String(n).replace('.',',');}
 
 function trend(arr,invert=false){
@@ -179,14 +184,14 @@ const arrow=t=>`<span class="${t.c}">${t.a==='up'?'↑':t.a==='down'?'↓':'→'
 
 // One summary tile, coloured by value 1–4
 function subjTile(f,v,cls='',suffix=''){
-  return`<div class="subj-item s${v??2}${cls}"><div class="subj-label">${SLBL_NAMES[f]}${suffix}</div><div class="subj-value">${v?SLBLS[f][v-1]:'-'}</div></div>`;
+  return`<div class="subj-item s${v??2}${cls?' '+cls:''}"><div class="subj-label">${SLBL_NAMES[f]}${suffix}</div><div class="subj-value">${v?SLBLS[f][v-1]:'-'}</div></div>`;
 }
 
 function showSummary(w){
   const card=document.getElementById('subj-card');
   card.innerHTML=`<div class="card-title">Today's check-in</div>
     <div class="subjective-grid">${TODAY_FIELDS.map(f=>subjTile(f,w[f])).join('')}
-      ${subjTile('mood',w.mood,' full','<small> yesterday</small>')}
+      ${subjTile('mood',w.mood,'full','<small> yesterday</small>')}
       <div class="subj-item wide"><div class="subj-label">Weight</div><div class="subj-value" id="weight-cell">${w.weight!=null?fmtN(w.weight)+' kg':weightInputHTML}</div></div></div>
     <div class="note-area"><textarea class="note-textarea" id="subj-note" placeholder="Add a note for today…">${w.comments??''}</textarea><div class="note-status" id="subj-note-status"></div></div>`;
   card.style.display='';
@@ -243,8 +248,10 @@ function renderWarnings(){
   if(v)_fresh={lastWeightDate:saved?.weight!=null?TODAY:v.lastWeightDate??null,lastBodyCompDate:v.lastBodyCompDate??null};
   renderWarnings();
   if(hasCheckinValues(tw)||saved){
-    const mood=v?.yesterdayWellness?.mood??saved?.mood??null;
-    showSummary({...(hasCheckinValues(tw)?tw:{...saved,comments:tw?.comments??null,weight:tw?.weight??saved.weight??null}),mood});
+    // Yesterday-logged fields (mood, stress) are read from yesterday's entry
+    const base=hasCheckinValues(tw)?tw:{...saved,comments:tw?.comments??null,weight:tw?.weight??saved.weight??null};
+    const yv=Object.fromEntries(YESTERDAY_FIELDS.map(f=>[f,v?.yesterdayWellness?.[f]??saved?.[f]??null]));
+    showSummary({...base,...yv});
     showNight(v?.latest,v?.trends);
     document.getElementById('coach-link').style.display='';
   }
@@ -294,20 +301,17 @@ function parseIB(url){
   document.querySelectorAll('#checkin-card .btn-group').forEach(g=>{g.querySelectorAll('button').forEach(b=>{b.addEventListener('click',()=>selectBtn(g,b));});});
   document.getElementById('checkin-submit').addEventListener('click',async()=>{
     const btn=document.getElementById('checkin-submit'),st=document.getElementById('checkin-status');
-    // Rows in the "Yesterday" group (stress, mood) are saved to yesterday's date, before today's
-    const p={date:TODAY},y={date:YESTERDAY};
-    document.querySelectorAll('#checkin-card .btn-group').forEach(g=>{const s=g.querySelector('button.selected');if(s)(g.closest('[data-day="yesterday"]')?y:p)[g.dataset.field]=+s.dataset.val;});
+    // Yesterday-logged fields (stress, mood) are saved to yesterday's date, before today's
+    const p={date:TODAY},y={};
+    document.querySelectorAll('#checkin-card .btn-group').forEach(g=>{const s=g.querySelector('button.selected');if(s)(YESTERDAY_FIELDS.includes(g.dataset.field)?y:p)[g.dataset.field]=+s.dataset.val;});
     const wRaw=document.getElementById('checkin-weight').value.trim().replace(',','.');
     if(wRaw){const w=parseFloat(wRaw);if(!w||w<40||w>200){st.textContent='Invalid weight';st.className='form-status err';return;}p.weight=w;}
     btn.disabled=true;st.textContent='Saving…';st.className='form-status';
     try{
-      if(Object.keys(y).length>1){const rs=await post(y);if(!rs.ok){const e=await rs.json().catch(()=>({}));throw Object.assign(new Error('Error: '+(e.error||rs.status)),{api:true});}}
-      const r=await post(p);
-      if(r.ok){
-        try{localStorage.setItem(LS,JSON.stringify({...y,...p}));}catch{}
-        location.href='/';
-      }
-      else{const e=await r.json().catch(()=>({}));st.textContent='Error: '+(e.error||r.status);st.className='form-status err';btn.disabled=false;}
+      if(Object.keys(y).length)await postOrThrow({date:YESTERDAY,...y});
+      await postOrThrow(p);
+      try{localStorage.setItem(LS,JSON.stringify({...p,...y}));}catch{}
+      location.href='/';
     }catch(err){st.textContent=err.api?err.message:'Network error';st.className='form-status err';btn.disabled=false;}
   });
 })();
