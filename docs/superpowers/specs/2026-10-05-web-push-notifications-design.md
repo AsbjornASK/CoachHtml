@@ -35,12 +35,12 @@ Notifikationer slås til og fra på en ny **Profil-side**.
 
 ### Profil: `static/profile.html` (ny)
 
-Åbnes fra et person-ikon øverst til højre i topbaren på Check-in, Coach, Vitals og Dashboard. Data-siden er en desktop-side med sin egen `topbar-nav` og får et "Profile"-link der. Bundbaren er uændret. Profil-siden har samme topbar og bundbar som de andre mobilsider, uden aktiv fane.
+Åbnes fra et person-ikon øverst til højre i topbaren på alle sider med en topbar (Check-in, Coach, Vitals, Dashboard, Data). Ikonet indsættes af et fælles script, `static/js/app-shell.js`, så sidernes markup ikke skal ændres. Bundbaren er uændret. Profil-siden har samme topbar og bundbar som de andre mobilsider, uden aktiv fane.
 
 Ét kort, **Notifications**, med:
 
 - **Status**, en af:
-  - *On*: der findes en subscription i browseren, og den er gemt på serveren.
+  - *On*: der findes en subscription i browseren, og serveren har den samme (`endpoint` fra `GET /api/push-subscribe` er det samme).
   - *Off*: understøttet, men ikke slået til.
   - *Add to Home Screen first*: iPhone i Safari uden for den installerede app (`navigator.standalone !== true` og ingen `PushManager`).
   - *Not supported*: ingen service worker eller `PushManager`.
@@ -50,17 +50,16 @@ Notifikationer slås til og fra på en ny **Profil-side**.
   - Fra: `subscription.unsubscribe()` og `DELETE /api/push-subscribe`.
 - **Send test**: `POST /api/push-test`. Vises kun, når status er *On*. Resultatet vises som tekst under knappen.
 
-Den offentlige VAPID-nøgle hentes fra `GET /api/push-subscribe`, så den kun står ét sted (env var).
+Den offentlige VAPID-nøgle og den gemte subscriptions `endpoint` hentes fra `GET /api/push-subscribe`, så nøglen kun står ét sted (env var).
 
 ### Alle sider
 
 - `<link rel="manifest" href="/manifest.webmanifest">`, `apple-touch-icon`, `apple-mobile-web-app-capable` og `theme-color` i `<head>`.
-- Person-ikonet i topbaren (inline SVG, samme stil som bundbarens ikoner).
-- Service workeren registreres på alle sider (`navigator.serviceWorker.register('/sw.js')`), så den er aktiv, uanset hvilken side appen åbnes på.
+- `<script src="/js/app-shell.js"></script>` sidst i `<body>`. Scriptet registrerer service workeren (`/sw.js`), så den er aktiv, uanset hvilken side appen åbnes på, og indsætter person-ikonet (inline SVG) i `.topbar`.
 
-### Coach: `static/index.html`
+### Coach og Vitals: `static/index.html`, `static/vitals.html`
 
-Readiness-beregningen flyttes til et delt modul (se nedenfor). Siden viser de samme tal som før.
+Readiness-beregningen (som i dag står ens i begge filer) flyttes til et delt modul (se nedenfor). Siderne viser de samme tal som før.
 
 ## PWA
 
@@ -77,7 +76,7 @@ Readiness-beregningen flyttes til et delt modul (se nedenfor). Siden viser de sa
 
 | Metode | Gør |
 |---|---|
-| `GET` | Returnerer `{ publicKey }` fra `VAPID_PUBLIC_KEY`. |
+| `GET` | Returnerer `{ publicKey, endpoint }`: `VAPID_PUBLIC_KEY` og den gemte subscriptions `endpoint` (eller `null`). `500`, hvis `VAPID_PUBLIC_KEY` mangler. |
 | `POST` | Validerer, at body har `endpoint` (https) og `keys.p256dh` og `keys.auth`. Gemmer som `push/subscription.json` i Vercel Blob (privat, overskriver). |
 | `DELETE` | Sletter `push/subscription.json`. |
 
@@ -99,8 +98,8 @@ Endpointet kræver ikke login, ligesom `update-wellness`. I værste fald kan nog
 
 ### Delte server-moduler
 
-- **`api/_lib/coach-data.mjs`**: det, `get-coach.mjs` bygger i dag, flyttes til `loadCoachData(intervals, today)`. `get-coach.mjs` returnerer `json(await loadCoachData(...))` og er uændret udadtil.
-- **`api/_lib/freshness-dates.mjs`**: `lastWeightDate` og `lastBodyCompDate` flyttes fra `get-vitals.mjs` til en funktion, som både `get-vitals` og cron'en bruger.
+- **`api/_lib/coach-data.mjs`**: det objekt, `get-coach.mjs` bygger i dag, flyttes til den rene funktion `coachData(days, activities, end)`. `get-coach.mjs` henter som før og returnerer `json(coachData(...))`. Den er uændret udadtil.
+- **`api/_lib/intervals.mjs`**: ny `freshnessDates(days)` → `{ lastWeightDate, lastBodyCompDate }`, flyttet fra `get-vitals.mjs`, som både `get-vitals` og cron'en bruger. Cron'en henter 21 dages wellness én gang og bruger dagene til både `coachData` og `freshnessDates`.
 - **`api/_lib/calendar.mjs`**: ny funktion `calendarEvents(today)` med den hentning, filtrering og sortering, `get-calendar.mjs` laver i dag. `get-calendar` bruger den og er uændret udadtil. Cron'en tager dagens events derfra. Er der ingen kalendere sat op, er listen tom.
 - **`api/_lib/push.mjs`**: `readSubscription()`, `saveSubscription()`, `deleteSubscription()` (Vercel Blob) og `sendPush(subscription, payload)` (`web-push`, VAPID fra env). Returnerer `{ ok, gone }`, hvor `gone` betyder 404 eller 410.
 - **`api/_lib/morning-message.mjs`**: ren funktion, se nedenfor.
@@ -111,7 +110,9 @@ Samme mønster som `wellness-labels.js`: klassisk `<script>` i browseren og `req
 
 - **`static/js/readiness.js`** (ny): `BL`, `calcRecovery`, `calcSleep`, `calcSubjectiveScore`, `calcReadiness`, `verdictColor` flyttes uændret fra `index.html`.
 - **`static/js/checkin-state.js`**: `hasCheckinValues` genbruges uændret.
-- **`static/js/data-freshness.js`**: `freshnessWarnings` genbruges uændret.
+- **`static/js/data-freshness.js`**: `freshnessWarnings` genbruges. Ny `warningText(w)` giver advarslens tekst, så Check-in-siden og notifikationen skriver det samme.
+- **`static/js/app-shell.js`** (ny): registrerer service workeren og indsætter Profil-ikonet.
+- **`static/js/push-status.js`** (ny): den rene statusfunktion til Profil-siden.
 
 ## Morgenbeskeden
 
@@ -136,7 +137,7 @@ Samme mønster som `wellness-labels.js`: klassisk `<script>` i browseren og `req
   - `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`: genereres én gang med `npx web-push generate-vapid-keys`.
   - `VAPID_SUBJECT`: `mailto:` med brugerens e-mail.
   - `CRON_SECRET`: tilfældig streng. Vercel sender den automatisk til cron-kald.
-  - `BLOB_READ_WRITE_TOKEN`: kommer automatisk, når en Blob store forbindes til projektet.
+  - `BLOB_STORE_ID`: kommer automatisk, når en privat Blob store forbindes til projektet. Adgang sker med Vercels OIDC, så der er intet token at sætte.
 
 Manuelle trin for brugeren: oprette Blob store og forbinde den, sætte de fire env vars, deploye og føje appen til hjemmeskærmen på iPhone.
 
