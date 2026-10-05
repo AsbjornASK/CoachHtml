@@ -56,10 +56,16 @@ function b64ToBytes(b64){const p='='.repeat((4-b64.length%4)%4);const s=atob((b6
 const supported=()=>'serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window;
 const msg=(t,err=false)=>{$('notif-msg').textContent=t;$('notif-msg').className='notif-msg'+(err?' err':'');};
 
+// The service worker registration, or null if it isn't ready within 5 s (e.g. sw.js failed to register)
+let _reg;
+function registration(){
+  if(!supported())return Promise.resolve(null);
+  return _reg??=Promise.race([navigator.serviceWorker.ready,new Promise(r=>setTimeout(()=>r(null),5000))]);
+}
+
 async function browserSubscription(){
-  if(!supported())return null;
-  const reg=await navigator.serviceWorker.ready;
-  return reg.pushManager.getSubscription();
+  const reg=await registration();
+  return reg?reg.pushManager.getSubscription():null;
 }
 
 async function refresh(){
@@ -69,9 +75,10 @@ async function refresh(){
     if(!r.ok)throw new Error(d.error||r.status);
     _publicKey=d.publicKey;_serverEndpoint=d.endpoint;
   }catch(e){$('notif-status').textContent='Notifications are not set up on the server ('+e.message+').';return;}
-  const sub=await browserSubscription().catch(()=>null);
+  const reg=await registration();
+  const sub=reg?await reg.pushManager.getSubscription().catch(()=>null):null;
   _status=notificationStatus({
-    supported:supported(),
+    supported:!!reg,
     standalone:window.navigator.standalone===true||matchMedia('(display-mode: standalone)').matches,
     ios:/iPhone|iPad|iPod/.test(navigator.userAgent),
     permission:'Notification' in window?Notification.permission:'default',

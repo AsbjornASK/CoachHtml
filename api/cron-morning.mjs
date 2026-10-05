@@ -1,5 +1,5 @@
 // Daily Vercel Cron (vercel.json): one morning push to the stored subscription.
-import { pushDeps } from './_lib/push.mjs';
+import { pushDeps, guardStorage } from './_lib/push.mjs';
 import { morningMessage } from './_lib/morning-message.mjs';
 import { coachData } from './_lib/coach-data.mjs';
 import { intervalsClient, parseDays, freshnessDates } from './_lib/intervals.mjs';
@@ -26,7 +26,7 @@ export async function loadMorning(today = new Date()) {
 }
 
 export function makeGET({ store, send, loadMorning: load }) {
-  return async function GET(request) {
+  return guardStorage(async request => {
     const secret = process.env.CRON_SECRET;
     if (!secret || request.headers.get('authorization') !== `Bearer ${secret}`) {
       return json({ error: 'Unauthorized' }, 401);
@@ -39,7 +39,7 @@ export function makeGET({ store, send, loadMorning: load }) {
     const r = await send(sub, msg);
     if (r.gone) await store.remove();
     return r.ok ? json({ sent: true, title: msg.title }) : json({ sent: false, status: r.status }, 502);
-  };
+  });
 }
 
 export const GET = makeGET({ ...pushDeps, loadMorning });

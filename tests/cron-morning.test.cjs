@@ -75,3 +75,12 @@ test('vercel.json schedules the cron at 07:00 UTC', () => {
   const v = require('../vercel.json');
   assert.deepEqual(v.crons, [{ path: '/api/cron-morning', schedule: '0 7 * * *' }]);
 });
+
+test('storage errors give a JSON 500', async () => {
+  process.env.CRON_SECRET = 's3cret';
+  const d = deps({ store: { async read() { throw new Error('BlobError'); } } });
+  const r = await cron.makeGET(d)(req('Bearer s3cret'));
+  assert.equal(r.status, 500);
+  assert.deepEqual(await r.json(), { error: 'Storage unavailable' });
+  assert.equal(d.sent.length, 0);
+});

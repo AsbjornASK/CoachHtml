@@ -1,15 +1,32 @@
 // The single Web Push subscription (private Vercel Blob) and sending to it.
 import { put, get, del } from '@vercel/blob';
 import webpush from 'web-push';
+import { json } from './util.mjs';
 
 export const SUBSCRIPTION_PATH = 'push/subscription.json';
 const TTL_SECONDS = 4 * 3600; // a morning message is useless after a few hours
 
+// Apple, Google, Mozilla and Microsoft push services; anything else could point the cron at an arbitrary URL
+const PUSH_HOST = /(^|\.)push\.apple\.com$|^fcm\.googleapis\.com$|^updates\.push\.services\.mozilla\.com$|(^|\.)notify\.windows\.com$/;
+
+function isPushEndpoint(endpoint) {
+  try {
+    const u = new URL(endpoint);
+    return u.protocol === 'https:' && PUSH_HOST.test(u.hostname);
+  } catch { return false; }
+}
+
 export function isValidSubscription(s) {
   return !!s && typeof s === 'object'
-    && typeof s.endpoint === 'string' && s.endpoint.startsWith('https://')
+    && typeof s.endpoint === 'string' && isPushEndpoint(s.endpoint)
     && typeof s.keys?.p256dh === 'string' && typeof s.keys?.auth === 'string';
 }
+
+// Storage (Blob) errors answer a JSON 500 instead of crashing the function
+export const guardStorage = handler => async request => {
+  try { return await handler(request); }
+  catch (e) { console.error(e); return json({ error: 'Storage unavailable' }, 500); }
+};
 
 export const blobStore = {
   async read() {

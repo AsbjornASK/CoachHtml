@@ -69,3 +69,15 @@ test('push-test without a subscription is a 404; a gone subscription is deleted'
   assert.equal(r.status, 502);
   assert.equal(store.value, null);
 });
+
+const brokenStore = () => ({ async read() { throw new Error('BlobError'); }, async save() { throw new Error('BlobError'); }, async remove() { throw new Error('BlobError'); } });
+
+test('storage errors give a JSON 500, not a crash', async () => {
+  process.env.VAPID_PUBLIC_KEY = 'PUB';
+  const h = sub.makeHandlers({ store: brokenStore() });
+  for (const r of [await h.GET(req('GET')), await h.POST(req('POST', SUB)), await h.DELETE(req('DELETE')),
+    await tst.makePOST({ store: brokenStore(), send: async () => ({ ok: true }) })(req('POST'))]) {
+    assert.equal(r.status, 500);
+    assert.deepEqual(await r.json(), { error: 'Storage unavailable' });
+  }
+});

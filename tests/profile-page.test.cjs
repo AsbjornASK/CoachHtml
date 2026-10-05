@@ -27,7 +27,7 @@ function runPage({ browserSub, serverEndpoint }) {
       if (opts?.method === 'POST') { posts.push(JSON.parse(opts.body)); return { ok: true, json: async () => ({}) }; }
       return { ok: true, json: async () => ({ publicKey: 'AAAA', endpoint: serverEndpoint }) };
     },
-    ...status, console,
+    ...status, console, setTimeout,
   };
   ctx.window = ctx;
   vm.runInNewContext(script, ctx);
@@ -51,4 +51,21 @@ test('Turn on without a browser subscription subscribes and saves it', async () 
   await settle();
   await ctx.turnOn();
   assert.equal(posts.at(-1).endpoint, 'https://web.push.apple.com/new');
+});
+
+test('a service worker that never becomes ready shows "not supported" instead of hanging', async () => {
+  const els = {};
+  const el = () => ({ style: {}, textContent: '', className: '', disabled: false, addEventListener() {} });
+  const ctx = {
+    document: { getElementById: id => (els[id] ??= el()) },
+    navigator: { serviceWorker: { ready: new Promise(() => {}) }, userAgent: 'iPhone', standalone: true },
+    PushManager: {}, Notification: { permission: 'default' }, matchMedia: () => ({ matches: true }),
+    setTimeout: fn => fn(), // the readiness timeout fires at once
+    fetch: async () => ({ ok: true, json: async () => ({ publicKey: 'AAAA', endpoint: null }) }),
+    ...status, console,
+  };
+  ctx.window = ctx;
+  vm.runInNewContext(script, ctx);
+  await settle();
+  assert.equal(els['notif-status'].textContent, status.STATUS_TEXT.unsupported);
 });

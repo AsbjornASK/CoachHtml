@@ -80,7 +80,7 @@ Readiness-beregningen (som i dag står ens i begge filer) flyttes til et delt mo
 | `POST` | Validerer, at body har `endpoint` (https) og `keys.p256dh` og `keys.auth`. Gemmer som `push/subscription.json` i Vercel Blob (privat, overskriver). |
 | `DELETE` | Sletter `push/subscription.json`. |
 
-Endpointet kræver ikke login, ligesom `update-wellness`. I værste fald kan nogen overskrive subscriptionen. De kan ikke læse data.
+Endpointet kræver ikke login, ligesom resten af API'et. Nogen kan derfor overskrive eller slette subscriptionen og selv modtage morgenbeskeden (Readiness og dagens pas). Det er samme data, som `get-coach` og `get-calendar` allerede udleverer uden login. `endpoint` skal ligge hos en kendt push-tjeneste (Apple, Google, Mozilla, Microsoft), så cron'en ikke kan bruges til at kalde vilkårlige adresser.
 
 ### `api/push-test.mjs` (ny)
 

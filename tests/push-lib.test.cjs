@@ -51,3 +51,15 @@ test('the real web-push library rejects missing VAPID keys without throwing out 
   const r = await push.sendPush(sub, {});
   assert.equal(r.ok, false);
 });
+
+test('isValidSubscription only accepts known push services', () => {
+  const at = endpoint => push.isValidSubscription({ ...sub, endpoint });
+  assert.equal(at('https://web.push.apple.com/x'), true);
+  assert.equal(at('https://api.push.apple.com/x'), true);
+  assert.equal(at('https://fcm.googleapis.com/fcm/send/x'), true);
+  assert.equal(at('https://updates.push.services.mozilla.com/wpush/v2/x'), true);
+  assert.equal(at('https://evil.example.com/x'), false);
+  assert.equal(at('https://push.apple.com.evil.com/x'), false);
+  assert.equal(at('https://evilpush.apple.com/x'), false);
+  assert.equal(at('not a url'), false);
+});
