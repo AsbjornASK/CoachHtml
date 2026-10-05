@@ -146,9 +146,9 @@ test('form buttons are rendered from the shared wellness labels', () => {
   assert.match(ctx.checkinButtonsHTML('mood'), /data-val="1" data-color="c-green">GREAT</);
 });
 
-test('summary shows today\'s Sick/injured and yesterday\'s mood', async () => {
+test('summary shows today\'s Sick/injured and yesterday\'s mood on their own rows', async () => {
   const { els } = runPage(jsonFetch(vitals({ todayWellness: { soreness: 1, fatigue: 2, motivation: 1, injury: 3, weight: null }, yesterdayWellness: { mood: 4 } })));
   await settle();
-  assert.match(els['subj-card'].innerHTML, /Sick\/injured<\/div><div class="subj-value">Sick</);
-  assert.match(els['subj-card'].innerHTML, /Mood<small> yesterday<\/small><\/div><div class="subj-value">Low</);
+  assert.match(els['subj-card'].innerHTML, /<div class="subj-item s3 full"><div class="subj-label">Sick\/injured<\/div><div class="subj-value">Sick</);
+  assert.match(els['subj-card'].innerHTML, /<div class="subj-item s4 full"><div class="subj-label">Mood<small> yesterday<\/small><\/div><div class="subj-value">Low</);
 });
