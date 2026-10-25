@@ -8,25 +8,22 @@ export async function GET() {
   const today     = new Date();
   const end       = fmt(today);
   const yesterday = daysAgo(1, today);
-  const start     = daysAgo(21, today);
-  const startLong = daysAgo(365, today);
+  const start     = daysAgo(90, today);
 
-  const [wellnessRes, ywRes, bodyCompRes] = await Promise.all([
+  const [wellnessRes, ywRes] = await Promise.all([
     intervals.get(`/wellness?oldest=${start}&newest=${end}`),
     intervals.get(`/wellness/${yesterday}`),
-    intervals.get(`/wellness?oldest=${startLong}&newest=${end}`),
   ]);
 
   if (!wellnessRes.ok) {
     return json({ error: 'Intervals wellness API error', status: wellnessRes.status }, 502);
   }
 
-  const rawWellness    = await wellnessRes.json();
-  const yw             = ywRes.ok ? await ywRes.json() : {};
+  const rawWellness = await wellnessRes.json();
+  const yw          = ywRes.ok ? await ywRes.json() : {};
 
   const days    = parseDays(rawWellness);
-  let allDays   = days;
-  try { if (bodyCompRes.ok) allDays = parseDays(await bodyCompRes.json()); } catch { /* fallback to 21-day window */ }
+  const allDays = days;
   const last7          = days.slice(-7);
   const latest         = findLatest(days, d => rhrOf(d) != null);
   const yesterdayEntry = days.find(d => d.date === yesterday) ?? {};
