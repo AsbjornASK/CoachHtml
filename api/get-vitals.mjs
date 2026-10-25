@@ -14,7 +14,7 @@ export async function GET() {
   const [wellnessRes, ywRes, bodyCompRes] = await Promise.all([
     intervals.get(`/wellness?oldest=${start}&newest=${end}`),
     intervals.get(`/wellness/${yesterday}`),
-    intervals.get(`/wellness?oldest=${startLong}&newest=${end}&fields=date,weight,fatMass,bodyFat`),
+    intervals.get(`/wellness?oldest=${startLong}&newest=${end}`),
   ]);
 
   if (!wellnessRes.ok) {
@@ -24,8 +24,9 @@ export async function GET() {
   const rawWellness    = await wellnessRes.json();
   const yw             = ywRes.ok ? await ywRes.json() : {};
 
-  const days           = parseDays(rawWellness);
-  const allDays        = bodyCompRes.ok ? parseDays(await bodyCompRes.json()) : days;
+  const days    = parseDays(rawWellness);
+  let allDays   = days;
+  try { if (bodyCompRes.ok) allDays = parseDays(await bodyCompRes.json()); } catch { /* fallback to 21-day window */ }
   const last7          = days.slice(-7);
   const latest         = findLatest(days, d => rhrOf(d) != null);
   const yesterdayEntry = days.find(d => d.date === yesterday) ?? {};
