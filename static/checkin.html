@@ -59,6 +59,12 @@
     .inbody-url-btn:disabled { background: #aeaeb2; cursor: default; }
     .inbody-url-status { text-align: center; font-size: 12px; margin-top: 6px; min-height: 14px; }
     .inbody-url-status.ok { color: #30d158; font-weight: 600; } .inbody-url-status.err { color: #ff3b30; }
+    .bc-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 4px; }
+    .bc-label { font-size: 10px; font-weight: 600; color: #8e8e93; text-transform: uppercase; letter-spacing: 0.4px; }
+    .bc-value { font-size: 16px; font-weight: 700; color: #1c1c1e; margin-top: 2px; }
+    .bc-delta { font-size: 12px; font-weight: 600; margin-top: 1px; }
+    .bc-delta.down { color: #30d158; } .bc-delta.up { color: #ff3b30; } .bc-delta.flat { color: #8e8e93; }
+    .bc-note { font-size: 11px; color: #aeaeb2; margin-bottom: 12px; }
     .skeleton { animation: pulse 1.4s ease-in-out infinite; background: #e5e5ea; border-radius: 16px; height: 320px; margin: 0 12px 12px; }
     @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.4} }
   </style>
@@ -120,6 +126,7 @@
   <div class="card" id="inbody-card" style="display:none">
     <div class="card-title">Body composition</div>
     <div class="checkin-row weight-row"><div class="checkin-label">Weight<small>Today</small></div><div class="weight-cell" id="weight-cell"></div></div>
+    <div id="bodycomp-compare"></div>
     <div class="inbody-quick-row"><input type="text" id="inbody-url-input" class="inbody-url-input" placeholder="Paste InBody link…"><button id="inbody-url-btn" class="inbody-url-btn">Import</button></div>
     <div class="inbody-url-status" id="inbody-url-status"></div>
   </div>
@@ -194,6 +201,29 @@ async function saveWeight(raw){
 document.addEventListener('click',e=>{if(e.target.id==='weight-save')saveWeight(document.getElementById('weight-input').value);});
 document.addEventListener('keydown',e=>{if(e.target.id==='weight-input'&&e.key==='Enter')saveWeight(e.target.value);});
 
+// Latest body composition measurement vs. the one before it (from /api/get-vitals inBody)
+let _ib=null;
+function bcDelta(cur,prev){
+  if(cur==null||prev==null)return'';
+  const d=Math.round((cur-prev)*10)/10;
+  if(Math.abs(d)<0.05)return'<div class="bc-delta flat">→ 0</div>';
+  return`<div class="bc-delta ${d<0?'down':'up'}">${d<0?'↓':'↑'} ${fmtN(Math.abs(d))}</div>`;
+}
+function bodyCompHTML(ib){
+  if(!ib)return'';
+  const p=ib.prev,tile=(label,key,unit)=>`<div><div class="bc-label">${label}</div><div class="bc-value">${fmtN(ib[key])}${unit}</div>${bcDelta(ib[key],p?.[key])}</div>`;
+  return`<div class="bc-grid">${tile('Weight','weight',' kg')}${tile('Body fat','fatPct',' %')}${tile('Fat mass','fatMass',' kg')}</div>
+    <div class="bc-note">Measured ${ib.date}${p?` · vs. ${p.date}`:' · no earlier measurement'}</div>`;
+}
+function renderBodyComp(){document.getElementById('bodycomp-compare').innerHTML=bodyCompHTML(_ib);}
+// A newly imported measurement becomes the latest; the previous latest becomes the comparison
+function addMeasurement(ib,m){
+  const e={date:m.date,weight:m.weight,fatPct:m.fatPct,fatMass:Math.round(m.weight*m.fatPct/10)/10};
+  if(!ib||m.date>ib.date)return{...e,prev:ib?{...ib,prev:undefined}:null};
+  if(m.date===ib.date)return{...e,prev:ib.prev};
+  return ib;
+}
+
 function renderWarnings(){
   const el=document.getElementById('warnings');
   if(!_fresh){el.innerHTML='';return;}
@@ -213,6 +243,7 @@ function renderWarnings(){
   const tw=v?.todayWellness??null,saved=readSaved();
   if(v)_fresh={lastWeightDate:v.lastWeightDate??null,lastBodyCompDate:v.lastBodyCompDate??null};
   renderWarnings();
+  _ib=v?.inBody??null;renderBodyComp();
   if(hasCheckinValues(tw)||saved){
     // Yesterday-logged fields (mood, stress) are read from yesterday's entry
     const base=hasCheckinValues(tw)?tw:{...saved,comments:tw?.comments??null};
@@ -250,6 +281,7 @@ function parseIB(url){
         st.textContent=`Saved: ${fmtN(d.weight)} kg, ${fmtN(d.fatPct)} % body fat (${d.date})`;st.className='inbody-url-status ok';input.value='';
         if(d.date===TODAY)document.getElementById('weight-cell').innerHTML=fmtN(d.weight)+' kg';
         if(_fresh){_fresh.lastWeightDate=later(_fresh.lastWeightDate,d.date);_fresh.lastBodyCompDate=later(_fresh.lastBodyCompDate,d.date);renderWarnings();}
+        _ib=addMeasurement(_ib,d);renderBodyComp();
       }else{
         const e=await r.json().catch(()=>({}));
         st.textContent='Error: '+(e.error||r.status)+(e.details?' — '+e.details:'');st.className='inbody-url-status err';

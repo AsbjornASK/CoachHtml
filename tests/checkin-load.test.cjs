@@ -148,3 +148,39 @@ test('summary shows today\'s fields on one row and yesterday\'s on another', asy
   assert.match(yesterday, /<div class="subj-item s2"><div class="subj-label">Stress<\/div><div class="subj-value">Moderate</);
   assert.match(yesterday, /<div class="subj-item s4"><div class="subj-label">Mood<\/div><div class="subj-value">Low</);
 });
+
+const inBody = {
+  date: daysAgo(3), weight: 78.4, fatPct: 18.2, fatMass: 14.3,
+  prev: { date: daysAgo(17), weight: 79.1, fatPct: 18.2, fatMass: 14.0 },
+};
+
+test('Body composition compares the latest measurement with the previous one', async () => {
+  const { els } = runPage(jsonFetch(vitals({ inBody })));
+  await settle();
+  const html = els['bodycomp-compare'].innerHTML;
+  assert.match(html, /78,4 kg<\/div><div class="bc-delta down">↓ 0,7</);
+  assert.match(html, /18,2 %<\/div><div class="bc-delta flat">→ 0</);
+  assert.match(html, /14,3 kg<\/div><div class="bc-delta up">↑ 0,3</);
+  assert.match(html, new RegExp(`Measured ${daysAgo(3)} · vs. ${daysAgo(17)}`));
+});
+
+test('Body composition without an earlier measurement shows no deltas', async () => {
+  const { els } = runPage(jsonFetch(vitals({ inBody: { ...inBody, prev: null } })));
+  await settle();
+  const html = els['bodycomp-compare'].innerHTML;
+  assert.doesNotMatch(html, /bc-delta/);
+  assert.match(html, /no earlier measurement/);
+});
+
+test('an imported InBody measurement becomes the latest and is compared with the old latest', () => {
+  const { ctx } = runPage(hangingFetch, 1);
+  const ib = ctx.addMeasurement(inBody, { date: TODAY, weight: 78.0, fatPct: 17.5 });
+  assert.equal(ib.date, TODAY);
+  assert.equal(ib.fatMass, 13.7);
+  assert.equal(ib.prev.date, daysAgo(3));
+  assert.equal(ib.prev.weight, 78.4);
+  // Re-importing the same date keeps the comparison
+  assert.equal(ctx.addMeasurement(ib, { date: TODAY, weight: 77.9, fatPct: 17.5 }).prev.date, daysAgo(3));
+  // An older measurement doesn't replace the latest
+  assert.equal(ctx.addMeasurement(inBody, { date: daysAgo(30), weight: 80, fatPct: 19 }), inBody);
+});
