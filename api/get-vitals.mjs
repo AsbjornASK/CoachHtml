@@ -9,10 +9,12 @@ export async function GET() {
   const end       = fmt(today);
   const yesterday = daysAgo(1, today);
   const start     = daysAgo(21, today);
+  const startLong = daysAgo(365, today);
 
-  const [wellnessRes, ywRes] = await Promise.all([
+  const [wellnessRes, ywRes, bodyCompRes] = await Promise.all([
     intervals.get(`/wellness?oldest=${start}&newest=${end}`),
     intervals.get(`/wellness/${yesterday}`),
+    intervals.get(`/wellness?oldest=${startLong}&newest=${end}&fields=date,weight,fatMass,bodyFat`),
   ]);
 
   if (!wellnessRes.ok) {
@@ -23,13 +25,14 @@ export async function GET() {
   const yw             = ywRes.ok ? await ywRes.json() : {};
 
   const days           = parseDays(rawWellness);
+  const allDays        = bodyCompRes.ok ? parseDays(await bodyCompRes.json()) : days;
   const last7          = days.slice(-7);
   const latest         = findLatest(days, d => rhrOf(d) != null);
   const yesterdayEntry = days.find(d => d.date === yesterday) ?? {};
   const todayEntry     = days.find(d => d.date === end) ?? {};
 
   const HEIGHT = 1.755;
-  const bodyCompEntries = days.filter(d => d.weight && (d.fatMass || d.bodyFat));
+  const bodyCompEntries = allDays.filter(d => d.weight && (d.fatMass || d.bodyFat));
   const bodyComp        = bodyCompEntries[bodyCompEntries.length - 1];
   const prevBodyComp    = bodyCompEntries[bodyCompEntries.length - 2];
   const toInBody = e => {
