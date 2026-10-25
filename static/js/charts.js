@@ -282,6 +282,18 @@ function hrvCalStressChart(days, series, bands) {
     return `<text x="${px(i).toFixed(1)}" y="${totalH - 5}" font-size="${fs}" fill="#aeaeb2" text-anchor="middle">${colW > 40 ? weekday + ' ' : ''}${fmtDM(d.date)}</text>`;
   }).join('');
 
+  const hrvLegend = `<div class="legend" style="margin-top:6px;flex-wrap:wrap;row-gap:4px">
+      <div class="legend-item" style="margin-right:6px"><span class="legend-title">Ikon-farve (180-dages kvartiler):</span></div>
+      ${legendItem('#30d158', 'Top 25 %')}
+      ${legendItem('#ff9f0a', '25–50 %')}
+      ${legendItem('#ff3b30', '50–75 %')}
+      ${legendItem('#bf5af2', 'Bund 25 %')}
+      <div class="legend-item" style="margin-left:10px;margin-right:6px"><span class="legend-title">Tal-farve (42-dages norm):</span></div>
+      ${legendItem('#30d158', '▲ Over norm')}
+      ${legendItem('#ff9f0a', '▼ Under norm')}
+      ${legendItem('#8e8e93', 'Inden for norm')}
+    </div>`;
+
   return `
     <div class="chart-wrap">
       <svg viewBox="0 0 ${W} ${totalH}" width="100%">
@@ -289,6 +301,7 @@ function hrvCalStressChart(days, series, bands) {
         ${rowLabel('Night HRV', nightTop, hrvH)}${rowLabel('Day HRV', dayTop, hrvH)}${rowLabel('Calendar', calTop, calH)}${rowLabel('Stress', stressTop, stressH)}
         ${night}${dayHrv}${cal}${stress}${xLabels}
       </svg>
+      ${hrvLegend}
     </div>`;
 }
 
