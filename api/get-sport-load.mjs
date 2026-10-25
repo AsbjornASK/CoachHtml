@@ -31,11 +31,11 @@ export async function GET() {
   const loadByDay = {};
   for (const a of activities) {
     const cat = sportOf(a.type);
-    if (cat !== 'run' && cat !== 'strength') continue;
+    if (cat !== 'run' && cat !== 'strength' && cat !== 'ride') continue;
     const date = activityDate(a);
     if (!date) continue;
     const load = a.icu_training_load ?? 0;
-    if (!loadByDay[date]) loadByDay[date] = { run: 0, strength: 0 };
+    if (!loadByDay[date]) loadByDay[date] = { run: 0, strength: 0, ride: 0 };
     loadByDay[date][cat] += load;
   }
 
@@ -46,15 +46,18 @@ export async function GET() {
   for (let t = startMs; t <= endMs; t += DAY_MS) {
     const date = fmt(new Date(t));
     const d = loadByDay[date];
-    days.push({ date, run: d?.run ?? 0, strength: d?.strength ?? 0 });
+    days.push({ date, run: d?.run ?? 0, strength: d?.strength ?? 0, ride: d?.ride ?? 0 });
   }
 
-  const runCtl = ewma(days.map(d => d.run), TAU_CTL);
-  const runAtl = ewma(days.map(d => d.run), TAU_ATL);
-  const strCtl = ewma(days.map(d => d.strength), TAU_CTL);
-  const strAtl = ewma(days.map(d => d.strength), TAU_ATL);
-  const runTsb = runCtl.map((c, i) => c - runAtl[i]);
-  const strTsb = strCtl.map((c, i) => c - strAtl[i]);
+  const runCtl  = ewma(days.map(d => d.run),      TAU_CTL);
+  const runAtl  = ewma(days.map(d => d.run),      TAU_ATL);
+  const strCtl  = ewma(days.map(d => d.strength), TAU_CTL);
+  const strAtl  = ewma(days.map(d => d.strength), TAU_ATL);
+  const ridCtl  = ewma(days.map(d => d.ride),     TAU_CTL);
+  const ridAtl  = ewma(days.map(d => d.ride),     TAU_ATL);
+  const runTsb  = runCtl.map((c, i) => c - runAtl[i]);
+  const strTsb  = strCtl.map((c, i) => c - strAtl[i]);
+  const ridTsb  = ridCtl.map((c, i) => c - ridAtl[i]);
 
   const series = days.map((d, i) => ({
     date: d.date,
@@ -68,11 +71,17 @@ export async function GET() {
       atl: r1(strAtl[i]),
       tsb: r1(strTsb[i]),
     },
+    ride: {
+      ctl: r1(ridCtl[i]),
+      atl: r1(ridAtl[i]),
+      tsb: r1(ridTsb[i]),
+    },
   })).slice(-DISPLAY_DAYS);
 
   const baseline = {
     run:      baselineOf(runTsb),
     strength: baselineOf(strTsb),
+    ride:     baselineOf(ridTsb),
   };
 
   return json({ today: end, series, baseline, sessions: sessionsOf(activities, end, SESSION_DAYS) });
