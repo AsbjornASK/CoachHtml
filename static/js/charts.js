@@ -236,13 +236,11 @@ function hrvCalStressChart(days, series, bands) {
   // Night HRV (moon) and Day HRV (sun): icon colour = level vs your 180-day quartiles,
   // number = vs your 42-day norm (▲ above, ▼ below)
   const hrvRow = (top, key, rowBands, kind, name) => days.map((d, i) => {
-    const cy = top + hrvH / 2 - fs * 0.6, v = d[key];
+    const cy = top + hrvH / 2, v = d[key];
     if (v == null) return `<text x="${px(i).toFixed(1)}" y="${cy.toFixed(1)}" font-size="${fs}" fill="#c7c7cc" text-anchor="middle" dominant-baseline="middle">–</text>`;
     const level = hrvLevel(v, rowBands);
     const color = level ? WELLNESS_COLORS[level - 1] : '#aeaeb2';
-    const mark = hrvNormMark(series, d.date, key, v);
-    return hrvIcon(kind, px(i), cy, iconR, color, `${fmtDate(d.date)}: ${name} = ${fmtN(v)} ms`) +
-      `<text x="${px(i).toFixed(1)}" y="${(cy + iconR + fs + 1).toFixed(1)}" font-size="${fs}" font-weight="700" fill="${mark.color}" text-anchor="middle">${mark.arrow}${fmtN(v)}</text>`;
+    return hrvIcon(kind, px(i), cy, iconR, color, `${fmtDate(d.date)}: ${name} = ${fmtN(v)} ms`);
   }).join('');
   const night = hrvRow(nightTop, 'hrv', bands?.night, 'moon', 'Night HRV');
   const dayHrv = hrvRow(dayTop, 'sdnn', bands?.day, 'sun', 'Day HRV');
@@ -283,15 +281,11 @@ function hrvCalStressChart(days, series, bands) {
   }).join('');
 
   const hrvLegend = `<div class="legend" style="margin-top:6px;flex-wrap:wrap;row-gap:4px">
-      <div class="legend-item" style="margin-right:6px"><span class="legend-title">Ikon-farve (180-dages kvartiler):</span></div>
+      <div class="legend-item" style="margin-right:6px"><span class="legend-title">Farve = din HRV ift. dine egne 180-dages kvartiler:</span></div>
       ${legendItem('#30d158', 'Top 25 %')}
       ${legendItem('#ff9f0a', '25–50 %')}
       ${legendItem('#ff3b30', '50–75 %')}
       ${legendItem('#bf5af2', 'Bund 25 %')}
-      <div class="legend-item" style="margin-left:10px;margin-right:6px"><span class="legend-title">Tal-farve (42-dages norm):</span></div>
-      ${legendItem('#30d158', '▲ Over norm')}
-      ${legendItem('#ff9f0a', '▼ Under norm')}
-      ${legendItem('#8e8e93', 'Inden for norm')}
     </div>`;
 
   return `
