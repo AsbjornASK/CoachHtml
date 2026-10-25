@@ -8,7 +8,7 @@ export async function GET() {
   const today     = new Date();
   const end       = fmt(today);
   const yesterday = daysAgo(1, today);
-  const start     = daysAgo(21, today);
+  const start     = daysAgo(90, today);
 
   const [wellnessRes, ywRes] = await Promise.all([
     intervals.get(`/wellness?oldest=${start}&newest=${end}`),
@@ -19,17 +19,18 @@ export async function GET() {
     return json({ error: 'Intervals wellness API error', status: wellnessRes.status }, 502);
   }
 
-  const rawWellness    = await wellnessRes.json();
-  const yw             = ywRes.ok ? await ywRes.json() : {};
+  const rawWellness = await wellnessRes.json();
+  const yw          = ywRes.ok ? await ywRes.json() : {};
 
-  const days           = parseDays(rawWellness);
+  const days    = parseDays(rawWellness);
+  const allDays = days;
   const last7          = days.slice(-7);
   const latest         = findLatest(days, d => rhrOf(d) != null);
   const yesterdayEntry = days.find(d => d.date === yesterday) ?? {};
   const todayEntry     = days.find(d => d.date === end) ?? {};
 
   const HEIGHT = 1.755;
-  const bodyCompEntries = days.filter(d => d.weight && (d.fatMass || d.bodyFat));
+  const bodyCompEntries = allDays.filter(d => d.weight && (d.fatMass || d.bodyFat));
   const bodyComp        = bodyCompEntries[bodyCompEntries.length - 1];
   const prevBodyComp    = bodyCompEntries[bodyCompEntries.length - 2];
   const toInBody = e => {

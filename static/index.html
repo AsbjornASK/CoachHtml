@@ -254,11 +254,11 @@ let _lastData=null,_lastSport=null,_fitTab=null;
 function sportToday(cal){
   const t=(cal?.today??[]).filter(e=>e.category==='training')
     .sort((a,b)=>(a.timeStart??'').localeCompare(b.timeStart??''));
-  for(const e of t){const sp=sportOf(e.title);if(sp==='run'||sp==='strength')return sp;}
+  for(const e of t){const sp=sportOf(e.title);if(sp==='run'||sp==='strength'||sp==='ride')return sp;}
   return'overall';
 }
 
-const TAB_LABELS={overall:'Overall',run:'Run',strength:'Strength'};
+const TAB_LABELS={overall:'Overall',run:'Run',ride:'Bike',strength:'Strength'};
 const titleFor=(base,tab)=>tab==='overall'?base:`${base} · ${TAB_LABELS[tab]}`;
 
 // Numbers + history for one Fitness tab; the Fitness and Training Load Ratio cards both read from here

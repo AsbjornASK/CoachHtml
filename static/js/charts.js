@@ -171,7 +171,7 @@ const CAT_KEYS = Object.keys(CAT_META);
 // ── HRV level and norm (top chart) ───────────────────────────────────────
 const HRV_NORM_DAYS = 42;
 
-// 1 (top quartile, green) … 4 (bottom quartile, purple) against [q25, median, q75] of the last 180 days
+// 1 (top quartile, green) … 4 (bottom quartile, purple) against [q25, median, q75] of the last 60 days
 function hrvLevel(v, bands) {
   if (v == null || !bands) return null;
   return v >= bands[2] ? 1 : v >= bands[1] ? 2 : v >= bands[0] ? 3 : 4;
@@ -208,7 +208,7 @@ const STRESS_COLORS = CHECKIN_COLORS;
 const STRESS_LABELS = ['', ...WELLNESS.stress.labels];
 const STRESS_SHORT  = ['', ...WELLNESS.stress.short];
 
-// days = the columns shown; series = full history for the HRV norm; bands = 180-day HRV quartiles
+// days = the columns shown; series = full history for the HRV norm; bands = 60-day HRV quartiles
 function hrvCalStressChart(days, series, bands) {
   if (!days.some(d => d.hrv != null || d.sdnn != null || d.stress != null || d.cal)) return emptyMsg('No HRV, calendar or stress data yet');
 
@@ -233,16 +233,14 @@ function hrvCalStressChart(days, series, bands) {
   const rowLabel = (txt, y0, h) =>
     `<text x="${PDL - 10}" y="${(y0 + h/2).toFixed(1)}" font-size="${fs}" font-weight="600" fill="#8e8e93" text-anchor="end" dominant-baseline="middle">${txt}</text>`;
 
-  // Night HRV (moon) and Day HRV (sun): icon colour = level vs your 180-day quartiles,
+  // Night HRV (moon) and Day HRV (sun): icon colour = level vs your 60-day quartiles,
   // number = vs your 42-day norm (▲ above, ▼ below)
   const hrvRow = (top, key, rowBands, kind, name) => days.map((d, i) => {
-    const cy = top + hrvH / 2 - fs * 0.6, v = d[key];
+    const cy = top + hrvH / 2, v = d[key];
     if (v == null) return `<text x="${px(i).toFixed(1)}" y="${cy.toFixed(1)}" font-size="${fs}" fill="#c7c7cc" text-anchor="middle" dominant-baseline="middle">–</text>`;
     const level = hrvLevel(v, rowBands);
     const color = level ? WELLNESS_COLORS[level - 1] : '#aeaeb2';
-    const mark = hrvNormMark(series, d.date, key, v);
-    return hrvIcon(kind, px(i), cy, iconR, color, `${fmtDate(d.date)}: ${name} = ${fmtN(v)} ms`) +
-      `<text x="${px(i).toFixed(1)}" y="${(cy + iconR + fs + 1).toFixed(1)}" font-size="${fs}" font-weight="700" fill="${mark.color}" text-anchor="middle">${mark.arrow}${fmtN(v)}</text>`;
+    return hrvIcon(kind, px(i), cy, iconR, color, `${fmtDate(d.date)}: ${name} = ${fmtN(v)} ms`);
   }).join('');
   const night = hrvRow(nightTop, 'hrv', bands?.night, 'moon', 'Night HRV');
   const dayHrv = hrvRow(dayTop, 'sdnn', bands?.day, 'sun', 'Day HRV');
@@ -282,6 +280,14 @@ function hrvCalStressChart(days, series, bands) {
     return `<text x="${px(i).toFixed(1)}" y="${totalH - 5}" font-size="${fs}" fill="#aeaeb2" text-anchor="middle">${colW > 40 ? weekday + ' ' : ''}${fmtDM(d.date)}</text>`;
   }).join('');
 
+  const hrvLegend = `<div class="legend" style="margin-top:6px;flex-wrap:wrap;row-gap:4px">
+      <div class="legend-item" style="margin-right:6px"><span class="legend-title">Farve = din HRV ift. dine egne 60-dages kvartiler:</span></div>
+      ${legendItem('#30d158', 'Top 25 %')}
+      ${legendItem('#ff9f0a', '25–50 %')}
+      ${legendItem('#ff3b30', '50–75 %')}
+      ${legendItem('#bf5af2', 'Bund 25 %')}
+    </div>`;
+
   return `
     <div class="chart-wrap">
       <svg viewBox="0 0 ${W} ${totalH}" width="100%">
@@ -289,6 +295,7 @@ function hrvCalStressChart(days, series, bands) {
         ${rowLabel('Night HRV', nightTop, hrvH)}${rowLabel('Day HRV', dayTop, hrvH)}${rowLabel('Calendar', calTop, calH)}${rowLabel('Stress', stressTop, stressH)}
         ${night}${dayHrv}${cal}${stress}${xLabels}
       </svg>
+      ${hrvLegend}
     </div>`;
 }
 

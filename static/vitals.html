@@ -238,6 +238,11 @@ function render(data){
   </div>`;
 
 
+  function daysAgoStr(dateStr){
+    if(!dateStr)return'';
+    const d=Math.round((Date.now()-new Date(dateStr+'T12:00:00').getTime())/(864e5));
+    return d===0?' (today)':d===1?' (yesterday)':` (${d} days ago)`;
+  }
   function ibDelta(cur,prev){
     if(cur==null||prev==null)return'';
     const d=Math.round((cur-prev)*10)/10;
@@ -246,7 +251,7 @@ function render(data){
     return` <span class="${down?'trend-up':'trend-down'}">${down?'↓':'↑'} ${fmtN(Math.abs(d))}</span>`;
   }
   const ibPrev=inBody?.prev;
-  const weightCardHTML=`<div class="card"><div class="card-title">Body composition</div>${inBody?`<div class="inbody-grid"><div><div class="inbody-item-label">Weight</div><div class="inbody-item-value">${fmtN(inBody.weight)} kg${ibDelta(inBody.weight,ibPrev?.weight)}</div></div><div><div class="inbody-item-label">Body fat %</div><div class="inbody-item-value">${fmtN(inBody.fatPct)} %${ibDelta(inBody.fatPct,ibPrev?.fatPct)}</div></div><div><div class="inbody-item-label">Fat mass</div><div class="inbody-item-value">${fmtN(inBody.fatMass)} kg${ibDelta(inBody.fatMass,ibPrev?.fatMass)}</div></div><div><div class="inbody-item-label">BMI</div><div class="inbody-item-value">${fmtN(inBody.bmi)}${ibDelta(inBody.bmi,ibPrev?.bmi)}</div></div><div><div class="inbody-item-label">Height</div><div class="inbody-item-value">175,5 cm</div></div><div><div class="inbody-item-label">Measured</div><div class="inbody-item-value" style="font-size:13px;color:#8e8e93">${inBody.date??'-'}</div></div></div>${ibPrev?`<div style="font-size:11px;color:#aeaeb2;margin-top:10px">vs. ${ibPrev.date} (${fmtN(ibPrev.weight)} kg, ${fmtN(ibPrev.fatPct)} %)</div>`:''}`:'<div style="color:#aeaeb2;font-size:14px">No measurement</div>'}</div>`;
+  const weightCardHTML=`<div class="card"><div class="card-title">Body composition</div>${inBody?`<div class="inbody-grid"><div><div class="inbody-item-label">Weight</div><div class="inbody-item-value">${fmtN(inBody.weight)} kg${ibDelta(inBody.weight,ibPrev?.weight)}</div></div><div><div class="inbody-item-label">Body fat %</div><div class="inbody-item-value">${fmtN(inBody.fatPct)} %${ibDelta(inBody.fatPct,ibPrev?.fatPct)}</div></div><div><div class="inbody-item-label">Fat mass</div><div class="inbody-item-value">${fmtN(inBody.fatMass)} kg${ibDelta(inBody.fatMass,ibPrev?.fatMass)}</div></div><div><div class="inbody-item-label">BMI</div><div class="inbody-item-value">${fmtN(inBody.bmi)}${ibDelta(inBody.bmi,ibPrev?.bmi)}</div></div><div><div class="inbody-item-label">Height</div><div class="inbody-item-value">175,5 cm</div></div><div><div class="inbody-item-label">Measured</div><div class="inbody-item-value" style="font-size:13px;color:#8e8e93">${inBody.date??'-'}${daysAgoStr(inBody.date)}${ibPrev?`<div style="font-size:11px;color:#aeaeb2;margin-top:3px">vs. ${ibPrev.date}${daysAgoStr(ibPrev.date)}<br>${fmtN(ibPrev.weight)} kg, ${fmtN(ibPrev.fatPct)} %</div>`:''}</div></div></div>`:'<div style="color:#aeaeb2;font-size:14px">No measurement</div>'}</div>`;
 
   document.getElementById('topbar-date').innerHTML=`${todayStr}<br>Updated ${timeStr}`;
 

@@ -3,7 +3,7 @@ import { json, fmt, daysAgo, r1, quartiles } from './_lib/util.mjs';
 import { activeCalendars, fetchCalendarEvents } from './_lib/calendar.mjs';
 
 // HRV level bands are quartiles of this many days; the returned series stays at 90 days
-const BANDS_DAYS = 180;
+const BANDS_DAYS = 60;
 
 export async function GET() {
   const intervals = intervalsClient();
