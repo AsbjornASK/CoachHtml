@@ -11,6 +11,18 @@ test('every wellness field has a name and 4 labels (value 1 = best)', () => {
   assert.equal(WELLNESS.motivation.labels[2], 'Medium');
 });
 
+test('stress labels are Restorative/Low/Medium/High', () => {
+  assert.deepEqual(WELLNESS.stress.labels, ['Restorative', 'Low', 'Medium', 'High']);
+});
+
+test('fatigue labels are Fresh/Normal/Tired/Drained', () => {
+  assert.deepEqual(WELLNESS.fatigue.labels, ['Fresh', 'Normal', 'Tired', 'Drained']);
+});
+
+test('soreness labels are Restored/Fresh/Sore/Very sore', () => {
+  assert.deepEqual(WELLNESS.soreness.labels, ['Restored', 'Fresh', 'Sore', 'Very sore']);
+});
+
 test('colours and button classes cover values 1–4', () => {
   assert.deepEqual(WELLNESS_COLORS, ['#30d158', '#ff9f0a', '#ff3b30', '#bf5af2']);
   assert.deepEqual(WELLNESS_BTN_CLASSES, ['c-green', 'c-yellow', 'c-red', 'c-purple']);

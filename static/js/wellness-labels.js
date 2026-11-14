@@ -4,10 +4,10 @@
 (function (root) {
   const WELLNESS = {
     mood:         { name: 'Mood',          labels: ['Great', 'Good', 'Avg', 'Low'], day: 'yesterday' },
-    soreness:     { name: 'Soreness',      labels: ['Low', 'Avg', 'High', 'Extreme'] },
-    fatigue:      { name: 'Fatigue',       labels: ['Low', 'Avg', 'High', 'Extreme'] },
+    soreness:     { name: 'Soreness',      labels: ['Restored', 'Fresh', 'Sore', 'Very sore'] },
+    fatigue:      { name: 'Fatigue',       labels: ['Fresh', 'Normal', 'Tired', 'Drained'] },
     motivation:   { name: 'Motivation',    labels: ['Extreme', 'High', 'Medium', 'Low'] },
-    stress:       { name: 'Stress',        labels: ['Low', 'Moderate', 'High', 'Very high'], short: ['Low', 'Mod.', 'High', 'V. high'], day: 'yesterday' },
+    stress:       { name: 'Stress',        labels: ['Restorative', 'Low', 'Medium', 'High'], short: ['Rest.', 'Low', 'Med', 'High'], day: 'yesterday' },
     sleepQuality: { name: 'Sleep quality', labels: ['High', 'Good', 'Avg', 'Poor'] },
     // Intervals' built-in "injury" field (None/Niggle/Injury/Sidelined), also used for sickness
     injury:       { name: 'Sick/injured',  labels: ['None', 'Mild', 'Sick', 'Sidelined'] },
