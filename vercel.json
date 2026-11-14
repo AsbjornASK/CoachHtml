@@ -1,7 +1,7 @@
 {
-  "outputDirectory": "static",
+  "outputDirectory": "dist",
   "rewrites": [
-    { "source": "/dashboard", "destination": "/dashboard.html" }
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
   ],
   "functions": {
     "api/cron-morning.mjs": {

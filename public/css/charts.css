@@ -1,0 +1,14 @@
+/* Styles the markup produced by /js/charts.js. Linked by every page that renders the shared charts. */
+
+/* Legend title, e.g. "Fatigue" / "Mood" before the coloured dots */
+.legend-title { font-weight: 700; color: #3a3a3c; }
+
+/* Partner vs. alone: average tiles and per-metric chart labels */
+.pc-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+.pc-tile { background: #f9f9fb; border-radius: 12px; padding: 10px 12px; }
+.pc-label, .pc-chart-label { font-size: 10px; font-weight: 700; color: #8e8e93; text-transform: uppercase; letter-spacing: 0.5px; }
+.pc-chart-label { margin: 10px 0 2px; }
+.pc-vals { font-size: 20px; font-weight: 800; margin-top: 4px; display: flex; align-items: baseline; gap: 5px; flex-wrap: wrap; }
+.pc-vs, .pc-unit { font-size: 11px; font-weight: 500; color: #aeaeb2; }
+.pc-diff { font-size: 11px; font-weight: 600; margin-top: 2px; }
+@media (max-width: 600px) { .pc-tiles { gap: 6px; } .pc-tile { padding: 8px; } .pc-vals { font-size: 16px; } }
