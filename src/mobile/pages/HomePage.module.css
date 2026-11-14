@@ -248,6 +248,29 @@
   font-size: 13px;
 }
 
+/* Stress & Fatigue chart */
+.sfChart {
+  position: relative;
+  padding-left: 28px;
+}
+
+.sfYLabels {
+  position: absolute;
+  left: 0;
+  top: 20px;
+  bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.sfYLabels span {
+  font-size: 8px;
+  color: #aeaeb2;
+  line-height: 1;
+}
+
 .skeleton {
   animation: pulse 1.4s ease-in-out infinite;
   background: #e5e5ea;

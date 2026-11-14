@@ -5,6 +5,7 @@ import { Ring } from '../../shared/components/Ring'
 import { useCoach } from '../../shared/hooks/useCoach'
 import { useCalendar } from '../../shared/hooks/useCalendar'
 import { useSportLoad } from '../../shared/hooks/useSportLoad'
+import { useDashboard } from '../../shared/hooks/useDashboard'
 import { calcRecovery, calcSleep, calcReadiness, verdictColor } from '../../shared/utils/readiness'
 import { WELLNESS } from '../../shared/charts/wellness-labels'
 import styles from './HomePage.module.css'
@@ -228,10 +229,79 @@ function SubjGrid({ subjective }) {
   )
 }
 
+const STRESS_COLORS = ['#30d158', '#ff9f0a', '#ff9f0a', '#ff3b30']
+const FATIGUE_COLORS = ['#30d158', '#ff9f0a', '#ff9f0a', '#ff3b30']
+
+function StressFatigueChart({ series, days = 21 }) {
+  if (!series?.length) return null
+  const today = series[series.length - 1]?.date
+  if (!today) return null
+
+  const cutoff = new Date(today)
+  cutoff.setDate(cutoff.getDate() - days + 1)
+  const pts = series.filter(d => d.date >= cutoff.toISOString().slice(0, 10) && (d.stress != null || d.fatigue != null))
+  if (pts.length < 2) return null
+
+  const W = 300, H = 90, axH = 16, pd = 6, pdY = 4
+  const totalDays = days
+  const dateIdx = d => {
+    const diff = (new Date(d.date) - new Date(today + 'T00:00:00')) / 86400000
+    return totalDays - 1 + diff
+  }
+  const px = i => pd + (i / (totalDays - 1)) * (W - 2 * pd)
+  const py = v => pdY + (1 - (v - 1) / 3) * (H - 2 * pdY)
+
+  const stressPts = pts.filter(d => d.stress != null).map(d => ({ x: dateIdx(d), v: d.stress, date: d.date }))
+  const fatiguePts = pts.filter(d => d.fatigue != null).map(d => ({ x: dateIdx(d), v: d.fatigue, date: d.date }))
+
+  const polyline = (ps, color) => {
+    if (ps.length < 2) return null
+    const points = ps.map(p => `${px(p.x).toFixed(1)},${py(p.v).toFixed(1)}`).join(' ')
+    return <polyline fill="none" stroke={color} strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" points={points} />
+  }
+
+  const dots = (ps, colors) => ps.map((p, i) => (
+    <circle key={i} cx={px(p.x)} cy={py(p.v)} r={3} fill={colors[Math.round(p.v) - 1] ?? '#aeaeb2'} />
+  ))
+
+  // x-axis: show ~4 date labels
+  const idxs = [0, Math.floor(totalDays * 0.33), Math.floor(totalDays * 0.66), totalDays - 1]
+  const dateLabels = idxs.map(i => {
+    const d = new Date(today + 'T12:00:00')
+    d.setDate(d.getDate() - (totalDays - 1 - i))
+    return { i, label: `${d.getDate()}/${d.getMonth() + 1}` }
+  })
+
+  return (
+    <div className={styles.sfChart}>
+      <div className={styles.graphLegend}>
+        <div className={styles.legendItem}><div className={styles.legendDot} style={{ background: '#ff9f0a' }} />Stress</div>
+        <div className={styles.legendItem}><div className={styles.legendDot} style={{ background: '#007aff' }} />Fatigue</div>
+      </div>
+      <div className={styles.sfYLabels}>
+        {['High', 'Med', 'Low'].map((l, i) => (
+          <span key={l} style={{ top: `${(i / 2) * 100}%` }}>{l}</span>
+        ))}
+      </div>
+      <svg viewBox={`0 0 ${W} ${H + axH}`} width="100%" height={H + axH}>
+        <line x1={pd} y1={py(2.5)} x2={W - pd} y2={py(2.5)} stroke="#f2f2f7" strokeWidth={1} strokeDasharray="3 3" />
+        {polyline(stressPts, '#ff9f0a')}
+        {polyline(fatiguePts, '#007aff')}
+        {dots(stressPts, STRESS_COLORS)}
+        {dots(fatiguePts, FATIGUE_COLORS.map(() => '#007aff'))}
+        {dateLabels.map(({ i, label }) => (
+          <text key={i} x={px(i)} y={H + axH - 1} fontSize={8} fill="#aeaeb2" textAnchor="middle">{label}</text>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
 export function HomePage({ desktop = false }) {
   const { data, loading: loadingCoach, error: errorCoach } = useCoach()
   const { data: cal } = useCalendar()
   const { data: sportLoad } = useSportLoad()
+  const { data: dashData } = useDashboard()
   const [fitTab, setFitTab] = useState(null)
 
   let content
@@ -247,6 +317,7 @@ export function HomePage({ desktop = false }) {
     content = <div className={styles.error}>Could not load data: {errorCoach}</div>
   } else {
     const { latest, trends, sleep8, subjective, fitnessHistory } = data
+    const dashSeries = dashData?.series ?? []
 
     const rec = calcRecovery(latest.hrv, latest.restingHR, latest.sleepHours, latest.tsb)
     const slp = calcSleep(latest.sleepHours, latest.sleepScore, sleep8)
@@ -323,6 +394,13 @@ export function HomePage({ desktop = false }) {
             </div>
           </div>
         </Card>
+
+        {dashSeries.length > 0 && (
+          <Card>
+            <div className={styles.cardTitle}>Stress & Fatigue · 21 days</div>
+            <StressFatigueChart series={dashSeries} days={21} />
+          </Card>
+        )}
 
         <div className={styles.sectionHeader}>Training</div>
         <div className={styles.tabBar}>
