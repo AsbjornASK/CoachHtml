@@ -11,3 +11,6 @@
 
 # Local clone of the Intervals MCP server (not part of the app)
 intervals-mcp-server/
+
+# npm
+node_modules/

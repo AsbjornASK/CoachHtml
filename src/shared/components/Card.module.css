@@ -1,0 +1,21 @@
+.card {
+  background: var(--color-card, #ffffff);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.title {
+  font-size: var(--font-size-base, 13px);
+  font-weight: var(--font-weight-semibold, 600);
+  color: var(--color-secondary, #8e8e93);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-label, 0.7px);
+  margin-bottom: 10px;
+}
+
+.subtitle {
+  font-size: var(--font-size-sm, 11px);
+  color: var(--color-secondary, #8e8e93);
+  margin-bottom: 8px;
+}

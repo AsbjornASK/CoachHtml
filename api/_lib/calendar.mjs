@@ -1,5 +1,7 @@
 // Google Calendar ICS feeds, one per life category.
 
+import { fmt, daysAgo } from './util.mjs';
+
 const TZ = 'Europe/Copenhagen';
 
 const CAL_SOURCES = [
@@ -23,6 +25,25 @@ export async function fetchCalendarEvents(sources) {
     sources.map(s => fetch(s.url).then(r => r.ok ? r.text() : '').catch(() => ''))
   );
   return sources.flatMap((s, i) => parseICS(texts[i]).map(ev => ({ ...ev, category: s.cat })));
+}
+
+// Today's and the next 14 days' events from all calendars, sorted; null when none are configured.
+export async function calendarEvents(today = new Date()) {
+  const sources = activeCalendars();
+  if (!sources.length) return null;
+
+  const todayStr = fmt(today);
+  const limitStr = daysAgo(-14, today);
+
+  const events = (await fetchCalendarEvents(sources))
+    .filter(e => e.date >= todayStr && e.date <= limitStr)
+    .map(({ title, date, timeStart, timeEnd, category }) => ({ title, date, timeStart, timeEnd, category }))
+    .sort((a, b) => a.date.localeCompare(b.date) || (a.timeStart ?? '').localeCompare(b.timeStart ?? ''));
+
+  return {
+    today:    events.filter(e => e.date === todayStr),
+    upcoming: events.filter(e => e.date > todayStr).slice(0, 5),
+  };
 }
 
 // All-day events have allDay: true, timeStart/timeEnd null and the default 60 min duration.

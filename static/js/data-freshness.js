@@ -20,7 +20,14 @@
     return out;
   }
 
+  // Banner / notification text for one warning from freshnessWarnings
+  function warningText(w) {
+    const when = w.days == null ? 'over 3 weeks' : `${w.days} days`;
+    return w.kind === 'weight' ? `Weight not logged for ${when}` : `Body composition not measured for ${when}`;
+  }
+
   root.daysSince = daysSince;
   root.freshnessWarnings = freshnessWarnings;
-  if (typeof module !== 'undefined') module.exports = { daysSince, freshnessWarnings };
+  root.warningText = warningText;
+  if (typeof module !== 'undefined') module.exports = { daysSince, freshnessWarnings, warningText };
 })(typeof window !== 'undefined' ? window : globalThis);

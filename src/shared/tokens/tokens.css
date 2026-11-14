@@ -1,0 +1,49 @@
+:root {
+  /* Colors */
+  --color-blue: #007aff;
+  --color-bg: #f2f2f7;
+  --color-text: #1c1c1e;
+  --color-secondary: #8e8e93;
+  --color-green: #30d158;
+  --color-red: #ff3b30;
+  --color-yellow: #ff9f0a;
+  --color-purple: #bf5af2;
+  --color-border: #e5e5ea;
+  --color-card: #ffffff;
+  --color-muted: #aeaeb2;
+  --color-section-bg: #f2f2f7;
+
+  /* Typography */
+  --font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+
+  --font-size-xs: 10px;
+  --font-size-sm: 11px;
+  --font-size-base: 13px;
+  --font-size-md: 15px;
+  --font-size-lg: 16px;
+  --font-size-xl: 17px;
+  --font-size-2xl: 22px;
+  --font-size-3xl: 24px;
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-black: 800;
+
+  --letter-spacing-label: 0.7px;
+  --letter-spacing-tight: -0.3px;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  background: var(--color-bg);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+}

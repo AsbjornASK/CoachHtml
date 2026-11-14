@@ -1,0 +1,71 @@
+.rings {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 8px 0 4px;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.metric {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.metricLabel {
+  font-size: var(--font-size-sm, 11px);
+  font-weight: var(--font-weight-medium, 500);
+  color: var(--color-secondary, #8e8e93);
+}
+
+.metricValue {
+  font-size: var(--font-size-2xl, 22px);
+  font-weight: var(--font-weight-bold, 700);
+  line-height: 1.1;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.metricUnit {
+  font-size: var(--font-size-base, 13px);
+  font-weight: var(--font-weight-regular, 400);
+  color: var(--color-secondary, #8e8e93);
+}
+
+.sectionHeader {
+  font-size: 20px;
+  font-weight: var(--font-weight-bold, 700);
+  margin: 20px 0 10px;
+  letter-spacing: var(--letter-spacing-tight, -0.3px);
+}
+
+.error {
+  background: #ffe5e5;
+  border-radius: 12px;
+  padding: 16px;
+  color: #c0392b;
+  font-size: var(--font-size-base, 13px);
+}
+
+.skeleton {
+  animation: pulse 1.4s ease-in-out infinite;
+  background: var(--color-border, #e5e5ea);
+  border-radius: 12px;
+}
+
+.skelCard {
+  height: 140px;
+  margin-bottom: 12px;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
