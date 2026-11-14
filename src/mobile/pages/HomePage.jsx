@@ -10,6 +10,7 @@ import { useDashboard } from '../../shared/hooks/useDashboard'
 import { useFetch } from '../../shared/hooks/useFetch'
 import { calcRecovery, calcSleep, calcReadiness, verdictColor } from '../../shared/utils/readiness'
 import { WELLNESS } from '../../shared/charts/wellness-labels'
+import { computeBurden } from '../../shared/utils/burdenIndex'
 import styles from './HomePage.module.css'
 
 const EN_DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
@@ -299,6 +300,61 @@ function StressFatigueChart({ series, days = 21 }) {
   )
 }
 
+function BurdenChart({ series }) {
+  const pts = computeBurden(series, 30)
+  if (pts.length < 2) return null
+
+  const W = 300, H = 90, axH = 16, pd = 6, pdY = 6
+  const n = pts.length
+  const values = pts.map(p => p.burden)
+  const minV = Math.min(...values, 0)
+  const maxV = Math.max(...values, 0)
+  const range = Math.max(maxV - minV, 0.5)
+
+  const px = i => pd + (i / (n - 1)) * (W - 2 * pd)
+  const py = v => pdY + (1 - (v - minV) / range) * (H - 2 * pdY)
+
+  const zeroY = py(0)
+
+  // Build colored line segments
+  const segments = []
+  for (let i = 0; i < pts.length - 1; i++) {
+    const a = pts[i], b = pts[i + 1]
+    const color = a.burden > 0 ? '#ff9f0a' : '#007aff'
+    segments.push(
+      <line key={i}
+        x1={px(i).toFixed(1)} y1={py(a.burden).toFixed(1)}
+        x2={px(i + 1).toFixed(1)} y2={py(b.burden).toFixed(1)}
+        stroke={color} strokeWidth={2.2} strokeLinecap="round" />
+    )
+  }
+
+  // Sick day columns
+  const sickRects = pts.map((p, i) => p.sick ? (
+    <rect key={i} x={px(i) - 3} y={pdY} width={6} height={H - 2 * pdY}
+      fill="#ff3b30" opacity={0.18} rx={1} />
+  ) : null)
+
+  // x-axis labels
+  const idxs = [0, Math.floor(n * 0.33), Math.floor(n * 0.66), n - 1]
+  const dateLabels = idxs.map(i => {
+    const d = new Date(pts[i].date + 'T12:00:00')
+    return { i, label: `${d.getDate()}/${d.getMonth() + 1}` }
+  })
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H + axH}`} width="100%" height={H + axH}>
+      {sickRects}
+      <line x1={pd} y1={zeroY.toFixed(1)} x2={W - pd} y2={zeroY.toFixed(1)}
+        stroke="#f2f2f7" strokeWidth={1} strokeDasharray="3 3" />
+      {segments}
+      {dateLabels.map(({ i, label }) => (
+        <text key={i} x={px(i)} y={H + axH - 1} fontSize={8} fill="#aeaeb2" textAnchor="middle">{label}</text>
+      ))}
+    </svg>
+  )
+}
+
 export function HomePage({ desktop = false }) {
   const navigate = useNavigate()
   const { data, loading: loadingCoach, error: errorCoach } = useCoach()
@@ -412,6 +468,13 @@ export function HomePage({ desktop = false }) {
           <Card>
             <div className={styles.cardTitle}>Stress & Fatigue · 21 days</div>
             <StressFatigueChart series={dashSeries} days={21} />
+          </Card>
+        )}
+
+        {dashSeries.length > 0 && (
+          <Card>
+            <div className={styles.cardTitle}>Accumulated burden · 30 days</div>
+            <BurdenChart series={dashSeries} />
           </Card>
         )}
 
