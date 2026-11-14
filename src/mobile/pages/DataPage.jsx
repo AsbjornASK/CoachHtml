@@ -78,8 +78,31 @@ function kpiColor(v) {
   return v == null ? '' : v >= 65 ? 'green' : v >= 45 ? 'yellow' : 'red'
 }
 
+const SPORT_LABELS = { all: 'All', run: 'Run', ride: 'Bike', strength: 'Strength' }
+const FILTER_SPORTS = ['all', 'run', 'ride', 'strength']
+
+function SportFilter({ sessions, activeSport, onSelect }) {
+  const present = new Set(sessions.map(s => s.sport).filter(Boolean))
+  const available = FILTER_SPORTS.filter(k => k === 'all' || present.has(k))
+  if (available.length <= 2) return null
+  return (
+    <div className={styles.sportFilter}>
+      {available.map(k => (
+        <button
+          key={k}
+          className={`${styles.sportBtn} ${activeSport === k ? styles.sportBtnActive : ''}`}
+          onClick={() => onSelect(k)}
+        >
+          {SPORT_LABELS[k]}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 export function DataPage({ desktop = false }) {
   const [activeTab, setActiveTab] = useState(getStoredTab)
+  const [sportFilter, setSportFilter] = useState('all')
   const { data: dashData, loading: dashLoading, error: dashError } = useDashboard()
   const { data: loadData, loading: loadLoading, error: loadError } = useSportLoad()
 
@@ -154,17 +177,18 @@ export function DataPage({ desktop = false }) {
 
     const sessionsPanel = activeTab === 'sessions' && (
       <>
+        <SportFilter sessions={sessions} activeSport={sportFilter} onSelect={setSportFilter} />
         <HtmlCard
           title="Load × Day HRV"
           subtitle="Training load per day by sport; dots = Day HRV the next morning against your 42-day norm"
-          html={loadHrvChart(t30, sessions, series)}
+          html={loadHrvChart(t30, sessions, series, undefined, sportFilter)}
         />
         <HtmlCard
           title="RPE × heart rate"
           subtitle="Sessions from the last 150 days"
-          html={rpeHrScatter(sessions)}
+          html={rpeHrScatter(sessions, undefined, sportFilter)}
         />
-        <HtmlCard title="Heart-rate zones per week" html={zoneWeeksChart(sessions, today)} />
+        <HtmlCard title="Heart-rate zones per week" html={zoneWeeksChart(sessions, today, 12, undefined, sportFilter)} />
       </>
     )
 

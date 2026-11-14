@@ -116,6 +116,35 @@
   }
 }
 
+/* Sport filter pill bar */
+.sportFilter {
+  display: flex;
+  gap: 6px;
+  padding: 8px 12px 4px;
+  flex-wrap: wrap;
+}
+
+.sportBtn {
+  padding: 5px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1.5px solid var(--color-border);
+  border-radius: 20px;
+  background: var(--color-card);
+  color: var(--color-secondary);
+  cursor: pointer;
+  letter-spacing: 0.2px;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+
+.sportBtnActive {
+  background: var(--color-blue);
+  border-color: var(--color-blue);
+  color: #fff;
+}
+
 .skeleton {
   animation: pulse 1.4s ease-in-out infinite;
   background: var(--color-border);

@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { MobileLayout } from '../components/MobileLayout'
 import { Card } from '../../shared/components/Card'
 import { Ring } from '../../shared/components/Ring'
@@ -6,6 +7,7 @@ import { useCoach } from '../../shared/hooks/useCoach'
 import { useCalendar } from '../../shared/hooks/useCalendar'
 import { useSportLoad } from '../../shared/hooks/useSportLoad'
 import { useDashboard } from '../../shared/hooks/useDashboard'
+import { useFetch } from '../../shared/hooks/useFetch'
 import { calcRecovery, calcSleep, calcReadiness, verdictColor } from '../../shared/utils/readiness'
 import { WELLNESS } from '../../shared/charts/wellness-labels'
 import styles from './HomePage.module.css'
@@ -298,11 +300,22 @@ function StressFatigueChart({ series, days = 21 }) {
 }
 
 export function HomePage({ desktop = false }) {
+  const navigate = useNavigate()
   const { data, loading: loadingCoach, error: errorCoach } = useCoach()
+  const { data: vitalsData } = useFetch('/api/get-vitals')
   const { data: cal } = useCalendar()
   const { data: sportLoad } = useSportLoad()
   const { data: dashData } = useDashboard()
   const [fitTab, setFitTab] = useState(null)
+
+  // Redirect to check-in if today's wellness hasn't been filled in
+  useEffect(() => {
+    if (desktop) return
+    if (!vitalsData) return
+    const tw = vitalsData.todayWellness
+    const checkedIn = tw && Object.values(tw).some(v => v != null)
+    if (!checkedIn) navigate('/checkin')
+  }, [vitalsData, desktop, navigate])
 
   let content
   if (loadingCoach) {

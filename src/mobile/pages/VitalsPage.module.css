@@ -80,7 +80,7 @@
 }
 
 .subjValue {
-  font-size: 14px;
+  font-size: var(--font-size-base);
   font-weight: var(--font-weight-bold);
   margin-top: 2px;
 }
