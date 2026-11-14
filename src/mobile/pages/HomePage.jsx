@@ -279,8 +279,8 @@ function StressFatigueChart({ series, days = 21 }) {
         <div className={styles.legendItem}><div className={styles.legendDot} style={{ background: '#007aff' }} />Fatigue</div>
       </div>
       <div className={styles.sfYLabels}>
-        {['High', 'Med', 'Low'].map((l, i) => (
-          <span key={l} style={{ top: `${(i / 2) * 100}%` }}>{l}</span>
+        {['High', 'Med', 'Low'].map(l => (
+          <span key={l}>{l}</span>
         ))}
       </div>
       <svg viewBox={`0 0 ${W} ${H + axH}`} width="100%" height={H + axH}>
