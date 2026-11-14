@@ -1,7 +1,8 @@
+import { useState } from 'react'
 import { MobileLayout } from '../components/MobileLayout'
 import { Card } from '../../shared/components/Card'
 import { useFetch } from '../../shared/hooks/useFetch'
-import { WELLNESS } from '../../shared/charts/wellness-labels'
+import { WELLNESS, WELLNESS_COLORS } from '../../shared/charts/wellness-labels'
 import styles from './VitalsPage.module.css'
 
 function fmtN(n, u = '') {
@@ -101,6 +102,52 @@ function BodyCompItem({ label, value, unit, delta }) {
   )
 }
 
+function StressCheckin({ initialValue }) {
+  const [value, setValue] = useState(initialValue ?? null)
+  const [saved, setSaved] = useState(false)
+  const [err, setErr] = useState(null)
+  const labels = WELLNESS['stress']?.labels ?? []
+
+  const save = async (v) => {
+    setValue(v)
+    setSaved(false)
+    setErr(null)
+    try {
+      const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10)
+      const res = await fetch('/api/update-wellness', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date: yesterday, stress: v }),
+      })
+      if (!res.ok) throw new Error('HTTP ' + res.status)
+      setSaved(true)
+    } catch (e) {
+      setErr(e.message)
+    }
+  }
+
+  return (
+    <div className={styles.stressRow}>
+      <div className={styles.stressLabel}>Yesterday's stress</div>
+      <div className={styles.stressBtns}>
+        {labels.map((label, i) => (
+          <button
+            key={i}
+            type="button"
+            className={`${styles.stressBtn} ${value === i + 1 ? styles.stressBtnActive : ''}`}
+            style={value === i + 1 ? { background: WELLNESS_COLORS[i], borderColor: WELLNESS_COLORS[i], color: '#fff' } : {}}
+            onClick={() => save(i + 1)}
+          >
+            {label.toUpperCase()}
+          </button>
+        ))}
+      </div>
+      {saved && <span className={styles.stressSaved}>✓</span>}
+      {err && <span className={styles.stressErr}>{err}</span>}
+    </div>
+  )
+}
+
 export function VitalsPage({ desktop = false }) {
   const { data, loading, error } = useFetch('/api/get-vitals')
 
@@ -138,8 +185,9 @@ export function VitalsPage({ desktop = false }) {
             <MetricItem label="Night HRV" value={fmtN(latest.hrv)} unit="ms" colorClass={colorHrv(latest.hrv)} sparkValues={trends.hrv} sparkColorFn={colorHrvFn} trend={hrv_t} />
             <MetricItem label="Resting HR" value={fmtN(latest.restingHR)} unit="bpm" colorClass={colorRhr(latest.restingHR)} sparkValues={trends.rhr} sparkColorFn={colorRhrFn} trend={rhr_t} />
             <MetricItem label="Sleep" value={fmtN(latest.sleepHours)} unit="h" colorClass={colorSleep(latest.sleepHours)} sparkValues={trends.sleep} sparkColorFn={colorSleepFn} trend={slp_t} />
-            <MetricItem label="Sleep score" value={fmtN(latest.sleepScore)} colorClass={colorSleep(latest.sleepScore ? latest.sleepScore / 10 : null)} sparkValues={trends.sleepScore} />
+            <MetricItem label="Sleep quality" value={fmtN(latest.sleepScore)} colorClass={colorSleep(latest.sleepScore ? latest.sleepScore / 10 : null)} sparkValues={trends.sleepScore} sub="auto" />
           </div>
+          <StressCheckin initialValue={yw.stress ?? null} />
         </Card>
 
         <div className={styles.sectionHeader}>Health markers</div>

@@ -549,3 +549,258 @@ export function zoneWeeksChart(sessions, today, weeks = 12, layout = TL, sport =
       </svg>
     </div>`
 }
+
+// ── Fitness & Form with mood dots ─────────────────────────────────────────
+export function fitnessCheckinChart(series, layout = TL) {
+  const days = series.filter(d => d.ctl != null || d.atl != null || d.tsb != null)
+  if (days.length < 3) return emptyMsg('Not enough fitness data yet')
+
+  const { W, PDL, PDR } = layout, H = 200, axH = 20, PDY = 10
+  const ctls = days.map(d => d.ctl ?? 0)
+  const atls = days.map(d => d.atl ?? 0)
+  const tsbs = days.map(d => d.tsb ?? 0)
+  const vals = [...ctls, ...atls, ...tsbs]
+  const mn = Math.floor(Math.min(...vals) / 10) * 10 - 5
+  const mx = Math.ceil(Math.max(...vals) / 10) * 10 + 5, rng = mx - mn || 1
+  const px = i => timelineX(i, days.length, layout)
+  const py = v => PDY + (1 - (v - mn) / rng) * (H - 2 * PDY)
+
+  const yTicks = [mn, 0, mx].map(v => {
+    const y = py(v).toFixed(1)
+    return `<line x1="${PDL}" y1="${y}" x2="${W - PDR}" y2="${y}" stroke="${v === 0 ? '#d1d1d6' : '#f2f2f7'}" stroke-width="${v === 0 ? 1.5 : 1}"/>` +
+      `<text x="${PDL - 6}" y="${y}" font-size="${AXIS_FS}" fill="#aeaeb2" text-anchor="end" dominant-baseline="middle">${Math.round(v)}</text>`
+  }).join('')
+
+  const makeLine = (arr, color) => {
+    const pts = arr.map((v, i) => `${px(i).toFixed(1)},${py(v).toFixed(1)}`).join(' ')
+    return `<polyline fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" points="${pts}"/>`
+  }
+
+  const moodDots = days.map((d, i) => {
+    if (d.mood == null || d.ctl == null) return ''
+    const col = CHECKIN_COLORS[d.mood] ?? '#8e8e93'
+    return `<circle cx="${px(i).toFixed(1)}" cy="${py(d.ctl).toFixed(1)}" r="4" fill="${col}" stroke="#fff" stroke-width="1.2"><title>${fmtDate(d.date)}: CTL=${fmtN(d.ctl)}, Mood=${WELLNESS.mood.labels[d.mood - 1] ?? d.mood}</title></circle>`
+  }).join('')
+
+  const xl = timelineLabels(days, H + axH - 3, layout)
+  const leg = `<div class="legend">${[['#007aff', 'CTL (fitness)'], ['#ff9f0a', 'ATL (fatigue)'], ['#30d158', 'TSB (form)']].map(([c, l]) => legendItem(c, l)).join('')}</div>`
+
+  return `${leg}<div class="chart-wrap"><svg viewBox="0 0 ${W} ${H + axH}" width="100%" style="overflow:visible">
+    ${yTicks}${makeLine(ctls, '#007aff')}${makeLine(atls, '#ff9f0a')}${makeLine(tsbs, '#30d158')}${moodDots}${xl}
+  </svg></div>`
+}
+
+// ── Per-sport CTL/ATL/TSB ─────────────────────────────────────────────────
+export function sportFitnessChart(sportSeries, layout = TL) {
+  const days = sportSeries.filter(d => d.ctl != null || d.atl != null)
+  if (days.length < 3) return emptyMsg('Not enough sport data yet')
+
+  const { W, PDL, PDR } = layout, H = 160, axH = 20, PDY = 8
+  const vals = days.flatMap(d => [d.ctl, d.atl, d.tsb].filter(v => v != null))
+  const mn = Math.floor(Math.min(0, ...vals)), mx = Math.ceil(Math.max(...vals)) + 2, rng = mx - mn || 1
+  const px = i => timelineX(i, days.length, layout)
+  const py = v => PDY + (1 - (v - mn) / rng) * (H - 2 * PDY)
+
+  const makeLine = (key, color) => {
+    const pts = days.filter(d => d[key] != null).map((d, _, arr) => {
+      const i = days.indexOf(d)
+      return `${px(i).toFixed(1)},${py(d[key]).toFixed(1)}`
+    }).join(' ')
+    return pts.length > 1 ? `<polyline fill="none" stroke="${color}" stroke-width="1.8" stroke-linejoin="round" points="${pts}"/>` : ''
+  }
+
+  const xl = timelineLabels(days, H + axH - 3, layout)
+  return `<div class="chart-wrap"><svg viewBox="0 0 ${W} ${H + axH}" width="100%" style="overflow:visible">
+    <line x1="${PDL}" y1="${py(0).toFixed(1)}" x2="${W - PDR}" y2="${py(0).toFixed(1)}" stroke="#d1d1d6" stroke-width="1"/>
+    ${makeLine('ctl', '#007aff')}${makeLine('atl', '#ff9f0a')}${makeLine('tsb', '#30d158')}${xl}
+  </svg></div>`
+}
+
+// ── TSB vs Mood scatter ───────────────────────────────────────────────────
+export function tsbMoodScatter(series, layout = TL) {
+  const pts = series.filter(d => d.tsb != null && d.mood != null)
+  if (pts.length < 5) return emptyMsg('Not enough TSB and mood data yet')
+
+  const { W, PDL, PDR } = layout, H = 200, axH = 30, PDY = 10
+  const tsbVals = pts.map(d => d.tsb)
+  const xMn = Math.floor(Math.min(...tsbVals) / 5) * 5 - 2
+  const xMx = Math.ceil(Math.max(...tsbVals) / 5) * 5 + 2
+  const px = v => PDL + (v - xMn) / (xMx - xMn) * (W - PDL - PDR)
+  const py = v => PDY + (4 - v) / 3 * (H - 2 * PDY)
+
+  const yTicks = [1, 2, 3, 4].map(v => {
+    const y = py(v).toFixed(1), lbl = WELLNESS.mood.labels[v - 1]
+    return `<line x1="${PDL}" y1="${y}" x2="${W - PDR}" y2="${y}" stroke="#f2f2f7"/>` +
+      `<text x="${PDL - 6}" y="${y}" font-size="${AXIS_FS}" fill="#aeaeb2" text-anchor="end" dominant-baseline="middle">${lbl}</text>`
+  }).join('')
+  const xLabels = [xMn, 0, xMx].map(v =>
+    `<text x="${px(v).toFixed(1)}" y="${H + axH - 4}" font-size="${AXIS_FS}" fill="#aeaeb2" text-anchor="middle">${fmtN(v)}</text>`
+  ).join('')
+  const zeroline = `<line x1="${px(0).toFixed(1)}" y1="${PDY}" x2="${px(0).toFixed(1)}" y2="${H - PDY}" stroke="#d1d1d6" stroke-width="1" stroke-dasharray="4 3"/>`
+
+  const dots = pts.map(d =>
+    `<circle cx="${px(d.tsb).toFixed(1)}" cy="${py(d.mood).toFixed(1)}" r="${DOT_R}" fill="${CHECKIN_COLORS[d.mood]}" opacity="0.8" stroke="#fff" stroke-width="1.5"><title>${fmtDate(d.date)}: TSB=${fmtN(d.tsb, 1)}, Mood=${WELLNESS.mood.labels[d.mood - 1]}</title></circle>`
+  ).join('')
+
+  return `<div class="chart-wrap"><svg viewBox="0 0 ${W} ${H + axH}" width="100%" style="overflow:visible">
+    ${yTicks}${zeroline}${dots}${xLabels}
+    <text x="${(PDL + W - PDR)/2}" y="${H + axH - 2}" font-size="${AXIS_FS}" fill="#8e8e93" text-anchor="middle">TSB (form)</text>
+  </svg></div>`
+}
+
+// ── Sleep vs Mood scatter ─────────────────────────────────────────────────
+export function sleepMoodScatter(series, layout = TL) {
+  const pts = series.filter(d => d.sleep != null && d.mood != null)
+  if (pts.length < 5) return emptyMsg('Not enough sleep and mood data yet')
+
+  const { W, PDL, PDR } = layout, H = 200, axH = 30, PDY = 10
+  const sleepVals = pts.map(d => d.sleep)
+  const xMn = Math.max(0, Math.floor(Math.min(...sleepVals)) - 1)
+  const xMx = Math.ceil(Math.max(...sleepVals)) + 0.5
+  const px = v => PDL + (v - xMn) / (xMx - xMn) * (W - PDL - PDR)
+  const py = v => PDY + (4 - v) / 3 * (H - 2 * PDY)
+
+  const yTicks = [1, 2, 3, 4].map(v => {
+    const y = py(v).toFixed(1), lbl = WELLNESS.mood.labels[v - 1]
+    return `<line x1="${PDL}" y1="${y}" x2="${W - PDR}" y2="${y}" stroke="#f2f2f7"/>` +
+      `<text x="${PDL - 6}" y="${y}" font-size="${AXIS_FS}" fill="#aeaeb2" text-anchor="end" dominant-baseline="middle">${lbl}</text>`
+  }).join('')
+  const xLabels = [xMn, Math.round((xMn + xMx) / 2), xMx].map(v =>
+    `<text x="${px(v).toFixed(1)}" y="${H + axH - 4}" font-size="${AXIS_FS}" fill="#aeaeb2" text-anchor="middle">${fmtN(v, 1)}h</text>`
+  ).join('')
+
+  const dots = pts.map(d =>
+    `<circle cx="${px(d.sleep).toFixed(1)}" cy="${py(d.mood).toFixed(1)}" r="${DOT_R}" fill="${CHECKIN_COLORS[d.mood]}" opacity="0.8" stroke="#fff" stroke-width="1.5"><title>${fmtDate(d.date)}: Sleep=${fmtN(d.sleep, 1)}h, Mood=${WELLNESS.mood.labels[d.mood - 1]}</title></circle>`
+  ).join('')
+
+  return `<div class="chart-wrap"><svg viewBox="0 0 ${W} ${H + axH}" width="100%" style="overflow:visible">
+    ${yTicks}${dots}${xLabels}
+    <text x="${(PDL + W - PDR)/2}" y="${H + axH - 2}" font-size="${AXIS_FS}" fill="#8e8e93" text-anchor="middle">Sleep (hours)</text>
+  </svg></div>`
+}
+
+// ── Check-in history table ────────────────────────────────────────────────
+export function checkinTable(series, days = 21) {
+  const rows = [...series].reverse().slice(0, days).filter(d =>
+    d.mood != null || d.soreness != null || d.fatigue != null || d.motivation != null || d.hrv != null || d.sleep != null
+  )
+  if (!rows.length) return emptyMsg('No check-in data yet')
+
+  const cols = ['Date', 'Mood', 'Soreness', 'Fatigue', 'Motivation', 'HRV', 'Sleep', 'CTL', 'TSB', 'Notes']
+  const wellnessCell = (field, v) => {
+    if (v == null) return '<td>–</td>'
+    const col = CHECKIN_COLORS[v] ?? '#aeaeb2'
+    const lbl = WELLNESS[field]?.labels[v - 1] ?? v
+    return `<td style="color:${col};font-weight:600">${lbl}</td>`
+  }
+
+  const thead = `<thead><tr>${cols.map(c => `<th>${c}</th>`).join('')}</tr></thead>`
+  const tbody = rows.map(d => `<tr>
+    <td>${fmtDM(d.date)}</td>
+    ${wellnessCell('mood', d.mood)}
+    ${wellnessCell('soreness', d.soreness)}
+    ${wellnessCell('fatigue', d.fatigue)}
+    ${wellnessCell('motivation', d.motivation)}
+    <td>${fmtN(d.hrv)}</td>
+    <td>${d.sleep != null ? fmtN(d.sleep, 1) + 'h' : '–'}</td>
+    <td>${fmtN(d.ctl)}</td>
+    <td>${fmtN(d.tsb, 1)}</td>
+    <td style="max-width:140px;white-space:normal;font-size:11px;color:#3a3a3c">${d.comments ?? ''}</td>
+  </tr>`).join('')
+
+  return `<table class="checkin-tbl"><style>.checkin-tbl{width:100%;border-collapse:collapse;font-size:12px}.checkin-tbl th,.checkin-tbl td{padding:5px 8px;border-bottom:1px solid #f2f2f7;text-align:left;white-space:nowrap}.checkin-tbl th{font-size:10px;font-weight:700;color:#8e8e93;text-transform:uppercase;letter-spacing:0.4px}</style>${thead}<tbody>${tbody}</tbody></table>`
+}
+
+// ── Computed insights ─────────────────────────────────────────────────────
+export function computeInsights(series) {
+  const pts = series.filter(d => d.hrv != null && d.mood != null)
+  const spPts = series.filter(d => d.sleep != null && d.mood != null)
+  if (pts.length < 7 && spPts.length < 7) return emptyMsg('Not enough data for insights yet')
+
+  const corr = (xs, ys) => {
+    const n = xs.length
+    const mx = xs.reduce((a, b) => a + b, 0) / n, my = ys.reduce((a, b) => a + b, 0) / n
+    const num = xs.reduce((a, x, i) => a + (x - mx) * (ys[i] - my), 0)
+    const den = Math.sqrt(xs.reduce((a, x) => a + (x - mx) ** 2, 0) * ys.reduce((a, y) => a + (y - my) ** 2, 0))
+    return den ? num / den : 0
+  }
+
+  const lines = []
+  if (pts.length >= 7) {
+    const r = corr(pts.map(d => d.hrv), pts.map(d => d.mood))
+    const strength = Math.abs(r) > 0.5 ? 'strong' : Math.abs(r) > 0.3 ? 'moderate' : 'weak'
+    const dir = r > 0 ? 'positive' : 'negative'
+    lines.push(`<li>HRV ↔ Mood: <strong>${strength} ${dir} correlation</strong> (r = ${r.toFixed(2)}, n = ${pts.length} days). ${r > 0.3 ? 'Higher HRV days tend to have better mood.' : r < -0.3 ? 'Higher HRV oddly aligns with lower mood — worth checking.' : 'No clear pattern yet.'}</li>`)
+  }
+  if (spPts.length >= 7) {
+    const r = corr(spPts.map(d => d.sleep), spPts.map(d => d.mood))
+    const strength = Math.abs(r) > 0.5 ? 'strong' : Math.abs(r) > 0.3 ? 'moderate' : 'weak'
+    const dir = r > 0 ? 'positive' : 'negative'
+    lines.push(`<li>Sleep ↔ Mood: <strong>${strength} ${dir} correlation</strong> (r = ${r.toFixed(2)}, n = ${spPts.length} days). ${r > 0.3 ? 'More sleep tends to mean better mood.' : 'No clear sleep–mood pattern yet.'}</li>`)
+  }
+
+  return `<ul style="font-size:14px;line-height:1.7;padding-left:18px;color:#1c1c1e">${lines.join('')}</ul>`
+}
+
+// ── Calendar load & SDNN ──────────────────────────────────────────────────
+export function calendarLoadChart(series, layout = TL) {
+  const days = [...series].slice(-30).filter(d => d.cal || d.sdnn != null || d.stress != null)
+  if (!days.length) return emptyMsg('No calendar data yet')
+
+  const { W, PDL, PDR } = layout
+  const H_cal = 110, H_stress = 32, divY = H_cal + 6, totalH = divY + H_stress + 20
+  const PDY = 8, DOT_R_S = 5
+  const plotW = W - PDL - PDR
+  const barW = Math.min(20, plotW / days.length * 0.5)
+  const maxEvents = Math.max(1, ...days.map(d => d.cal ? CAT_KEYS.reduce((s, k) => s + (d.cal[k] ?? 0), 0) : 0))
+  const px = i => PDL + (i / Math.max(days.length - 1, 1)) * plotW
+
+  const bars = days.map((d, i) => {
+    if (!d.cal) return ''
+    const total = CAT_KEYS.reduce((s, k) => s + (d.cal[k] ?? 0), 0)
+    if (!total) return ''
+    const blockH = (H_cal - 2 * PDY) / maxEvents
+    let y = H_cal - PDY
+    return CAT_KEYS.flatMap(k => {
+      const count = d.cal[k] ?? 0, titles = d.cal[k + 'Titles'] ?? []
+      if (!count) return []
+      return Array.from({ length: count }, (_, j) => {
+        y -= blockH
+        const gap = Math.min(2, blockH * 0.15)
+        return `<rect x="${(px(i) - barW/2).toFixed(1)}" y="${(y + gap/2).toFixed(1)}" width="${barW.toFixed(1)}" height="${Math.max(1, blockH - gap).toFixed(1)}" fill="${CAT_META[k].color}" opacity="0.85" rx="2"><title>${fmtDate(d.date)}: ${CAT_META[k].label}${titles[j] ? ' — ' + titles[j] : ''}</title></rect>`
+      })
+    }).join('')
+  }).join('')
+
+  const sdnnDays = days.map((d, i) => ({ i, sdnn: days[i + 1]?.sdnn ?? null, date: d.date })).filter(d => d.sdnn != null)
+  const sdVals = sdnnDays.map(d => d.sdnn)
+  let sdDots = ''
+  if (sdVals.length) {
+    const sdMn = Math.floor(Math.min(...sdVals) / 10) * 10
+    const sdMx = Math.ceil(Math.max(...sdVals) / 10) * 10 || sdMn + 10
+    const sdRng = sdMx - sdMn || 10
+    const pySd = v => PDY + (1 - (v - sdMn) / sdRng) * (H_cal - 2 * PDY)
+    sdDots = sdnnDays.map(d => `<circle cx="${px(d.i).toFixed(1)}" cy="${pySd(d.sdnn).toFixed(1)}" r="${DOT_R_S}" fill="#1c1c1e" opacity="0.8" stroke="#fff" stroke-width="1.5"><title>${fmtDate(d.date)}: SDNN next morning = ${d.sdnn} ms</title></circle>`).join('')
+  }
+
+  const stressBars = days.map((d, i) => {
+    if (d.stress == null) return ''
+    const bh = (d.stress / 4) * (H_stress - 10)
+    return `<rect x="${(px(i) - barW/2).toFixed(1)}" y="${(divY + H_stress - 10 - bh).toFixed(1)}" width="${barW.toFixed(1)}" height="${bh.toFixed(1)}" rx="2" fill="${CHECKIN_COLORS[d.stress]}" opacity="0.75"><title>${fmtDate(d.date)}: Stress=${WELLNESS.stress.labels[d.stress - 1]}</title></rect>`
+  }).join('')
+
+  const step = Math.max(1, Math.floor(days.length / 8))
+  const xLabels = days.map((d, i) =>
+    (i % step !== 0 && i !== days.length - 1) ? '' :
+    `<text x="${px(i).toFixed(1)}" y="${totalH - 3}" font-size="${AXIS_FS}" fill="#aeaeb2" text-anchor="middle">${fmtDM(d.date)}</text>`
+  ).join('')
+
+  const leg = `<div class="legend">${CAT_KEYS.map(k => legendItem(CAT_META[k].color, CAT_META[k].label)).join('')}${legendItem('#1c1c1e', 'SDNN next morning')}</div>`
+
+  return `${leg}<div class="chart-wrap"><svg viewBox="0 0 ${W} ${totalH}" width="100%" style="overflow:visible">
+    ${bars}${sdDots}
+    <line x1="${PDL}" y1="${divY}" x2="${PDL + plotW}" y2="${divY}" stroke="#e5e5ea" stroke-width="1"/>
+    <text x="12" y="${(divY + H_stress/2).toFixed(1)}" font-size="${AXIS_FS}" fill="#8e8e93" text-anchor="middle" transform="rotate(-90 12 ${(divY + H_stress/2).toFixed(1)})">Stress</text>
+    ${stressBars}${xLabels}
+  </svg></div>`
+}

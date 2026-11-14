@@ -1,7 +1,119 @@
+.desktopWrap {
+  width: 100%;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  padding: 12px 12px 4px;
+  flex-wrap: wrap;
+}
+
+.tab {
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  border-radius: 20px;
+  background: var(--color-border);
+  color: var(--color-text);
+  cursor: pointer;
+  letter-spacing: 0.2px;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tabActive {
+  background: var(--color-blue);
+  color: #fff;
+}
+
 .chartContainer {
-  min-height: 160px;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+}
+
+.cardSubtitle {
+  font-size: 11px;
+  color: var(--color-secondary);
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+/* KPI tiles */
+.kpiRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 12px;
+}
+
+.kpiTile {
+  background: var(--color-card);
+  border-radius: 14px;
+  padding: 14px 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+.kpiTitle {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 6px;
+}
+
+.kpiValue {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.kpiUnit {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--color-secondary);
+  margin-left: 2px;
+}
+
+.kpiSub {
+  font-size: 11px;
+  color: var(--color-secondary);
+  margin-top: 4px;
+}
+
+.blue   { color: var(--color-blue); }
+.yellow { color: var(--color-yellow); }
+.green  { color: var(--color-green); }
+.red    { color: var(--color-red); }
+
+/* Two column layout for patterns */
+.row2 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+}
+
+@media (min-width: 769px) {
+  .row2 {
+    grid-template-columns: 2fr 1fr;
+    gap: 16px;
+    align-items: start;
+  }
+
+  .kpiRow {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .tabs {
+    flex-wrap: nowrap;
+  }
+
+  .tab {
+    flex: 1;
+    text-align: center;
+  }
 }
 
 .skeleton {
@@ -26,4 +138,5 @@
   padding: 16px;
   color: var(--color-red);
   font-size: var(--font-size-base);
+  margin: 12px;
 }
