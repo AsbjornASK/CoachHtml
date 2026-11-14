@@ -22,7 +22,7 @@ function MetricItem({ label, value, unit, color }) {
   )
 }
 
-export function HomePage() {
+export function HomePage({ desktop = false }) {
   const { data, loading, error } = useCoach()
 
   let content
@@ -82,5 +82,6 @@ export function HomePage() {
     )
   }
 
+  if (desktop) return content
   return <MobileLayout title="Coach">{content}</MobileLayout>
 }

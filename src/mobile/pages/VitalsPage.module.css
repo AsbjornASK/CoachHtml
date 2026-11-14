@@ -1,0 +1,115 @@
+.sectionHeader {
+  font-size: 20px;
+  font-weight: var(--font-weight-bold);
+  margin: 20px 0 10px;
+  letter-spacing: var(--letter-spacing-tight);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 12px;
+}
+
+.metric {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.metricLabel {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-secondary);
+}
+
+.metricValue {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.1;
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+}
+
+.unit {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-secondary);
+}
+
+.metricSub {
+  font-size: var(--font-size-xs);
+  color: var(--color-muted);
+  margin-top: 1px;
+}
+
+.green { color: var(--color-green); }
+.yellow { color: var(--color-yellow); }
+.red { color: var(--color-red); }
+
+.subjGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.subjItem {
+  text-align: center;
+  padding: 8px;
+  border-radius: 10px;
+}
+
+.subj1 { background: #e8f8ee; color: #1a7a33; }
+.subj2 { background: #fff8e1; color: #b86e00; }
+.subj3 { background: #ffe5e5; color: #c0392b; }
+.subj4 { background: #f3e8ff; color: #7a1fa2; }
+
+.subjLabel {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  opacity: 0.7;
+}
+
+.subjValue {
+  font-size: 14px;
+  font-weight: var(--font-weight-bold);
+  margin-top: 2px;
+}
+
+.notes {
+  font-size: var(--font-size-base);
+  color: #3a3a3c;
+  background: var(--color-bg);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-top: 10px;
+  line-height: 1.5;
+  border: 1.5px solid var(--color-border);
+}
+
+.skeleton {
+  animation: pulse 1.4s ease-in-out infinite;
+  background: var(--color-border);
+  border-radius: 12px;
+}
+
+.skelCard {
+  height: 140px;
+  margin-bottom: 12px;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.errCard {
+  background: #ffe5e5;
+  border-radius: 12px;
+  padding: 16px;
+  color: var(--color-red);
+  font-size: var(--font-size-base);
+}

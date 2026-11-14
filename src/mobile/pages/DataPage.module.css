@@ -1,0 +1,29 @@
+.chartContainer {
+  min-height: 160px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.skeleton {
+  animation: pulse 1.4s ease-in-out infinite;
+  background: var(--color-border);
+  border-radius: 12px;
+}
+
+.skelCard {
+  height: 180px;
+  margin-bottom: 12px;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.errCard {
+  background: #ffe5e5;
+  border-radius: 12px;
+  padding: 16px;
+  color: var(--color-red);
+  font-size: var(--font-size-base);
+}
