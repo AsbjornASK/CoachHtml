@@ -6,7 +6,7 @@
 }
 
 .title {
-  font-size: var(--font-size-base, 13px);
+  font-size: var(--font-size-xs, 10px);
   font-weight: var(--font-weight-semibold, 600);
   color: var(--color-secondary, #8e8e93);
   text-transform: uppercase;
