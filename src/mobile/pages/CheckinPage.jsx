@@ -5,8 +5,10 @@ import { useWellness } from '../../shared/hooks/useWellness'
 import { WELLNESS, WELLNESS_COLORS } from '../../shared/charts/wellness-labels'
 import styles from './CheckinPage.module.css'
 
-const TODAY_FIELDS = ['soreness', 'fatigue', 'injury', 'motivation', 'sleepQuality']
-const YESTERDAY_FIELDS = ['mood', 'stress']
+// Today: soreness, fatigue, injury, motivation, Partner (custom YES/NO field)
+// Yesterday: stress, mood
+const TODAY_FIELDS = ['soreness', 'fatigue', 'injury', 'motivation']
+const YESTERDAY_FIELDS = ['stress', 'mood']
 
 function BtnGroup({ field, value, onChange }) {
   const { labels } = WELLNESS[field]
@@ -23,6 +25,29 @@ function BtnGroup({ field, value, onChange }) {
           {label.toUpperCase()}
         </button>
       ))}
+    </div>
+  )
+}
+
+function PartnerField({ value, onChange }) {
+  return (
+    <div className={styles.row}>
+      <div className={styles.rowLabel}>
+        Partner<small className={styles.small}>Slept together last night</small>
+      </div>
+      <div className={styles.btnGroup}>
+        {[['YES', 1], ['NO', 2]].map(([label, val]) => (
+          <button
+            key={val}
+            type="button"
+            className={`${styles.btn} ${value === val ? styles.btnActive : ''}`}
+            style={value === val ? { background: '#007aff', borderColor: '#007aff' } : {}}
+            onClick={() => onChange('Partner', value === val ? null : val)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
     </div>
   )
 }
@@ -58,51 +83,52 @@ export function CheckinPage({ desktop = false }) {
 
   const inner = (
     <form onSubmit={handleSubmit}>
-        <Card>
-          <div className={styles.section}>Today</div>
-          {TODAY_FIELDS.map(f => (
-            <CheckinRow key={f} field={f} value={fields[f] ?? null} onChange={setField} />
-          ))}
-        </Card>
+      <Card>
+        <div className={styles.section}>Today</div>
+        {TODAY_FIELDS.map(f => (
+          <CheckinRow key={f} field={f} value={fields[f] ?? null} onChange={setField} />
+        ))}
+        <PartnerField value={fields['Partner'] ?? null} onChange={setField} />
+      </Card>
 
-        <Card>
-          <div className={styles.section}>Yesterday</div>
-          {YESTERDAY_FIELDS.map(f => (
-            <CheckinRow key={f} field={f} value={fields[f] ?? null} onChange={setField} />
-          ))}
-        </Card>
+      <Card>
+        <div className={styles.section}>Yesterday</div>
+        {YESTERDAY_FIELDS.map(f => (
+          <CheckinRow key={f} field={f} value={fields[f] ?? null} onChange={setField} />
+        ))}
+      </Card>
 
-        <Card>
-          <div className={styles.row}>
-            <div className={styles.rowLabel}>
-              Weight<small className={styles.small}>kg</small>
-            </div>
-            <input
-              type="number"
-              inputMode="decimal"
-              step="0.1"
-              className={styles.weightInput}
-              value={weight}
-              onChange={e => setWeight(e.target.value)}
-              placeholder="–"
-            />
+      <Card>
+        <div className={styles.row}>
+          <div className={styles.rowLabel}>
+            Weight<small className={styles.small}>kg</small>
           </div>
-          <textarea
-            className={styles.notes}
-            placeholder="Notes…"
-            value={notes}
-            onChange={e => setNotes(e.target.value)}
-            rows={3}
+          <input
+            type="number"
+            inputMode="decimal"
+            step="0.1"
+            className={styles.weightInput}
+            value={weight}
+            onChange={e => setWeight(e.target.value)}
+            placeholder="–"
           />
-        </Card>
+        </div>
+        <textarea
+          className={styles.notes}
+          placeholder="Notes…"
+          value={notes}
+          onChange={e => setNotes(e.target.value)}
+          rows={3}
+        />
+      </Card>
 
-        {error && <div className={styles.errMsg}>{error}</div>}
-        {success && <div className={styles.okMsg}>Saved to Intervals ✓</div>}
+      {error && <div className={styles.errMsg}>{error}</div>}
+      {success && <div className={styles.okMsg}>Saved to Intervals ✓</div>}
 
-        <button type="submit" className={styles.submitBtn} disabled={loading}>
-          {loading ? 'Saving…' : 'Save to Intervals'}
-        </button>
-      </form>
+      <button type="submit" className={styles.submitBtn} disabled={loading}>
+        {loading ? 'Saving…' : 'Save to Intervals'}
+      </button>
+    </form>
   )
   if (desktop) return inner
   return <MobileLayout title="Check-in">{inner}</MobileLayout>

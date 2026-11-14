@@ -48,6 +48,12 @@
 .yellow { color: var(--color-yellow); }
 .red { color: var(--color-red); }
 
+.trendUp   { color: #30d158; font-size: 14px; margin-left: 2px; }
+.trendDown { color: #ff3b30; font-size: 14px; margin-left: 2px; }
+.trendFlat { color: #aeaeb2; font-size: 14px; margin-left: 2px; }
+
+.sparkline { display: block; margin-top: 4px; }
+
 .subjGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
