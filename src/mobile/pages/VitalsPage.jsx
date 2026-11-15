@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { MobileLayout } from '../components/MobileLayout'
 import { Card } from '../../shared/components/Card'
+import { EmptyState } from '../../shared/components/EmptyState'
 import { useFetch } from '../../shared/hooks/useFetch'
 import { WELLNESS, WELLNESS_COLORS } from '../../shared/charts/wellness-labels'
 import styles from './VitalsPage.module.css'
@@ -164,9 +165,9 @@ export function VitalsPage({ desktop = false }) {
       </>
     )
   } else if (error) {
-    content = <div className={styles.errCard}>Could not load data: {error}</div>
+    content = <Card><EmptyState body="Configure your Intervals.icu API credentials to view your vitals." /></Card>
   } else if (!data) {
-    content = <div className={styles.errCard}>No data available</div>
+    content = <Card><EmptyState icon="📭" title="No data" body="No vitals data available yet." /></Card>
   } else {
     const { latest, trends, healthMarkers, yesterdayWellness, inBody, spo2Latest, vo2Latest } = data
     const hm  = healthMarkers ?? {}

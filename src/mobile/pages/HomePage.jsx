@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MobileLayout } from '../components/MobileLayout'
 import { Card } from '../../shared/components/Card'
+import { EmptyState } from '../../shared/components/EmptyState'
 import { Ring } from '../../shared/components/Ring'
 import { useCoach } from '../../shared/hooks/useCoach'
 import { useCalendar } from '../../shared/hooks/useCalendar'
@@ -357,19 +358,20 @@ function BurdenChart({ series }) {
 
 export function HomePage({ desktop = false }) {
   const navigate = useNavigate()
-  const { data, loading: loadingCoach, error: errorCoach } = useCoach()
-  const { data: vitalsData } = useFetch('/api/get-vitals')
+  const { data, loading: loadingCoach, error: errorCoach, refetch: refetchCoach } = useCoach()
+  const { data: vitalsData, refetch: refetchVitals } = useFetch('/api/get-vitals')
   const { data: cal } = useCalendar()
   const { data: sportLoad } = useSportLoad()
   const { data: dashData } = useDashboard()
   const [fitTab, setFitTab] = useState(null)
 
-  // Redirect to check-in if today's wellness hasn't been filled in
+  // Redirect to check-in if today's subjective wellness hasn't been filled in
+  const CHECKIN_FIELDS = new Set(['soreness', 'fatigue', 'injury', 'motivation', 'stress', 'mood', 'Partner', 'sleepQuality'])
   useEffect(() => {
     if (desktop) return
     if (!vitalsData) return
     const tw = vitalsData.todayWellness
-    const checkedIn = tw && Object.values(tw).some(v => v != null)
+    const checkedIn = tw && Object.keys(tw).some(k => CHECKIN_FIELDS.has(k) && tw[k] != null)
     if (!checkedIn) navigate('/checkin')
   }, [vitalsData, desktop, navigate])
 
@@ -383,9 +385,9 @@ export function HomePage({ desktop = false }) {
       </>
     )
   } else if (errorCoach) {
-    content = <div className={styles.error}>Could not load data: {errorCoach}</div>
+    content = <Card><EmptyState body="Configure your Intervals.icu API credentials to start tracking your training." /></Card>
   } else if (!data) {
-    content = <div className={styles.error}>No data available</div>
+    content = <Card><EmptyState icon="📭" title="No data" body="No training data available yet." /></Card>
   } else {
     const { latest, trends, sleep8, subjective, fitnessHistory } = data
     const dashSeries = dashData?.series ?? []
@@ -522,6 +524,8 @@ export function HomePage({ desktop = false }) {
     )
   }
 
+  const handleRefresh = async () => { await Promise.all([refetchCoach(), refetchVitals()]) }
+
   if (desktop) return content
-  return <MobileLayout title="Coach">{content}</MobileLayout>
+  return <MobileLayout title="Coach" onRefresh={handleRefresh}>{content}</MobileLayout>
 }

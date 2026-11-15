@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MobileLayout } from '../components/MobileLayout'
 import { Card } from '../../shared/components/Card'
+import { EmptyState } from '../../shared/components/EmptyState'
 import { useWellness } from '../../shared/hooks/useWellness'
 import { useFetch } from '../../shared/hooks/useFetch'
 import { WELLNESS, WELLNESS_COLORS } from '../../shared/charts/wellness-labels'
@@ -314,18 +315,19 @@ export function CheckinPage({ desktop = false }) {
 
   if (desktop) return inner
 
+  if (!vitalsData && !vitalsError) {
+    return (
+      <MobileLayout title="Check-in">
+        <div className={`${styles.skelCard}`} />
+        <div className={`${styles.skelCard}`} />
+      </MobileLayout>
+    )
+  }
+
   if (vitalsError && !vitalsData) {
     return (
       <MobileLayout title="Check-in">
-        <Card>
-          <div className={styles.emptyState}>
-            <div className={styles.emptyIcon}>⚙️</div>
-            <div className={styles.emptyTitle}>Setup required</div>
-            <div className={styles.emptyBody}>
-              Configure your Intervals.icu API credentials to start tracking your wellness.
-            </div>
-          </div>
-        </Card>
+        <Card><EmptyState body="Configure your Intervals.icu API credentials to start tracking your wellness." /></Card>
       </MobileLayout>
     )
   }

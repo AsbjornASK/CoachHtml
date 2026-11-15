@@ -1,6 +1,7 @@
 import { useRef, useEffect } from 'react'
 import { MobileLayout } from '../components/MobileLayout'
 import { Card } from '../../shared/components/Card'
+import { EmptyState } from '../../shared/components/EmptyState'
 import { useDashboard } from '../../shared/hooks/useDashboard'
 import { useSportLoad } from '../../shared/hooks/useSportLoad'
 import {
@@ -31,7 +32,7 @@ function HtmlCard({ title, html }) {
 }
 
 export function DashboardPage({ desktop = false }) {
-  const { data: dashData, loading, error } = useDashboard()
+  const { data: dashData, loading, error, refetch } = useDashboard()
   const { data: loadData } = useSportLoad()
 
   let content
@@ -44,7 +45,7 @@ export function DashboardPage({ desktop = false }) {
       </>
     )
   } else if (error) {
-    content = <div className={styles.errCard}>Could not load data: {error}</div>
+    content = <Card><EmptyState body="Configure your Intervals.icu API credentials to view your dashboard." /></Card>
   } else {
     const series = dashData?.series ?? []
     const today = dashData?.today ?? new Date().toISOString().slice(0, 10)
@@ -73,5 +74,5 @@ export function DashboardPage({ desktop = false }) {
   }
 
   if (desktop) return content
-  return <MobileLayout title="Dashboard">{content}</MobileLayout>
+  return <MobileLayout title="Dashboard" onRefresh={refetch}>{content}</MobileLayout>
 }

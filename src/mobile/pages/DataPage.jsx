@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { MobileLayout } from '../components/MobileLayout'
 import { Card } from '../../shared/components/Card'
+import { EmptyState } from '../../shared/components/EmptyState'
 import { useDashboard } from '../../shared/hooks/useDashboard'
 import { useSportLoad } from '../../shared/hooks/useSportLoad'
 import {
@@ -103,7 +104,7 @@ function SportFilter({ sessions, activeSport, onSelect }) {
 export function DataPage({ desktop = false }) {
   const [activeTab, setActiveTab] = useState(getStoredTab)
   const [sportFilter, setSportFilter] = useState('all')
-  const { data: dashData, loading: dashLoading, error: dashError } = useDashboard()
+  const { data: dashData, loading: dashLoading, error: dashError, refetch: refetchDash } = useDashboard()
   const { data: loadData, loading: loadLoading, error: loadError } = useSportLoad()
 
   const selectTab = (t) => {
@@ -124,7 +125,7 @@ export function DataPage({ desktop = false }) {
       </>
     )
   } else if (error) {
-    content = <div className={styles.errCard}>Could not load data: {error}</div>
+    content = <Card><EmptyState body="Configure your Intervals.icu API credentials to view your data." /></Card>
   } else {
     const series = dashData?.series ?? []
     const today = dashData?.today ?? new Date().toISOString().slice(0, 10)
@@ -234,5 +235,5 @@ export function DataPage({ desktop = false }) {
   }
 
   if (desktop) return <div className={styles.desktopWrap}>{content}</div>
-  return <MobileLayout title="Data">{content}</MobileLayout>
+  return <MobileLayout title="Data" onRefresh={refetchDash}>{content}</MobileLayout>
 }

@@ -13,6 +13,9 @@
   --color-muted: #aeaeb2;
   --color-section-bg: #f2f2f7;
 
+  /* Shadows */
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.08), 0 0 0 0.5px rgba(0,0,0,0.04);
+
   /* Typography */
   --font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
 
@@ -36,7 +39,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --color-bg:         #000000;
     --color-card:       #1c1c1e;
     --color-section-bg: #000000;
@@ -50,6 +53,8 @@
     --color-red:        #ff453a;
     --color-yellow:     #ff9f0a;
     --color-purple:     #bf5af2;
+
+    --shadow-card:      none;
   }
 }
 

@@ -51,7 +51,12 @@
   color: var(--color-text);
   cursor: pointer;
   letter-spacing: 0.3px;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn:active {
+  transform: scale(0.94);
 }
 
 .btnActive {
@@ -105,10 +110,35 @@
   border: none;
   border-radius: 14px;
   cursor: pointer;
+  transition: transform 0.1s, opacity 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.submitBtn:active:not(:disabled) {
+  transform: scale(0.97);
 }
 
 .submitBtn:disabled {
   opacity: 0.6;
+}
+
+/* Skeleton loading */
+.skelCard {
+  height: 100px;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  background: linear-gradient(90deg, var(--color-card) 25%, var(--color-border) 50%, var(--color-card) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% center; }
+  100% { background-position: -200% center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skelCard { animation: none; opacity: 0.6; }
 }
 
 .errMsg {
@@ -196,6 +226,12 @@
   border-radius: 10px;
   cursor: pointer;
   flex-shrink: 0;
+  transition: transform 0.1s, opacity 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ibBtn:active:not(:disabled) {
+  transform: scale(0.95);
 }
 
 .ibBtn:disabled {
