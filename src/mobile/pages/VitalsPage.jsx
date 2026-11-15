@@ -5,15 +5,21 @@ import { useFetch } from '../../shared/hooks/useFetch'
 import { WELLNESS, WELLNESS_COLORS } from '../../shared/charts/wellness-labels'
 import styles from './VitalsPage.module.css'
 
-function fmtN(n, u = '') {
+function fmtN(n) {
   if (n == null) return '–'
-  return String(n).replace('.', ',') + (u ? ' ' + u : '')
+  return String(n).replace('.', ',')
 }
 
 function fmtDate(iso) {
   if (!iso) return ''
   const d = new Date(iso + 'T12:00:00')
   return d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })
+}
+
+function fmtDateShort(iso) {
+  if (!iso) return ''
+  const d = new Date(iso + 'T12:00:00')
+  return `${d.getDate()}/${d.getMonth() + 1}`
 }
 
 function colorHrv(v)   { return v == null ? '' : v >= 75 ? styles.green : v >= 60 ? styles.yellow : styles.red }
@@ -25,7 +31,7 @@ function colorVo2(v)   { return v == null ? '' : v >= 56 ? styles.green : v >= 5
 
 function fmtSteps(s) {
   if (s == null) return '–'
-  return s >= 1000 ? (s / 1000).toFixed(1).replace('.', ',') + ' k' : String(s)
+  return s >= 1000 ? (s / 1000).toFixed(1).replace('.', ',') + 'k' : String(s)
 }
 
 function trendDir(arr, invert = false) {
@@ -40,12 +46,26 @@ function trendDir(arr, invert = false) {
   return { a: up ? '↑' : '↓', c: good ? 'up' : 'down' }
 }
 
+function deltaBadgeFor(current, prev, unit = '', invertGood = false) {
+  if (current == null || prev == null) return null
+  const diff = current - prev
+  if (Math.abs(diff) < 0.05) return null
+  const up = diff > 0
+  const good = invertGood ? !up : up
+  const sign = diff > 0 ? '+' : ''
+  const val = Math.round(Math.abs(diff) * 10) / 10
+  return {
+    text: `${up ? '↑' : '↓'} ${sign}${fmtN(val)}${unit ? ' ' + unit : ''}`,
+    cls: `${styles.deltaBadge} ${good ? styles.deltaBadgeGood : styles.deltaBadgeBad}`,
+  }
+}
+
 function Sparkline({ values, colorFn }) {
   const pts = (values ?? []).map((v, i) => v != null ? { x: i, v } : null).filter(Boolean)
   if (pts.length < 2) return null
   const vs = pts.map(p => p.v)
   const mn = Math.min(...vs), mx = Math.max(...vs), rng = mx - mn || 1
-  const W = 56, H = 24, pd = 2
+  const W = 90, H = 24, pd = 2
   const px = i => pd + i * (W - 2 * pd) / (values.length - 1)
   const py = v => H - pd - ((v - mn) / rng) * (H - 2 * pd)
   const pts2 = pts.map(p => `${px(p.x).toFixed(1)},${py(p.v).toFixed(1)}`).join(' ')
@@ -59,107 +79,74 @@ function Sparkline({ values, colorFn }) {
   )
 }
 
-function MetricItem({ label, value, unit, colorClass, sub, sparkValues, sparkColorFn, trend }) {
+function BarSparkline({ values, colorFn }) {
+  if (!values || values.length === 0) return null
+  const max = Math.max(...values.filter(v => v != null), 1)
   return (
-    <div className={styles.metric}>
-      <div className={styles.metricLabel}>{label}</div>
-      <div className={`${styles.metricValue} ${colorClass || ''}`}>
-        {value}
-        {unit && <span className={styles.unit}>{unit}</span>}
-        {trend && <span className={trend.c === 'up' ? styles.trendUp : trend.c === 'down' ? styles.trendDown : styles.trendFlat}>{trend.a}</span>}
-      </div>
-      {sub && <div className={styles.metricSub}>{sub}</div>}
-      {sparkValues && <Sparkline values={sparkValues} colorFn={sparkColorFn} />}
+    <div className={styles.barSparkline}>
+      {values.map((v, i) => {
+        const h = v != null ? Math.max(3, Math.round((v / max) * 20)) : 2
+        const bg = v == null ? '#c7c7cc' : (colorFn ? colorFn(v) : '#007aff')
+        return <div key={i} className={styles.barSparklineBar} style={{ height: h + 'px', background: bg }} />
+      })}
     </div>
   )
 }
 
-function MetricRow({ label, value, unit, colorClass, sparkValues, sparkColorFn, trend }) {
+function DotTimeline({ values }) {
+  if (!values || values.length === 0) return null
+  return (
+    <div className={styles.dotTimeline}>
+      {values.map((v, i) => {
+        const isLast = i === values.length - 1
+        const bg = v == null ? '#c7c7cc' : WELLNESS_COLORS[v - 1] ?? '#c7c7cc'
+        return (
+          <div
+            key={i}
+            className={`${styles.dot} ${isLast ? styles.dotLast : ''}`}
+            style={{ background: bg }}
+          />
+        )
+      })}
+    </div>
+  )
+}
+
+function MetricRow({ label, labelDate, value, unit, colorClass, sparkValues, sparkColorFn, trend, badge, barValues, barColorFn }) {
   return (
     <div className={styles.metricRow}>
-      <div className={styles.metricRowLabel}>{label}</div>
+      <div className={styles.metricRowLabel}>
+        {label}
+        {labelDate && <span className={styles.metricRowDate}>{labelDate}</span>}
+      </div>
       <div className={`${styles.metricRowValue} ${colorClass || ''}`}>
         {value}
         {unit && <span className={styles.unit}>{unit}</span>}
         {trend && <span className={trend.c === 'up' ? styles.trendUp : trend.c === 'down' ? styles.trendDown : styles.trendFlat}>{trend.a}</span>}
       </div>
       <div className={styles.metricRowGraph}>
-        {sparkValues && <Sparkline values={sparkValues} colorFn={sparkColorFn} />}
+        {badge && <span className={badge.cls}>{badge.text}</span>}
+        {!badge && barValues && <BarSparkline values={barValues} colorFn={barColorFn} />}
+        {!badge && !barValues && sparkValues && <Sparkline values={sparkValues} colorFn={sparkColorFn} />}
       </div>
     </div>
   )
 }
 
-function SubjItem({ field, value }) {
-  if (value == null) return null
-  const cls = [styles.subj1, styles.subj2, styles.subj3, styles.subj4][value - 1]
-  const label = WELLNESS[field]?.labels[value - 1] ?? '–'
+function WellnessRow({ field, value, history }) {
+  const info = WELLNESS[field]
+  if (!info) return null
+  const label = info.labels[value - 1] ?? '–'
+  const colorClass = value != null ? [styles.green, styles.yellow, styles.red, styles.purple][value - 1] : ''
   return (
-    <div className={`${styles.subjItem} ${cls}`}>
-      <div className={styles.subjLabel}>{WELLNESS[field]?.name}</div>
-      <div className={styles.subjValue}>{label}</div>
-    </div>
-  )
-}
-
-function BodyCompItem({ label, value, unit, delta }) {
-  const sign = delta > 0 ? '+' : ''
-  const dColor = delta == null ? '' : delta <= 0 ? styles.green : styles.red
-  return (
-    <div className={styles.metric}>
-      <div className={styles.metricLabel}>{label}</div>
-      <div className={styles.metricValue}>
-        {fmtN(value)}{unit && <span className={styles.unit}>{unit}</span>}
+    <div className={styles.metricRow}>
+      <div className={styles.metricRowLabel}>{info.name}</div>
+      <div className={`${styles.metricRowValue} ${colorClass}`} style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-semibold)' }}>
+        {value != null ? label : '–'}
       </div>
-      {delta != null && (
-        <div className={`${styles.metricSub} ${dColor}`}>{sign}{fmtN(delta)}</div>
-      )}
-    </div>
-  )
-}
-
-function StressCheckin({ initialValue }) {
-  const [value, setValue] = useState(initialValue ?? null)
-  const [saved, setSaved] = useState(false)
-  const [err, setErr] = useState(null)
-  const labels = WELLNESS['stress']?.labels ?? []
-
-  const save = async (v) => {
-    setValue(v)
-    setSaved(false)
-    setErr(null)
-    try {
-      const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10)
-      const res = await fetch('/api/update-wellness', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ date: yesterday, stress: v }),
-      })
-      if (!res.ok) throw new Error('HTTP ' + res.status)
-      setSaved(true)
-    } catch (e) {
-      setErr(e.message)
-    }
-  }
-
-  return (
-    <div className={styles.stressRow}>
-      <div className={styles.stressLabel}>Yesterday's stress</div>
-      <div className={styles.stressBtns}>
-        {labels.map((label, i) => (
-          <button
-            key={i}
-            type="button"
-            className={`${styles.stressBtn} ${value === i + 1 ? styles.stressBtnActive : ''}`}
-            style={value === i + 1 ? { background: WELLNESS_COLORS[i], borderColor: WELLNESS_COLORS[i], color: '#fff' } : {}}
-            onClick={() => save(i + 1)}
-          >
-            {label.toUpperCase()}
-          </button>
-        ))}
+      <div className={styles.metricRowGraph}>
+        <DotTimeline values={history} />
       </div>
-      {saved && <span className={styles.stressSaved}>✓</span>}
-      {err && <span className={styles.stressErr}>{err}</span>}
     </div>
   )
 }
@@ -181,23 +168,30 @@ export function VitalsPage({ desktop = false }) {
   } else if (!data) {
     content = <div className={styles.errCard}>No data available</div>
   } else {
-    const { latest, trends, healthMarkers, yesterdayWellness, inBody } = data
-    const hm = healthMarkers ?? {}
-    const yw = yesterdayWellness ?? {}
+    const { latest, trends, healthMarkers, yesterdayWellness, inBody, spo2Latest, vo2Latest } = data
+    const hm  = healthMarkers ?? {}
+    const yw  = yesterdayWellness ?? {}
+    const wh  = trends?.wellness ?? {}
 
     const hrv_t = trendDir(trends.hrv)
     const rhr_t = trendDir(trends.rhr, true)
     const slp_t = trendDir(trends.sleep)
 
-    const colorHrvFn = v => v >= 75 ? '#30d158' : v >= 60 ? '#ff9f0a' : '#ff3b30'
-    const colorRhrFn = v => v <= 50 ? '#30d158' : v <= 58 ? '#ff9f0a' : '#ff3b30'
+    const colorHrvFn   = v => v >= 75 ? '#30d158' : v >= 60 ? '#ff9f0a' : '#ff3b30'
+    const colorRhrFn   = v => v <= 50 ? '#30d158' : v <= 58 ? '#ff9f0a' : '#ff3b30'
     const colorSleepFn = v => v >= 7.5 ? '#30d158' : v >= 6 ? '#ff9f0a' : '#ff3b30'
+    const colorStepsFn = v => v >= 8000 ? '#30d158' : v >= 5000 ? '#ff9f0a' : '#ff3b30'
 
-    const ywFields = ['mood', 'soreness', 'fatigue', 'motivation', 'stress', 'sleepQuality']
+    const spo2Badge = spo2Latest ? deltaBadgeFor(spo2Latest.value, spo2Latest.prev, '%') : null
+    const vo2Badge  = vo2Latest  ? deltaBadgeFor(vo2Latest.value,  vo2Latest.prev)       : null
+
+    const wellnessFields = ['soreness', 'fatigue', 'motivation', 'stress']
 
     content = (
       <>
         <div className={styles.sectionHeader}>Yesterday{yw.date ? ` · ${fmtDate(yw.date)}` : ''}</div>
+
+        <div className={styles.sectionSubtitle}>Night health markers</div>
         <Card>
           <div className={styles.grid1}>
             <MetricRow label="Night HRV" value={fmtN(latest.hrv)} unit="ms" colorClass={colorHrv(latest.hrv)} sparkValues={trends.hrv} sparkColorFn={colorHrvFn} trend={hrv_t} />
@@ -207,39 +201,55 @@ export function VitalsPage({ desktop = false }) {
           </div>
         </Card>
 
-        <div className={styles.sectionHeader}>Health markers</div>
+        <div className={styles.sectionSubtitle}>Day health markers</div>
         <Card>
-          <div className={styles.grid}>
-            <MetricItem label="HRV (SDNN)" value={fmtN(hm.sdnn)} unit="ms" colorClass={colorHrv(hm.sdnn)} sub="Heart rate variability" />
-            <MetricItem label="Steps" value={fmtSteps(hm.steps)} colorClass={colorSteps(hm.steps)} sub={hm.steps != null ? (hm.steps >= 8000 ? 'Above avg' : 'Below avg') : 'No data'} />
-            <MetricItem label="SpO₂" value={fmtN(hm.spo2)} unit="%" colorClass={colorSpo2(hm.spo2)} sub="Blood oxygen" />
-            <MetricItem label="VO₂ max" value={fmtN(hm.vo2max)} unit="ml/kg" colorClass={colorVo2(hm.vo2max)} sub="Aerobic capacity" />
+          <div className={styles.grid1}>
+            <MetricRow label="HRV (SDNN)" value={fmtN(hm.sdnn)} unit="ms" colorClass={colorHrv(hm.sdnn)} sparkValues={trends.sdnn} sparkColorFn={colorHrvFn} />
+            <MetricRow label="Steps" value={fmtSteps(hm.steps)} colorClass={colorSteps(hm.steps)} barValues={trends.steps} barColorFn={colorStepsFn} />
+            <MetricRow
+              label="SpO₂"
+              labelDate={spo2Latest?.date ? fmtDateShort(spo2Latest.date) : null}
+              value={fmtN(spo2Latest?.value)}
+              unit="%"
+              colorClass={colorSpo2(spo2Latest?.value)}
+              badge={spo2Badge}
+            />
+            <MetricRow
+              label="VO₂ max"
+              labelDate={vo2Latest?.date ? fmtDateShort(vo2Latest.date) : null}
+              value={fmtN(vo2Latest?.value)}
+              unit="ml/kg"
+              colorClass={colorVo2(vo2Latest?.value)}
+              badge={vo2Badge}
+            />
           </div>
         </Card>
 
-        {ywFields.some(f => yw[f] != null) && (
-          <>
-            <div className={styles.sectionHeader}>Yesterday's wellness</div>
-            <Card>
-              <div className={styles.subjGrid}>
-                {ywFields.map(f => yw[f] != null ? <SubjItem key={f} field={f} value={yw[f]} /> : null)}
-              </div>
-              {yw.comments && <div className={styles.notes}>{yw.comments}</div>}
-            </Card>
-          </>
-        )}
+        <div className={styles.sectionSubtitle}>Morning check-in</div>
+        <Card>
+          <div className={styles.grid1}>
+            {wellnessFields.map(f => (
+              <WellnessRow key={f} field={f} value={yw[f]} history={wh[f] ?? []} />
+            ))}
+          </div>
+          {yw.comments && <div className={styles.notes}>{yw.comments}</div>}
+        </Card>
 
         {inBody && (
           <>
-            <div className={styles.sectionHeader}>Body composition</div>
+            <div className={styles.sectionSubtitle}>Body composition</div>
             <Card>
-              <div className={styles.grid}>
-                <BodyCompItem label="Weight" value={inBody.weight} unit="kg" delta={inBody.prev ? inBody.weight - inBody.prev.weight : null} />
-                <BodyCompItem label="Fat %" value={inBody.fatPct} unit="%" delta={inBody.prev ? inBody.fatPct - inBody.prev.fatPct : null} />
-                <BodyCompItem label="Fat mass" value={inBody.fatMass} unit="kg" delta={inBody.prev ? inBody.fatMass - inBody.prev.fatMass : null} />
-                <BodyCompItem label="BMI" value={inBody.bmi} delta={inBody.prev ? inBody.bmi - inBody.prev.bmi : null} />
+              {inBody.prev && (
+                <div className={styles.compHeader}>
+                  <strong>{fmtDateShort(inBody.date)}</strong> vs {fmtDateShort(inBody.prev.date)}
+                </div>
+              )}
+              <div className={styles.grid1}>
+                <MetricRow label="Weight" value={fmtN(inBody.weight)} unit="kg" badge={inBody.prev ? deltaBadgeFor(inBody.weight, inBody.prev.weight, 'kg', true) : null} />
+                <MetricRow label="Fat %" value={fmtN(inBody.fatPct)} unit="%" colorClass={''} badge={inBody.prev ? deltaBadgeFor(inBody.fatPct, inBody.prev.fatPct, '%', true) : null} />
+                <MetricRow label="Fat mass" value={fmtN(inBody.fatMass)} unit="kg" badge={inBody.prev ? deltaBadgeFor(inBody.fatMass, inBody.prev.fatMass, 'kg', true) : null} />
+                <MetricRow label="BMI" value={fmtN(inBody.bmi)} badge={inBody.prev ? deltaBadgeFor(inBody.bmi, inBody.prev.bmi, '', true) : null} />
               </div>
-              {inBody.date && <div className={styles.metricSub} style={{ marginTop: 10 }}>Measured {fmtDate(inBody.date)}</div>}
             </Card>
           </>
         )}

@@ -91,20 +91,17 @@ function SubjSummaryCard({ todayWellness }) {
 
 function parseIB(url) {
   try {
-    const u = new URL(url)
-    const raw = u.searchParams.get('IBData')
-    if (!raw) return null
-    const dec = decodeURIComponent(raw)
-    const pairs = {}
-    dec.split('|').forEach(p => {
-      const [k, v] = p.split(':')
-      if (k && v) pairs[k.trim()] = v.trim()
-    })
-    const weight = parseFloat(pairs['Weight'] ?? pairs['Wt'])
-    const fatPct = parseFloat(pairs['PBF'] ?? pairs['BFP'] ?? pairs['Fat%'])
-    const dateRaw = pairs['Date'] ?? pairs['Dt']
-    if (!weight || isNaN(weight)) return null
-    return { weight, fatPct: isNaN(fatPct) ? null : fatPct, date: dateRaw ?? null }
+    const m = url.match(/[?&]IBData=([^&\s]+)/)
+    if (!m) return null
+    const raw = decodeURIComponent(m[1])
+    const segs = raw.split('!')
+    const main = segs.find(s => /^\d{8}[MF]\d{8}/.test(s))
+    if (!main) return null
+    const ds = main.substring(9, 17)
+    const fat = parseInt(main.substring(47, 51)) / 10
+    const w = parseInt(main.substring(115, 119)) / 10
+    const date = `${ds.slice(0, 4)}-${ds.slice(4, 6)}-${ds.slice(6, 8)}`
+    return { date, weight: w, fatPct: Math.round(fat / w * 1000) / 10 }
   } catch { return null }
 }
 

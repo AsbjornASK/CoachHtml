@@ -5,6 +5,15 @@
   letter-spacing: var(--letter-spacing-tight);
 }
 
+.sectionSubtitle {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 14px 0 6px;
+}
+
 .grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -14,7 +23,16 @@
 .grid1 {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 12px;
+  gap: 0;
+}
+
+.grid1 > * + * {
+  border-top: 1px solid var(--color-border);
+}
+
+.grid1 > .metricRow {
+  min-height: 38px;
+  padding: 2px 0;
 }
 
 .metric {
@@ -50,9 +68,10 @@
   margin-top: 1px;
 }
 
-.green { color: var(--color-green); }
+.green  { color: var(--color-green); }
 .yellow { color: var(--color-yellow); }
-.red { color: var(--color-red); }
+.red    { color: var(--color-red); }
+.purple { color: #bf5af2; }
 
 .trendUp   { color: #30d158; font-size: 14px; margin-left: 2px; }
 .trendDown { color: #ff3b30; font-size: 14px; margin-left: 2px; }
@@ -90,6 +109,70 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
+}
+
+.metricRowDate {
+  font-size: 10px;
+  color: var(--color-muted);
+  font-weight: var(--font-weight-regular);
+  margin-left: 4px;
+}
+
+/* Delta badge (infrequent metrics: SpO₂, VO₂ max, body comp) */
+.deltaBadge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+  font-weight: var(--font-weight-semibold);
+  padding: 3px 8px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+.deltaBadgeGood { background: #e8f8ee; color: #1a7a33; }
+.deltaBadgeBad  { background: #ffe5e5; color: #c0392b; }
+
+/* Bar sparkline (Steps) */
+.barSparkline {
+  display: flex;
+  gap: 2px;
+  align-items: flex-end;
+  height: 20px;
+}
+.barSparklineBar {
+  width: 8px;
+  border-radius: 2px 2px 0 0;
+  flex-shrink: 0;
+}
+
+/* Dot timeline (Morning check-in) */
+.dotTimeline {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.dotLast {
+  width: 12px;
+  height: 12px;
+  outline: 2px solid var(--color-card);
+  outline-offset: 1px;
+}
+
+/* Body composition comparison header */
+.compHeader {
+  font-size: var(--font-size-xs);
+  color: var(--color-secondary);
+  margin-bottom: 8px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid var(--color-border);
+}
+.compHeader strong {
+  color: var(--color-text);
 }
 
 .subjGrid {
