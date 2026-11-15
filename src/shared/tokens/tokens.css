@@ -35,6 +35,24 @@
   --letter-spacing-tight: -0.3px;
 }
 
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg:         #000000;
+    --color-card:       #1c1c1e;
+    --color-section-bg: #000000;
+    --color-text:       #ffffff;
+    --color-secondary:  #aeaeb2;
+    --color-muted:      #636366;
+    --color-border:     #38383a;
+
+    --color-blue:       #0a84ff;
+    --color-green:      #30d158;
+    --color-red:        #ff453a;
+    --color-yellow:     #ff9f0a;
+    --color-purple:     #bf5af2;
+  }
+}
+
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
