@@ -5,4 +5,16 @@
 @media (min-width: 769px) {
   .mobile-only { display: none; }
   .desktop-only { display: block; }
+
+  /* Desktop: cards sit two-up; on mobile these wrappers are plain blocks. */
+  .card-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 16px;
+    align-items: start;
+  }
+  .card-grid > * { min-width: 0; }
+
+  /* Desktop: forms and settings stay at a readable width. */
+  .narrow-col { max-width: 560px; }
 }

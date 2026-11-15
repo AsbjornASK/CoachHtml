@@ -46,6 +46,6 @@ export function ProfilePage({ desktop = false }) {
       </Card>
     </>
   )
-  if (desktop) return content
+  if (desktop) return <div className="narrow-col">{content}</div>
   return <MobileLayout title="Profile">{content}</MobileLayout>
 }

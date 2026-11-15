@@ -24,11 +24,11 @@
 }
 
 /* Status chips */
-.chip-1 { background: #e8f8ee; color: #1a7a33; border-radius: 6px; padding: 2px 7px; font-size: 11px; font-weight: 600; }
-.chip-2 { background: #fff3e0; color: #b86e00; border-radius: 6px; padding: 2px 7px; font-size: 11px; font-weight: 600; }
-.chip-3 { background: #ffe5e5; color: #c0392b; border-radius: 6px; padding: 2px 7px; font-size: 11px; font-weight: 600; }
-.chip-4 { background: #f3e8ff; color: #7a1fa2; border-radius: 6px; padding: 2px 7px; font-size: 11px; font-weight: 600; }
-.chip-null { background: #f2f2f7; color: #aeaeb2; border-radius: 6px; padding: 2px 7px; font-size: 11px; font-weight: 600; }
+.chip-1 { background: var(--tint-green-bg); color: var(--tint-green-fg); border-radius: 6px; padding: 2px 7px; font-size: 11px; font-weight: 600; }
+.chip-2 { background: var(--tint-amber-bg); color: var(--tint-amber-fg); border-radius: 6px; padding: 2px 7px; font-size: 11px; font-weight: 600; }
+.chip-3 { background: var(--tint-red-bg); color: var(--tint-red-fg); border-radius: 6px; padding: 2px 7px; font-size: 11px; font-weight: 600; }
+.chip-4 { background: var(--tint-purple-bg); color: var(--tint-purple-fg); border-radius: 6px; padding: 2px 7px; font-size: 11px; font-weight: 600; }
+.chip-null { background: var(--color-bg); color: var(--color-muted); border-radius: 6px; padding: 2px 7px; font-size: 11px; font-weight: 600; }
 
 /* Chart SVG overflow */
 .chart-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }

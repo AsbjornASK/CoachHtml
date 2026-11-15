@@ -9,6 +9,9 @@
   grid-template-columns: repeat(3, 1fr);
   gap: 1px;
   background: var(--color-border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
   margin-bottom: 20px;
 }
 .statCell {
@@ -38,13 +41,11 @@
 
 /* Section headers */
 .sectionHeader {
-  font-size: 11px;
+  font-size: 20px;
   font-weight: var(--font-weight-bold);
-  color: var(--color-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  padding: 0 4px;
-  margin: 8px 0 6px;
+  letter-spacing: var(--letter-spacing-tight);
+  color: var(--color-text);
+  margin: 20px 0 10px;
 }
 
 /* Card internals */
@@ -69,36 +70,48 @@
   white-space: nowrap;
 }
 .badgeneutral {
-  background: var(--color-background);
+  background: var(--color-bg);
   color: var(--color-secondary);
   border: 1px solid var(--color-border);
 }
-.badgegreen {
-  background: #edfaf1;
-  color: #1a7a33;
-}
-.badgeamber {
-  background: #fff8ec;
-  color: #b86e00;
-}
-.badgeblue {
-  background: #e8f1ff;
-  color: #0051d4;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .badgegreen { background: #0d2d16; color: #4cd97b; }
-  :root:not([data-theme="light"]) .badgeamber { background: #2b1f00; color: #ffd60a; }
-  :root:not([data-theme="light"]) .badgeblue  { background: #001a4d; color: #64acff; }
-}
+.badgegreen { background: var(--tint-green-bg); color: var(--tint-green-fg); }
+.badgeamber { background: var(--tint-amber-bg); color: var(--tint-amber-fg); }
+.badgeblue  { background: var(--tint-blue-bg);  color: var(--tint-blue-fg); }
 
-/* Body section 2-column layout */
-.bodyRow {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
+/* Body section: stacked on mobile so the charts keep readable labels, two-up on desktop */
 .bodyRow > * {
   min-width: 0;
+}
+@media (min-width: 769px) {
+  .bodyRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 16px;
+    align-items: start;
+  }
+}
+
+/* Row link to the Data page (its only entry point on mobile) */
+.moreLink {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+  padding: 0 16px;
+  margin-top: 8px;
+  background: var(--color-card);
+  border-radius: 12px;
+  box-shadow: var(--shadow-card);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-blue);
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.moreChevron {
+  font-size: 20px;
+  line-height: 1;
+  color: var(--color-muted);
 }
 
 /* Skeleton */

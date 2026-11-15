@@ -14,12 +14,10 @@
 }
 
 .cardTitle {
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-bold);
-  color: var(--color-secondary);
-  text-transform: uppercase;
-  letter-spacing: var(--letter-spacing-label);
-  margin-bottom: 14px;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  margin-bottom: 10px;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -214,8 +212,8 @@
 .workoutRow:last-child { border-bottom: none; }
 .workoutTitle { font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold); color: var(--color-text); }
 .workoutTime  { font-size: var(--font-size-base); color: var(--color-secondary); }
-.sessionBadgeDone    { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 20px; background: #edfaf1; color: #1a7a33; white-space: nowrap; flex-shrink: 0; }
-.sessionBadgePlanned { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 20px; background: var(--color-background); color: var(--color-secondary); white-space: nowrap; flex-shrink: 0; border: 1px solid var(--color-border); }
+.sessionBadgeDone    { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 20px; background: var(--tint-green-bg); color: var(--tint-green-fg); white-space: nowrap; flex-shrink: 0; }
+.sessionBadgePlanned { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 20px; background: var(--color-bg); color: var(--color-secondary); white-space: nowrap; flex-shrink: 0; border: 1px solid var(--color-border); }
 
 /* Upcoming */
 .upcomingRow {
@@ -243,30 +241,6 @@
 .upcomingInfo { flex: 1; }
 .upcomingTitle { font-size: var(--font-size-md); font-weight: var(--font-weight-semibold); color: var(--color-text); }
 .upcomingTime  { font-size: var(--font-size-sm); color: var(--color-secondary); margin-top: 1px; }
-
-/* Subjective grid */
-.subjGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-.subjItem {
-  text-align: center;
-  padding: 8px;
-  border-radius: 10px;
-}
-.subjLabel {
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-semibold);
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  opacity: 0.7;
-}
-.subjValue {
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight-bold);
-  margin-top: 2px;
-}
 
 .error {
   background: #ffe5e5;

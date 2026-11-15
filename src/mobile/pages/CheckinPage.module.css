@@ -1,6 +1,6 @@
 .lateWarning {
-  background: #fff8ec;
-  color: #b86e00;
+  background: var(--tint-amber-bg);
+  color: var(--tint-amber-fg);
   border-radius: 10px;
   padding: 10px 14px;
   font-size: var(--font-size-sm);
@@ -8,20 +8,11 @@
   margin-bottom: 10px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .lateWarning {
-    background: #2b1f00;
-    color: #ffd60a;
-  }
-}
-
 .section {
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
-  letter-spacing: var(--letter-spacing-label);
-  text-transform: uppercase;
-  color: var(--color-secondary);
-  margin-bottom: 12px;
+  color: var(--color-text);
+  margin-bottom: 10px;
 }
 
 .row {
@@ -35,6 +26,13 @@
 
 .row:last-child {
   border-bottom: none;
+}
+
+/* Scale questions: label on its own line, answers full width below it */
+.rowStacked {
+  flex-direction: column;
+  align-items: stretch;
+  padding: 12px 0;
 }
 
 .rowLabel {
@@ -52,22 +50,25 @@
 }
 
 .btnGroup {
-  display: flex;
-  gap: 4px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 6px;
 }
 
 .btn {
-  font-size: 11px;
+  min-height: 44px;
+  font-size: var(--font-size-base);
+  font-family: inherit;
   font-weight: var(--font-weight-semibold);
-  padding: 5px 8px;
-  border-radius: 8px;
+  line-height: 1.15;
+  padding: 4px;
+  border-radius: 10px;
   border: 1.5px solid var(--color-border);
   background: var(--color-card);
   color: var(--color-text);
   cursor: pointer;
-  letter-spacing: 0.3px;
+  overflow-wrap: anywhere;
   transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.1s;
   -webkit-tap-highlight-color: transparent;
 }
@@ -161,8 +162,8 @@
 .errMsg {
   margin-top: 10px;
   padding: 10px 14px;
-  background: #ffe5e5;
-  color: var(--color-red);
+  background: var(--tint-red-bg);
+  color: var(--tint-red-fg);
   border-radius: 10px;
   font-size: var(--font-size-base);
 }
@@ -170,8 +171,8 @@
 .okMsg {
   margin-top: 10px;
   padding: 10px 14px;
-  background: #e3f9e7;
-  color: var(--color-green);
+  background: var(--tint-green-bg);
+  color: var(--tint-green-fg);
   border-radius: 10px;
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-medium);

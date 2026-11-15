@@ -10,7 +10,6 @@ import { useSportLoad } from '../../shared/hooks/useSportLoad'
 import { useDashboard } from '../../shared/hooks/useDashboard'
 import { useFetch } from '../../shared/hooks/useFetch'
 import { calcRecovery, calcSleep, calcReadiness, verdictColor } from '../../shared/utils/readiness'
-import { WELLNESS } from '../../shared/charts/wellness-labels'
 import { computeBurden } from '../../shared/utils/burdenIndex'
 import styles from './HomePage.module.css'
 
@@ -47,8 +46,6 @@ const TLR_Z_BOUNDS = [-2.5, -2, -1, -0.5, 0.5, 1, 1.5]
 const TLR_Z_ZONES = TLR_ZONES.map((z, i) => ({ ...z, min: TLR_Z_BOUNDS[i], max: TLR_Z_BOUNDS[i + 1] }))
 
 const TAB_LABELS = { overall: 'Overall', run: 'Run', ride: 'Bike', strength: 'Strength' }
-const SUBJ_FIELDS = ['soreness', 'fatigue', 'motivation', 'stress', 'mood', 'sleepQuality']
-const SUBJ_COLORS = ['#e8f8ee:#1a7a33', '#fff8e1:#b86e00', '#ffe5e5:#c0392b', '#f3e8ff:#7a1fa2']
 
 function colorFor(r) {
   return r >= 65 ? '#30d158' : r >= 45 ? '#ff9f0a' : '#ff3b30'
@@ -84,7 +81,7 @@ function ReadinessHistGraph({ trends }) {
   return (
     <div className={styles.readinessHist}>
       <div className={styles.readinessHistLabel}>Readiness history</div>
-      <svg viewBox={`0 0 ${W} ${totalH}`} width="100%" height={totalH}>
+      <svg viewBox={`0 0 ${W} ${totalH}`} width="100%">
         {segments}
         {pts.map(p => <circle key={p.x} cx={px(p.x)} cy={py(p.v)} r={3.5} fill={colorFor(p.v)} />)}
         {pts.map(p => <text key={`s${p.x}`} x={px(p.x)} y={py(p.v) - 7} fontSize={8} fontWeight={700} fill={colorFor(p.v)} textAnchor="middle">{p.v}</text>)}
@@ -112,9 +109,9 @@ function FitnessGraph({ hist }) {
         <div className={styles.legendItem}><div className={styles.legendDot} style={{ background: '#007aff' }} />CTL</div>
         <div className={styles.legendItem}><div className={styles.legendDot} style={{ background: '#ff9f0a' }} />ATL</div>
       </div>
-      <svg viewBox={`0 0 ${W} ${H + axH}`} width="100%" height={H + axH}>
-        <line x1={0} y1={H * 0.33} x2={W} y2={H * 0.33} stroke="#f2f2f7" strokeWidth={1} />
-        <line x1={0} y1={H * 0.66} x2={W} y2={H * 0.66} stroke="#f2f2f7" strokeWidth={1} />
+      <svg viewBox={`0 0 ${W} ${H + axH}`} width="100%">
+        <line x1={0} y1={H * 0.33} x2={W} y2={H * 0.33} style={{ stroke: 'var(--color-border)' }} strokeWidth={1} />
+        <line x1={0} y1={H * 0.66} x2={W} y2={H * 0.66} style={{ stroke: 'var(--color-border)' }} strokeWidth={1} />
         <polyline fill="none" stroke="#007aff" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" points={cPts} />
         <polyline fill="none" stroke="#ff9f0a" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" points={aPts} />
         {idxs.map(i => {
@@ -223,33 +220,6 @@ function UpcomingCard({ upcoming }) {
   )
 }
 
-function SubjGrid({ subjective }) {
-  if (!subjective) return null
-  const items = SUBJ_FIELDS.map(f => {
-    const val = subjective[f]
-    if (val == null) return null
-    const cfg = WELLNESS[f]
-    if (!cfg) return null
-    const label = cfg.labels[val - 1] ?? '–'
-    const [bg, fg] = (SUBJ_COLORS[val - 1] ?? '#f2f2f7:#aeaeb2').split(':')
-    return { f, name: cfg.name, label, bg, fg }
-  }).filter(Boolean)
-  if (!items.length) return null
-  return (
-    <Card>
-      <div className={styles.cardTitle}>Morning check-in</div>
-      <div className={styles.subjGrid}>
-        {items.map(({ f, name, label, bg, fg }) => (
-          <div key={f} className={styles.subjItem} style={{ background: bg, color: fg }}>
-            <div className={styles.subjLabel}>{name}</div>
-            <div className={styles.subjValue}>{label}</div>
-          </div>
-        ))}
-      </div>
-    </Card>
-  )
-}
-
 const STRESS_COLORS = ['#30d158', '#ff9f0a', '#ff9f0a', '#ff3b30']
 const FATIGUE_COLORS = ['#30d158', '#ff9f0a', '#ff9f0a', '#ff3b30']
 
@@ -304,8 +274,8 @@ function StressFatigueChart({ series, days = 21 }) {
           <span key={l}>{l}</span>
         ))}
       </div>
-      <svg viewBox={`0 0 ${W} ${H + axH}`} width="100%" height={H + axH}>
-        <line x1={pd} y1={py(2.5)} x2={W - pd} y2={py(2.5)} stroke="#f2f2f7" strokeWidth={1} strokeDasharray="3 3" />
+      <svg viewBox={`0 0 ${W} ${H + axH}`} width="100%">
+        <line x1={pd} y1={py(2.5)} x2={W - pd} y2={py(2.5)} style={{ stroke: 'var(--color-border)' }} strokeWidth={1} strokeDasharray="3 3" />
         {polyline(stressPts, '#ff9f0a')}
         {polyline(fatiguePts, '#007aff')}
         {dots(stressPts, STRESS_COLORS)}
@@ -361,10 +331,10 @@ function BurdenChart({ series }) {
   })
 
   return (
-    <svg viewBox={`0 0 ${W} ${H + axH}`} width="100%" height={H + axH}>
+    <svg viewBox={`0 0 ${W} ${H + axH}`} width="100%">
       {sickRects}
       <line x1={pd} y1={zeroY.toFixed(1)} x2={W - pd} y2={zeroY.toFixed(1)}
-        stroke="#f2f2f7" strokeWidth={1} strokeDasharray="3 3" />
+        style={{ stroke: 'var(--color-border)' }} strokeWidth={1} strokeDasharray="3 3" />
       {segments}
       {dateLabels.map(({ i, label }) => (
         <text key={i} x={px(i)} y={H + axH - 1} fontSize={8} fill="#aeaeb2" textAnchor="middle">{label}</text>
@@ -468,7 +438,6 @@ export function HomePage({ desktop = false }) {
 
     content = (
       <>
-        <div className={styles.sectionHeader}>Body</div>
         <Card>
           <div className={styles.rings}>
             <Ring pct={ready} color={rColor} label="Readiness" />
@@ -478,6 +447,14 @@ export function HomePage({ desktop = false }) {
           <ReadinessHistGraph trends={trends} />
         </Card>
 
+        <div className={styles.sectionHeader}>Today</div>
+        <div className="card-grid">
+          <SessionsCard cal={cal} sportSessions={sportLoad?.sessions?.filter(s => s.date === new Date().toISOString().slice(0, 10))} />
+          {cal?.upcoming?.length > 0 && <UpcomingCard upcoming={cal.upcoming} />}
+        </div>
+
+        <div className={styles.sectionHeader}>Body</div>
+        <div className="card-grid">
         <Card>
           <div className={styles.cardTitle}>Night physiology</div>
           <div className={styles.physioRow}>
@@ -509,6 +486,7 @@ export function HomePage({ desktop = false }) {
             <BurdenChart series={dashSeries} />
           </Card>
         )}
+        </div>
 
         <div className={styles.sectionHeader}>Training</div>
         <div className={styles.tabBar}>
@@ -524,6 +502,7 @@ export function HomePage({ desktop = false }) {
           ))}
         </div>
 
+        <div className="card-grid">
         <Card>
           <div className={styles.cardTitle}>
             {activeTab === 'overall' ? 'Fitness' : `Fitness · ${TAB_LABELS[activeTab]}`}
@@ -542,12 +521,7 @@ export function HomePage({ desktop = false }) {
         </Card>
 
         {tlrCard}
-
-        <div className={styles.sectionHeader}>Today</div>
-        <SessionsCard cal={cal} sportSessions={sportLoad?.sessions?.filter(s => s.date === new Date().toISOString().slice(0, 10))} />
-        {cal?.upcoming?.length > 0 && <UpcomingCard upcoming={cal.upcoming} />}
-
-        {subjective && <SubjGrid subjective={subjective} />}
+        </div>
       </>
     )
   }

@@ -13,6 +13,13 @@
   --color-muted: #aeaeb2;
   --color-section-bg: #f2f2f7;
 
+  /* Tinted status surfaces (badge / chip / tile background + text) */
+  --tint-green-bg: #e8f8ee;  --tint-green-fg: #1a7a33;
+  --tint-amber-bg: #fff8e1;  --tint-amber-fg: #b86e00;
+  --tint-red-bg: #ffe5e5;    --tint-red-fg: #c0392b;
+  --tint-purple-bg: #f3e8ff; --tint-purple-fg: #7a1fa2;
+  --tint-blue-bg: #e8f1ff;   --tint-blue-fg: #0051d4;
+
   /* Shadows */
   --shadow-card: 0 1px 3px rgba(0,0,0,0.08), 0 0 0 0.5px rgba(0,0,0,0.04);
 
@@ -53,6 +60,12 @@
     --color-red:        #ff453a;
     --color-yellow:     #ff9f0a;
     --color-purple:     #bf5af2;
+
+    --tint-green-bg: #0d2d16;  --tint-green-fg: #4cd97b;
+    --tint-amber-bg: #2b1f00;  --tint-amber-fg: #ffd60a;
+    --tint-red-bg: #3a1210;    --tint-red-fg: #ff6961;
+    --tint-purple-bg: #2a1438; --tint-purple-fg: #da8fff;
+    --tint-blue-bg: #001a4d;   --tint-blue-fg: #64acff;
 
     --shadow-card:      none;
   }

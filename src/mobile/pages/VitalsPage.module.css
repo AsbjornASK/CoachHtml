@@ -6,11 +6,9 @@
 }
 
 .sectionSubtitle {
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
-  color: var(--color-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  color: var(--color-text);
   margin: 14px 0 6px;
 }
 
@@ -128,8 +126,8 @@
   border-radius: 20px;
   white-space: nowrap;
 }
-.deltaBadgeGood { background: #e8f8ee; color: #1a7a33; }
-.deltaBadgeBad  { background: #ffe5e5; color: #c0392b; }
+.deltaBadgeGood { background: var(--tint-green-bg); color: var(--tint-green-fg); }
+.deltaBadgeBad  { background: var(--tint-red-bg); color: var(--tint-red-fg); }
 
 /* Bar sparkline (Steps) */
 .barSparkline {
@@ -208,7 +206,7 @@
 
 .notes {
   font-size: var(--font-size-base);
-  color: #3a3a3c;
+  color: var(--color-text);
   background: var(--color-bg);
   border-radius: 10px;
   padding: 10px 12px;

@@ -72,8 +72,8 @@
 .errMsg {
   margin-top: 10px;
   padding: 10px 14px;
-  background: #ffe5e5;
-  color: var(--color-red);
+  background: var(--tint-red-bg);
+  color: var(--tint-red-fg);
   border-radius: 10px;
   font-size: var(--font-size-base);
 }

@@ -4,12 +4,15 @@
 
 .tabs {
   display: flex;
-  gap: 4px;
-  padding: 12px 12px 4px;
-  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 0 12px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
 }
 
 .tab {
+  flex-shrink: 0;
   padding: 7px 14px;
   font-size: 13px;
   font-weight: 600;
@@ -45,7 +48,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
-  padding: 12px;
+  padding: 0 0 12px;
 }
 
 .kpiTile {
@@ -120,7 +123,7 @@
 .sportFilter {
   display: flex;
   gap: 6px;
-  padding: 8px 12px 4px;
+  padding: 0 0 12px;
   flex-wrap: wrap;
 }
 

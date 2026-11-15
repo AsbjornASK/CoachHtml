@@ -25,7 +25,7 @@ function BtnGroup({ field, value, onChange }) {
           style={value === i + 1 ? { background: WELLNESS_COLORS[i], borderColor: WELLNESS_COLORS[i] } : {}}
           onClick={() => onChange(field, value === i + 1 ? null : i + 1)}
         >
-          {label.toUpperCase()}
+          {label}
         </button>
       ))}
     </div>
@@ -34,12 +34,12 @@ function BtnGroup({ field, value, onChange }) {
 
 function PartnerField({ value, onChange }) {
   return (
-    <div className={styles.row}>
+    <div className={`${styles.row} ${styles.rowStacked}`}>
       <div className={styles.rowLabel}>
         Partner<small className={styles.small}>Slept together last night</small>
       </div>
       <div className={styles.btnGroup}>
-        {[['YES', 1], ['NO', 2]].map(([label, val]) => (
+        {[['Yes', 1], ['No', 2]].map(([label, val]) => (
           <button
             key={val}
             type="button"
@@ -57,15 +57,15 @@ function PartnerField({ value, onChange }) {
 
 function CheckinRow({ field, value, onChange }) {
   return (
-    <div className={styles.row}>
+    <div className={`${styles.row} ${styles.rowStacked}`}>
       <div className={styles.rowLabel}>{WELLNESS[field].name}</div>
       <BtnGroup field={field} value={value} onChange={onChange} />
     </div>
   )
 }
 
-const SUBJ_COLORS = ['#e8f8ee', '#fff8e1', '#ffe5e5', '#f3e8ff']
-const SUBJ_TEXT   = ['#1a7a33', '#b86e00', '#c0392b', '#7a1fa2']
+const SUBJ_COLORS = ['var(--tint-green-bg)', 'var(--tint-amber-bg)', 'var(--tint-red-bg)', 'var(--tint-purple-bg)']
+const SUBJ_TEXT   = ['var(--tint-green-fg)', 'var(--tint-amber-fg)', 'var(--tint-red-fg)', 'var(--tint-purple-fg)']
 
 function SubjSummaryCard({ todayWellness }) {
   const fields = ['soreness', 'fatigue', 'injury', 'motivation', 'stress', 'mood']
@@ -158,6 +158,12 @@ function InBodyCard({ todayWeight, onSaved }) {
           placeholder="Paste InBody URL…"
           value={ibUrl}
           onChange={e => { setIbUrl(e.target.value); setIbMsg(''); setPreview(null) }}
+          onKeyDown={e => {
+            // Sits inside the check-in form: Enter previews instead of submitting it.
+            if (e.key !== 'Enter') return
+            e.preventDefault()
+            if (ibUrl && !saving) handleParse()
+          }}
         />
         <button
           type="button"
@@ -300,7 +306,9 @@ export function CheckinPage({ desktop = false }) {
         />
       </Card>
 
-      {isLate && <div className={styles.lateWarning}>Late check-in — logging today's data now.</div>}
+      <InBodyCard todayWeight={todayWeight} />
+
+      {isLate &&<div className={styles.lateWarning}>Late check-in — logging today's data now.</div>}
       {error && <div className={styles.errMsg}>{error}</div>}
       {success && <div className={styles.okMsg}>Saved to Intervals ✓</div>}
 
@@ -328,31 +336,22 @@ export function CheckinPage({ desktop = false }) {
     </>
   )
 
-  const inner = (
-    <>
-      {checkedInToday ? alreadyCheckedIn : checkinForm}
-      {!checkedInToday && <InBodyCard todayWeight={todayWeight} />}
-    </>
-  )
-
-  if (desktop) return inner
-
+  let body
+  let ready = false
   if (!vitalsData && !vitalsError) {
-    return (
-      <MobileLayout title="Check-in">
+    body = (
+      <>
         <div className={`${styles.skelCard}`} />
         <div className={`${styles.skelCard}`} />
-      </MobileLayout>
+      </>
     )
+  } else if (vitalsError && !vitalsData) {
+    body = <Card><EmptyState body="Configure your Intervals.icu API credentials to start tracking your wellness." /></Card>
+  } else {
+    body = checkedInToday ? alreadyCheckedIn : checkinForm
+    ready = true
   }
 
-  if (vitalsError && !vitalsData) {
-    return (
-      <MobileLayout title="Check-in">
-        <Card><EmptyState body="Configure your Intervals.icu API credentials to start tracking your wellness." /></Card>
-      </MobileLayout>
-    )
-  }
-
-  return <MobileLayout title="Check-in" onRefresh={refetch}>{inner}</MobileLayout>
+  if (desktop) return <div className="narrow-col">{body}</div>
+  return <MobileLayout title="Check-in" onRefresh={ready ? refetch : undefined}>{body}</MobileLayout>
 }

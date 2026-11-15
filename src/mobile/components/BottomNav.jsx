@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 import styles from './BottomNav.module.css'
 
 const NAV_ITEMS = [
@@ -55,6 +55,9 @@ const NAV_ITEMS = [
 ]
 
 export function BottomNav() {
+  const { pathname } = useLocation()
+  // Data is reached from Dashboard on mobile, so it lights up the Dashboard tab.
+  const isOn = (to, isActive) => isActive || (to === '/dashboard' && pathname === '/data')
   return (
     <nav className={styles.nav}>
       <div className={styles.inner}>
@@ -63,7 +66,7 @@ export function BottomNav() {
             key={to}
             to={to}
             end={to === '/'}
-            className={({ isActive }) => `${styles.item}${isActive ? ' ' + styles.active : ''}`}
+            className={({ isActive }) => `${styles.item}${isOn(to, isActive) ? ' ' + styles.active : ''}`}
           >
             <span className={styles.icon}>{icon}</span>
             {label}

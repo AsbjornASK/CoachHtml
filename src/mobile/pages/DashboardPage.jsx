@@ -1,4 +1,5 @@
 import { useRef, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { MobileLayout } from '../components/MobileLayout'
 import { Card } from '../../shared/components/Card'
 import { EmptyState } from '../../shared/components/EmptyState'
@@ -103,8 +104,10 @@ export function DashboardPage({ desktop = false }) {
         <SummaryStrip series={series} today={today} />
 
         <SectionHeader>Recovery</SectionHeader>
-        <HtmlCard title="HRV · Calendar · Stress" html={hrvCalHtml} />
-        <HtmlCard title="HRV × Fatigue" html={hrvHtml} />
+        <div className="card-grid">
+          <HtmlCard title="HRV · Calendar · Stress" html={hrvCalHtml} />
+          <HtmlCard title="HRV × Fatigue" html={hrvHtml} />
+        </div>
 
         <SectionHeader>Sleep & mood</SectionHeader>
         <HtmlCard title="Sleep × Mood" html={sleepHtml} />
@@ -123,6 +126,11 @@ export function DashboardPage({ desktop = false }) {
             <div className={styles.chartContainer} dangerouslySetInnerHTML={{ __html: vo2Html }} />
           </Card>
         </div>
+
+        <Link to="/data" className={styles.moreLink}>
+          All data
+          <span className={styles.moreChevron} aria-hidden="true">›</span>
+        </Link>
       </>
     )
   }

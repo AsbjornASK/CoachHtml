@@ -192,6 +192,8 @@ export function VitalsPage({ desktop = false }) {
       <>
         <div className={styles.sectionHeader}>Yesterday{yw.date ? ` · ${fmtDate(yw.date)}` : ''}</div>
 
+        <div className="card-grid">
+        <div>
         <div className={styles.sectionSubtitle}>Night health markers</div>
         <Card>
           <div className={styles.grid1}>
@@ -201,7 +203,9 @@ export function VitalsPage({ desktop = false }) {
             <MetricRow label="Sleep quality" value={fmtN(latest.sleepScore)} colorClass={colorSleep(latest.sleepScore ? latest.sleepScore / 10 : null)} sparkValues={trends.sleepScore} />
           </div>
         </Card>
+        </div>
 
+        <div>
         <div className={styles.sectionSubtitle}>Day health markers</div>
         <Card>
           <div className={styles.grid1}>
@@ -225,7 +229,9 @@ export function VitalsPage({ desktop = false }) {
             />
           </div>
         </Card>
+        </div>
 
+        <div>
         <div className={styles.sectionSubtitle}>Morning check-in</div>
         <Card>
           <div className={styles.grid1}>
@@ -235,9 +241,10 @@ export function VitalsPage({ desktop = false }) {
           </div>
           {yw.comments && <div className={styles.notes}>{yw.comments}</div>}
         </Card>
+        </div>
 
         {inBody && (
-          <>
+          <div>
             <div className={styles.sectionSubtitle}>Body composition</div>
             <Card>
               {inBody.prev && (
@@ -253,8 +260,9 @@ export function VitalsPage({ desktop = false }) {
                 <MetricRow label="BMI" value={fmtN(inBody.bmi)} badge={inBody.prev ? deltaBadgeFor(inBody.bmi, inBody.prev.bmi, '', true) : null} />
               </div>
             </Card>
-          </>
+          </div>
         )}
+        </div>
       </>
     )
   }
