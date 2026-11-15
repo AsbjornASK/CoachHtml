@@ -109,15 +109,21 @@ function InBodyCard({ todayWeight, onSaved }) {
   const [ibUrl, setIbUrl] = useState('')
   const [ibMsg, setIbMsg] = useState('')
   const [saving, setSaving] = useState(false)
+  const [preview, setPreview] = useState(null)
 
-  const handleImport = async () => {
+  const handleParse = () => {
     const parsed = parseIB(ibUrl)
     if (!parsed) { setIbMsg('Could not parse URL'); return }
+    setPreview(parsed)
+    setIbMsg('')
+  }
+
+  const handleConfirm = async () => {
+    if (!preview) return
     setSaving(true)
     try {
-      const today = new Date().toISOString().slice(0, 10)
-      const payload = { date: parsed.date ?? today, weight: parsed.weight }
-      if (parsed.fatPct != null) payload.bodyFat = parsed.fatPct
+      const payload = { date: preview.date, weight: preview.weight }
+      if (preview.fatPct != null) payload.bodyFat = preview.fatPct
       const res = await fetch('/api/update-wellness', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -126,6 +132,7 @@ function InBodyCard({ todayWeight, onSaved }) {
       if (!res.ok) throw new Error(await res.text())
       setIbMsg('Saved ✓')
       setIbUrl('')
+      setPreview(null)
       if (onSaved) onSaved()
     } catch (e) {
       setIbMsg('Error: ' + e.message)
@@ -149,17 +156,34 @@ function InBodyCard({ todayWeight, onSaved }) {
           className={styles.ibInput}
           placeholder="Paste InBody URL…"
           value={ibUrl}
-          onChange={e => { setIbUrl(e.target.value); setIbMsg('') }}
+          onChange={e => { setIbUrl(e.target.value); setIbMsg(''); setPreview(null) }}
         />
         <button
           type="button"
           className={styles.ibBtn}
           disabled={!ibUrl || saving}
-          onClick={handleImport}
+          onClick={handleParse}
         >
-          Import
+          Preview
         </button>
       </div>
+      {preview && (
+        <div className={styles.ibPreview}>
+          <div className={styles.ibPreviewRow}><span>Date</span><strong>{preview.date}</strong></div>
+          <div className={styles.ibPreviewRow}><span>Weight</span><strong>{preview.weight} kg</strong></div>
+          {preview.fatPct != null && (
+            <div className={styles.ibPreviewRow}><span>Body fat</span><strong>{preview.fatPct}%</strong></div>
+          )}
+          <div className={styles.ibPreviewActions}>
+            <button type="button" className={styles.ibBtn} disabled={saving} onClick={handleConfirm}>
+              {saving ? 'Saving…' : 'Save'}
+            </button>
+            <button type="button" className={styles.ibBtnCancel} onClick={() => setPreview(null)}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
       {ibMsg && <div className={styles.ibMsg}>{ibMsg}</div>}
     </Card>
   )
@@ -168,14 +192,15 @@ function InBodyCard({ todayWeight, onSaved }) {
 export function CheckinPage({ desktop = false }) {
   const navigate = useNavigate()
   const { submit, loading, error, success } = useWellness()
-  const { data: vitalsData } = useFetch('/api/get-vitals')
+  const { data: vitalsData, error: vitalsError, refetch } = useFetch('/api/get-vitals')
   const [fields, setFields] = useState({})
   const [weight, setWeight] = useState('')
   const [notes, setNotes] = useState('')
   const notesTimer = useRef(null)
 
   const todayWellness = vitalsData?.todayWellness ?? null
-  const checkedInToday = todayWellness != null && Object.keys(todayWellness).some(k => todayWellness[k] != null && k !== 'date' && k !== 'comments')
+  const CHECKIN_FIELDS = new Set([...TODAY_FIELDS, ...YESTERDAY_FIELDS, 'Partner', 'sleepQuality'])
+  const checkedInToday = todayWellness != null && Object.keys(todayWellness).some(k => CHECKIN_FIELDS.has(k) && todayWellness[k] != null)
   const todayWeight = vitalsData?.latest?.weight ?? null
 
   // Auto-save notes when already checked in
@@ -288,5 +313,22 @@ export function CheckinPage({ desktop = false }) {
   )
 
   if (desktop) return inner
-  return <MobileLayout title="Check-in">{inner}</MobileLayout>
+
+  if (vitalsError && !vitalsData) {
+    return (
+      <MobileLayout title="Check-in">
+        <Card>
+          <div className={styles.emptyState}>
+            <div className={styles.emptyIcon}>⚙️</div>
+            <div className={styles.emptyTitle}>Setup required</div>
+            <div className={styles.emptyBody}>
+              Configure your Intervals.icu API credentials to start tracking your wellness.
+            </div>
+          </div>
+        </Card>
+      </MobileLayout>
+    )
+  }
+
+  return <MobileLayout title="Check-in" onRefresh={refetch}>{inner}</MobileLayout>
 }

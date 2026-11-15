@@ -10,4 +10,23 @@
   padding: 16px 16px;
   /* leave room for BottomNav (56px) */
   padding-bottom: calc(56px + env(safe-area-inset-bottom) + 16px);
+  overflow-y: auto;
+}
+
+.refreshSpinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-blue);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  margin: 0 auto 12px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .refreshSpinner { animation: none; opacity: 0.5; }
 }

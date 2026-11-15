@@ -152,7 +152,7 @@ function WellnessRow({ field, value, history }) {
 }
 
 export function VitalsPage({ desktop = false }) {
-  const { data, loading, error } = useFetch('/api/get-vitals')
+  const { data, loading, error, refetch } = useFetch('/api/get-vitals')
 
   let content
   if (loading) {
@@ -258,5 +258,5 @@ export function VitalsPage({ desktop = false }) {
   }
 
   if (desktop) return content
-  return <MobileLayout title="Vitals">{content}</MobileLayout>
+  return <MobileLayout title="Vitals" onRefresh={refetch}>{content}</MobileLayout>
 }

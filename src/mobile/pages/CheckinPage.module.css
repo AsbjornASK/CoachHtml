@@ -207,3 +207,64 @@
   font-size: var(--font-size-sm);
   color: var(--color-secondary);
 }
+
+/* InBody preview */
+.ibPreview {
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: var(--color-section-bg);
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+}
+
+.ibPreviewRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--font-size-base);
+  padding: 3px 0;
+}
+
+.ibPreviewRow span {
+  color: var(--color-secondary);
+}
+
+.ibPreviewActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.ibBtnCancel {
+  padding: 8px 14px;
+  background: transparent;
+  color: var(--color-secondary);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  border: 1.5px solid var(--color-border);
+  border-radius: 10px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* Empty / onboarding state */
+.emptyState {
+  text-align: center;
+  padding: 32px 16px;
+}
+
+.emptyIcon {
+  font-size: 40px;
+  margin-bottom: 12px;
+}
+
+.emptyTitle {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  margin-bottom: 8px;
+}
+
+.emptyBody {
+  font-size: var(--font-size-md);
+  color: var(--color-secondary);
+  line-height: 1.4;
+}
