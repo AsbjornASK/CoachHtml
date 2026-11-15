@@ -11,6 +11,12 @@
   gap: 16px 12px;
 }
 
+.grid1 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
 .metric {
   display: flex;
   flex-direction: column;
@@ -52,7 +58,39 @@
 .trendDown { color: #ff3b30; font-size: 14px; margin-left: 2px; }
 .trendFlat { color: #aeaeb2; font-size: 14px; margin-left: 2px; }
 
-.sparkline { display: block; margin-top: 4px; }
+.sparkline { display: block; }
+
+.metricRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+}
+
+.metricRowLabel {
+  flex: 0 0 100px;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-secondary);
+}
+
+.metricRowValue {
+  flex: 0 0 auto;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.1;
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  min-width: 70px;
+}
+
+.metricRowGraph {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
 
 .subjGrid {
   display: grid;

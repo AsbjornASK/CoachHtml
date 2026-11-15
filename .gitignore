@@ -14,3 +14,5 @@ intervals-mcp-server/
 
 # npm
 node_modules/
+.vercel
+.env*

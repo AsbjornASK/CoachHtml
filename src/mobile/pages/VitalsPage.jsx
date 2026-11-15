@@ -74,6 +74,22 @@ function MetricItem({ label, value, unit, colorClass, sub, sparkValues, sparkCol
   )
 }
 
+function MetricRow({ label, value, unit, colorClass, sparkValues, sparkColorFn, trend }) {
+  return (
+    <div className={styles.metricRow}>
+      <div className={styles.metricRowLabel}>{label}</div>
+      <div className={`${styles.metricRowValue} ${colorClass || ''}`}>
+        {value}
+        {unit && <span className={styles.unit}>{unit}</span>}
+        {trend && <span className={trend.c === 'up' ? styles.trendUp : trend.c === 'down' ? styles.trendDown : styles.trendFlat}>{trend.a}</span>}
+      </div>
+      <div className={styles.metricRowGraph}>
+        {sparkValues && <Sparkline values={sparkValues} colorFn={sparkColorFn} />}
+      </div>
+    </div>
+  )
+}
+
 function SubjItem({ field, value }) {
   if (value == null) return null
   const cls = [styles.subj1, styles.subj2, styles.subj3, styles.subj4][value - 1]
@@ -162,6 +178,8 @@ export function VitalsPage({ desktop = false }) {
     )
   } else if (error) {
     content = <div className={styles.errCard}>Could not load data: {error}</div>
+  } else if (!data) {
+    content = <div className={styles.errCard}>No data available</div>
   } else {
     const { latest, trends, healthMarkers, yesterdayWellness, inBody } = data
     const hm = healthMarkers ?? {}
@@ -181,13 +199,12 @@ export function VitalsPage({ desktop = false }) {
       <>
         <div className={styles.sectionHeader}>Yesterday{yw.date ? ` · ${fmtDate(yw.date)}` : ''}</div>
         <Card>
-          <div className={styles.grid}>
-            <MetricItem label="Night HRV" value={fmtN(latest.hrv)} unit="ms" colorClass={colorHrv(latest.hrv)} sparkValues={trends.hrv} sparkColorFn={colorHrvFn} trend={hrv_t} />
-            <MetricItem label="Resting HR" value={fmtN(latest.restingHR)} unit="bpm" colorClass={colorRhr(latest.restingHR)} sparkValues={trends.rhr} sparkColorFn={colorRhrFn} trend={rhr_t} />
-            <MetricItem label="Sleep" value={fmtN(latest.sleepHours)} unit="h" colorClass={colorSleep(latest.sleepHours)} sparkValues={trends.sleep} sparkColorFn={colorSleepFn} trend={slp_t} />
-            <MetricItem label="Sleep quality" value={fmtN(latest.sleepScore)} colorClass={colorSleep(latest.sleepScore ? latest.sleepScore / 10 : null)} sparkValues={trends.sleepScore} sub="auto" />
+          <div className={styles.grid1}>
+            <MetricRow label="Night HRV" value={fmtN(latest.hrv)} unit="ms" colorClass={colorHrv(latest.hrv)} sparkValues={trends.hrv} sparkColorFn={colorHrvFn} trend={hrv_t} />
+            <MetricRow label="Resting HR" value={fmtN(latest.restingHR)} unit="bpm" colorClass={colorRhr(latest.restingHR)} sparkValues={trends.rhr} sparkColorFn={colorRhrFn} trend={rhr_t} />
+            <MetricRow label="Sleep" value={fmtN(latest.sleepHours)} unit="h" colorClass={colorSleep(latest.sleepHours)} sparkValues={trends.sleep} sparkColorFn={colorSleepFn} trend={slp_t} />
+            <MetricRow label="Sleep quality" value={fmtN(latest.sleepScore)} colorClass={colorSleep(latest.sleepScore ? latest.sleepScore / 10 : null)} sparkValues={trends.sleepScore} />
           </div>
-          <StressCheckin initialValue={yw.stress ?? null} />
         </Card>
 
         <div className={styles.sectionHeader}>Health markers</div>
