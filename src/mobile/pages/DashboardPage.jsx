@@ -12,6 +12,7 @@ import {
   trendGraph,
   vo2Summary,
   lastDays,
+  fmtN,
 } from '../../shared/charts/charts'
 import styles from './DashboardPage.module.css'
 
@@ -19,16 +20,51 @@ const TIMELINE_DAYS = 10
 const WEIGHT_WINDOW = 21
 const VO2_WINDOW = 30
 
-function HtmlCard({ title, html }) {
+function HtmlCard({ title, html, badge, badgeVariant = 'neutral' }) {
   const ref = useRef(null)
   useEffect(() => {
     if (ref.current) ref.current.innerHTML = html ?? ''
   }, [html])
   return (
-    <Card title={title}>
+    <Card>
+      <div className={styles.cardHead}>
+        <span className={styles.cardTitle}>{title}</span>
+        {badge && <span className={`${styles.badge} ${styles['badge' + badgeVariant]}`}>{badge}</span>}
+      </div>
       <div ref={ref} className={styles.chartContainer} />
     </Card>
   )
+}
+
+function SummaryStrip({ series, today }) {
+  const recent = series ? [...series].reverse().find(d => d.hrv != null) : null
+  const recentSleep = series ? [...series].reverse().find(d => d.sleepSecs != null || d.sleepHours != null) : null
+  const recentVo2 = series ? [...series].reverse().find(d => d.vo2max != null || d.vo2Max != null) : null
+
+  const hrv = recent?.hrv ?? null
+  const sleep = recentSleep ? (recentSleep.sleepSecs != null ? recentSleep.sleepSecs / 3600 : recentSleep.sleepHours) : null
+  const vo2 = recentVo2 ? (recentVo2.vo2max ?? recentVo2.vo2Max) : null
+
+  return (
+    <div className={styles.summaryStrip}>
+      <div className={styles.statCell}>
+        <span className={styles.statVal}>{hrv != null ? Math.round(hrv) : '–'}<span className={styles.statUnit}> ms</span></span>
+        <span className={styles.statLabel}>HRV</span>
+      </div>
+      <div className={styles.statCell}>
+        <span className={styles.statVal}>{sleep != null ? sleep.toFixed(1).replace('.', ',') : '–'}<span className={styles.statUnit}> h</span></span>
+        <span className={styles.statLabel}>Sleep</span>
+      </div>
+      <div className={styles.statCell}>
+        <span className={styles.statVal}>{vo2 != null ? fmtN(vo2, 1) : '–'}</span>
+        <span className={styles.statLabel}>VO₂ max</span>
+      </div>
+    </div>
+  )
+}
+
+function SectionHeader({ children }) {
+  return <div className={styles.sectionHeader}>{children}</div>
 }
 
 export function DashboardPage({ desktop = false }) {
@@ -39,6 +75,7 @@ export function DashboardPage({ desktop = false }) {
   if (loading) {
     content = (
       <>
+        <div className={`${styles.skeleton} ${styles.skelStrip}`} />
         <div className={`${styles.skeleton} ${styles.skelCard}`} />
         <div className={`${styles.skeleton} ${styles.skelCard}`} />
         <div className={`${styles.skeleton} ${styles.skelCard}`} />
@@ -63,12 +100,29 @@ export function DashboardPage({ desktop = false }) {
 
     content = (
       <>
+        <SummaryStrip series={series} today={today} />
+
+        <SectionHeader>Recovery</SectionHeader>
         <HtmlCard title="HRV · Calendar · Stress" html={hrvCalHtml} />
         <HtmlCard title="HRV × Fatigue" html={hrvHtml} />
+
+        <SectionHeader>Sleep & mood</SectionHeader>
         <HtmlCard title="Sleep × Mood" html={sleepHtml} />
+
+        <SectionHeader>Training</SectionHeader>
         <HtmlCard title="Partner vs. alone" html={partnerHtml} />
-        <HtmlCard title="Weight over time" html={weightHtml} />
-        <HtmlCard title="VO₂ max over time" html={vo2Html} />
+
+        <SectionHeader>Body</SectionHeader>
+        <div className={styles.bodyRow}>
+          <Card>
+            <div className={styles.cardHead}><span className={styles.cardTitle}>Weight</span></div>
+            <div className={styles.chartContainer} dangerouslySetInnerHTML={{ __html: weightHtml }} />
+          </Card>
+          <Card>
+            <div className={styles.cardHead}><span className={styles.cardTitle}>VO₂ max</span></div>
+            <div className={styles.chartContainer} dangerouslySetInnerHTML={{ __html: vo2Html }} />
+          </Card>
+        </div>
       </>
     )
   }

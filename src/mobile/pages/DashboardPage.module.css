@@ -3,26 +3,120 @@
   -webkit-overflow-scrolling: touch;
 }
 
+/* Summary strip */
+.summaryStrip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--color-border);
+  margin-bottom: 20px;
+}
+.statCell {
+  background: var(--color-card);
+  padding: 14px 10px 12px;
+  text-align: center;
+}
+.statVal {
+  display: block;
+  font-size: 22px;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: -0.5px;
+  line-height: 1.1;
+  color: var(--color-text);
+}
+.statUnit {
+  font-size: 13px;
+  font-weight: var(--font-weight-regular);
+  color: var(--color-secondary);
+}
+.statLabel {
+  display: block;
+  font-size: 11px;
+  color: var(--color-secondary);
+  margin-top: 3px;
+}
+
+/* Section headers */
+.sectionHeader {
+  font-size: 11px;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 0 4px;
+  margin: 8px 0 6px;
+}
+
+/* Card internals */
+.cardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.cardTitle {
+  font-size: 13px;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+}
+
+/* Status badges */
+.badge {
+  font-size: 11px;
+  font-weight: var(--font-weight-semibold);
+  padding: 2px 8px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+.badgeneutral {
+  background: var(--color-background);
+  color: var(--color-secondary);
+  border: 1px solid var(--color-border);
+}
+.badgegreen {
+  background: #edfaf1;
+  color: #1a7a33;
+}
+.badgeamber {
+  background: #fff8ec;
+  color: #b86e00;
+}
+.badgeblue {
+  background: #e8f1ff;
+  color: #0051d4;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .badgegreen { background: #0d2d16; color: #4cd97b; }
+  :root:not([data-theme="light"]) .badgeamber { background: #2b1f00; color: #ffd60a; }
+  :root:not([data-theme="light"]) .badgeblue  { background: #001a4d; color: #64acff; }
+}
+
+/* Body section 2-column layout */
+.bodyRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.bodyRow > * {
+  min-width: 0;
+}
+
+/* Skeleton */
 .skeleton {
   animation: pulse 1.4s ease-in-out infinite;
   background: var(--color-border);
   border-radius: 12px;
 }
-
+.skelStrip {
+  height: 72px;
+  margin-bottom: 20px;
+}
 .skelCard {
-  height: 180px;
-  margin-bottom: 12px;
+  height: 160px;
+  margin-bottom: 10px;
 }
 
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }
-}
-
-.errCard {
-  background: #ffe5e5;
-  border-radius: 12px;
-  padding: 16px;
-  color: var(--color-red);
-  font-size: var(--font-size-base);
 }
