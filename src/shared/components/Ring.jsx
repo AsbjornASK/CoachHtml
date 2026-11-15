@@ -10,7 +10,7 @@ export function Ring({ pct, color, label }) {
     <div className={styles.wrap}>
       <svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`}>
         {/* track */}
-        <circle cx={48} cy={48} r={R} fill="none" stroke="#e5e5ea" strokeWidth={10} />
+        <circle cx={48} cy={48} r={R} fill="none" style={{ stroke: 'var(--color-border)' }} strokeWidth={10} />
         {pct != null ? (
           <>
             {/* fill */}

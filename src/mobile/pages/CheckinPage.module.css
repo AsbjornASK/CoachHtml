@@ -107,7 +107,7 @@
   border: 1.5px solid var(--color-border);
   border-radius: 10px;
   padding: 10px 12px;
-  background: var(--color-bg);
+  background: var(--color-inset);
   resize: vertical;
   outline: none;
 }
@@ -225,7 +225,7 @@
   border: 1.5px solid var(--color-border);
   border-radius: 10px;
   padding: 8px 12px;
-  background: var(--color-bg);
+  background: var(--color-inset);
   outline: none;
   min-width: 0;
 }

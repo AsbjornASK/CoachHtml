@@ -50,7 +50,9 @@ export function timelineX(i, n, layout = TL) {
 }
 
 export function timelineLabels(days, y, layout = TL) {
-  const step = days.length > 20 ? 2 : 1
+  // Label every Nth day so neighbours never touch, whatever the chart width
+  const gap = (layout.W - layout.PDL - layout.PDR) / Math.max(days.length - 1, 1)
+  const step = Math.max(1, Math.ceil(34 / gap))
   return days.map((d, i) => (days.length - 1 - i) % step ? '' :
     `<text class="x-tick" x="${timelineX(i, days.length, layout).toFixed(1)}" y="${y}" font-size="${AXIS_FS}" fill="#aeaeb2" text-anchor="middle">${fmtDM(d.date)}</text>`).join('')
 }
@@ -80,16 +82,17 @@ export function hrvCheckinChart(days, layout = TL) {
   const yTicks = Array.from({length: tickCount}, (_, k) => {
     const v = mn + k * (mx - mn) / (tickCount - 1)
     const y = py(v).toFixed(1)
-    return `<line x1="${PDL}" y1="${y}" x2="${PDL + plotW}" y2="${y}" stroke="#f2f2f7" stroke-width="1"/>
+    return `<line x1="${PDL}" y1="${y}" x2="${PDL + plotW}" y2="${y}" stroke="var(--chart-grid)" stroke-width="1"/>
             <text x="${PDL - 6}" y="${y}" font-size="${AXIS_FS}" fill="#aeaeb2" text-anchor="end" dominant-baseline="middle">${Math.round(v)} ms</text>`
   }).join('')
 
-  const axisLabel = `<text x="8" y="${H / 2}" font-size="${AXIS_FS}" fill="#8e8e93" text-anchor="middle" transform="rotate(-90 8 ${H / 2})">HRV (ms)</text>`
+  // Compact (phone) layouts drop the rotated label: the ticks already carry the unit
+  const axisLabel = layout.compact ? '' : `<text x="8" y="${H / 2}" font-size="${AXIS_FS}" fill="#8e8e93" text-anchor="middle" transform="rotate(-90 8 ${H / 2})">HRV (ms)</text>`
 
   const dots = days.map((d, i) => {
     if (d.hrv == null) return ''
     const col = CHECKIN_COLORS[d.fatigue] ?? '#007aff'
-    return `<circle cx="${px(i).toFixed(1)}" cy="${py(d.hrv).toFixed(1)}" r="${DOT_R}" fill="${col}" stroke="#fff" stroke-width="1.5"><title>${fmtDate(d.date)}: HRV=${d.hrv} ms, Fatigue=${FAT_LABELS[d.fatigue] ?? '–'}</title></circle>`
+    return `<circle cx="${px(i).toFixed(1)}" cy="${py(d.hrv).toFixed(1)}" r="${DOT_R}" fill="${col}" stroke="var(--color-card)" stroke-width="1.5"><title>${fmtDate(d.date)}: HRV=${d.hrv} ms, Fatigue=${FAT_LABELS[d.fatigue] ?? '–'}</title></circle>`
   }).join('')
 
   const xLabels = timelineLabels(days, H + axH - 3, layout)
@@ -121,17 +124,17 @@ export function sleepMoodChart(days, layout = TL) {
     const isRef = h === 7 || h === 8
     const col = h === 8 ? '#30d158' : h === 7 ? '#ff9f0a' : '#aeaeb2'
     hourTicks.push(
-      `<line x1="${PDL}" y1="${y}" x2="${PDL + plotW}" y2="${y}" stroke="${isRef ? col + '33' : '#f2f2f7'}" stroke-width="${isRef ? 1.5 : 1}"/>`,
+      `<line x1="${PDL}" y1="${y}" x2="${PDL + plotW}" y2="${y}" stroke="${isRef ? col + '33' : 'var(--chart-grid)'}" stroke-width="${isRef ? 1.5 : 1}"/>`,
       `<text x="${PDL - 6}" y="${y}" font-size="${AXIS_FS}" fill="${col}" text-anchor="end" dominant-baseline="middle">${h}h</text>`
     )
   }
 
-  const axisLabel = `<text x="8" y="${H / 2}" font-size="${AXIS_FS}" fill="#8e8e93" text-anchor="middle" transform="rotate(-90 8 ${H / 2})">Sleep (h)</text>`
+  const axisLabel = layout.compact ? '' : `<text x="8" y="${H / 2}" font-size="${AXIS_FS}" fill="#8e8e93" text-anchor="middle" transform="rotate(-90 8 ${H / 2})">Sleep (h)</text>`
 
   const dots = days.map((d, i) => {
     if (d.sleep == null) return ''
     const col = CHECKIN_COLORS[d.mood] ?? '#007aff'
-    return `<circle cx="${px(i).toFixed(1)}" cy="${py(d.sleep).toFixed(1)}" r="${DOT_R}" fill="${col}" stroke="#fff" stroke-width="1.5"><title>${fmtDate(d.date)}: Sleep=${d.sleep}h, Mood=${MOOD_LABELS[d.mood] ?? '–'}</title></circle>`
+    return `<circle cx="${px(i).toFixed(1)}" cy="${py(d.sleep).toFixed(1)}" r="${DOT_R}" fill="${col}" stroke="var(--color-card)" stroke-width="1.5"><title>${fmtDate(d.date)}: Sleep=${d.sleep}h, Mood=${MOOD_LABELS[d.mood] ?? '–'}</title></circle>`
   }).join('')
 
   const xLabels = timelineLabels(days, H + axH - 3, layout)
@@ -207,15 +210,15 @@ export function hrvCalStressChart(days, series, bands, containerWidth = 1024) {
   const totalH = axTop + axH
 
   const dayBands = days.map((d, i) => i % 2 ? '' :
-    `<rect x="${(PDL + colW * i).toFixed(1)}" y="0" width="${colW.toFixed(1)}" height="${axTop}" fill="#f9f9fb"/>`).join('')
+    `<rect x="${(PDL + colW * i).toFixed(1)}" y="0" width="${colW.toFixed(1)}" height="${axTop}" fill="var(--chart-band)"/>`).join('')
 
-  const sep = y => `<line x1="${PDL}" y1="${y}" x2="${W - PDR}" y2="${y}" stroke="#e5e5ea" stroke-width="1"/>`
+  const sep = y => `<line x1="${PDL}" y1="${y}" x2="${W - PDR}" y2="${y}" stroke="var(--color-border)" stroke-width="1"/>`
   const rowLabel = (txt, y0, h) =>
     `<text x="${PDL - 10}" y="${(y0 + h/2).toFixed(1)}" font-size="${fs}" font-weight="600" fill="#8e8e93" text-anchor="end" dominant-baseline="middle">${txt}</text>`
 
   const hrvRow = (top, key, rowBands, kind, name) => days.map((d, i) => {
     const cy = top + hrvH / 2 - fs * 0.6, v = d[key]
-    if (v == null) return `<text x="${px(i).toFixed(1)}" y="${cy.toFixed(1)}" font-size="${fs}" fill="#c7c7cc" text-anchor="middle" dominant-baseline="middle">–</text>`
+    if (v == null) return `<text x="${px(i).toFixed(1)}" y="${cy.toFixed(1)}" font-size="${fs}" fill="var(--color-muted)" text-anchor="middle" dominant-baseline="middle">–</text>`
     const level = hrvLevel(v, rowBands)
     const color = level ? WELLNESS_COLORS[level - 1] : '#aeaeb2'
     const mark = hrvNormMark(series, d.date, key, v)
@@ -247,7 +250,7 @@ export function hrvCalStressChart(days, series, bands, containerWidth = 1024) {
   const stress = days.map((d, i) => {
     const x = px(i) - pw/2, y = stressTop + (stressH - pillH) / 2
     if (d.stress == null)
-      return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${pw.toFixed(1)}" height="${pillH}" rx="${pillH/2}" fill="none" stroke="#d1d1d6" stroke-dasharray="3 3"><title>${fmtDate(d.date)}: No stress data</title></rect>`
+      return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${pw.toFixed(1)}" height="${pillH}" rx="${pillH/2}" fill="none" stroke="var(--chart-rule)" stroke-dasharray="3 3"><title>${fmtDate(d.date)}: No stress data</title></rect>`
     const lbl = colW > 60 ? STRESS_LABELS[d.stress] : colW > 34 ? STRESS_SHORT[d.stress] : ''
     return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${pw.toFixed(1)}" height="${pillH}" rx="${pillH/2}" fill="${STRESS_COLORS[d.stress]}" opacity="0.85"><title>${fmtDate(d.date)}: Stress = ${STRESS_LABELS[d.stress]}</title></rect>` +
       (lbl ? `<text x="${px(i).toFixed(1)}" y="${(y + pillH/2).toFixed(1)}" font-size="${fs - 1}" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central" pointer-events="none">${lbl}</text>` : '')
@@ -307,7 +310,7 @@ export function partnerCompare(series, days, layout = TL) {
     const py = v => PDY + (1 - (v - mn) / rng) * (H - 2 * PDY)
     const dots = shown.map(({ d, i }) => {
       const [col, who] = d.partner === 1 ? [PARTNER_COL, 'partner'] : [ALONE_COL, 'alone']
-      return `<circle cx="${timelineX(i, days.length, layout).toFixed(1)}" cy="${py(d[m.key]).toFixed(1)}" r="${DOT_R}" fill="${col}" opacity="0.85" stroke="#fff" stroke-width="1.5"><title>${fmtDate(d.date)} (${who}): ${fmtN(d[m.key], m.dec)} ${m.unit}</title></circle>`
+      return `<circle cx="${timelineX(i, days.length, layout).toFixed(1)}" cy="${py(d[m.key]).toFixed(1)}" r="${DOT_R}" fill="${col}" opacity="0.85" stroke="var(--color-card)" stroke-width="1.5"><title>${fmtDate(d.date)} (${who}): ${fmtN(d[m.key], m.dec)} ${m.unit}</title></circle>`
     }).join('')
     const ticks = [lo, hi].map(v =>
       `<text x="${PDL - 6}" y="${py(v).toFixed(1)}" font-size="${fs}" fill="#aeaeb2" text-anchor="end" dominant-baseline="middle">${fmtN(v, m.dec)}</text>`).join('')
@@ -353,7 +356,7 @@ export function trendGraph(series, today, { field, days, range, W = 320, color =
   const yDec = yVals.every(Number.isInteger) ? 0 : 1
   const yAxis = yVals.map(v => {
     const y = py(v).toFixed(1)
-    return `<line x1="${PDL}" y1="${y}" x2="${W - PDR}" y2="${y}" stroke="#f2f2f7" stroke-width="1"/>` +
+    return `<line x1="${PDL}" y1="${y}" x2="${W - PDR}" y2="${y}" stroke="var(--chart-grid)" stroke-width="1"/>` +
       `<text class="y-tick" x="${PDL - 6}" y="${y}" font-size="${AXIS_FS}" fill="#aeaeb2" text-anchor="end" dominant-baseline="middle">${fmtN(v, yDec)}</text>`
   }).join('')
 
@@ -362,7 +365,7 @@ export function trendGraph(series, today, { field, days, range, W = 320, color =
     const label = isLast
       ? `<text class="pt-label" x="${cx.toFixed(1)}" y="${(cy - 9).toFixed(1)}" text-anchor="${cx > W * 0.85 ? 'end' : 'middle'}" font-size="${AXIS_FS}" font-weight="700" fill="${color}">${fmtN(p[field], 1)}</text>`
       : ''
-    return `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${DOT_R}" fill="${color}" opacity="${isLast ? 1 : 0.75}" stroke="#fff" stroke-width="1.5"><title>${fmtDate(p.date)}: ${fmtN(p[field], 1)}</title></circle>${label}`
+    return `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${DOT_R}" fill="${color}" opacity="${isLast ? 1 : 0.75}" stroke="var(--color-card)" stroke-width="1.5"><title>${fmtDate(p.date)}: ${fmtN(p[field], 1)}</title></circle>${label}`
   }).join('')
 
   return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block;margin-top:10px;overflow:visible">${yAxis}${xAxis}${dots}</svg>`
@@ -419,7 +422,7 @@ export function loadHrvChart(days, sessions, series, layout = TL, sport = 'all')
 
   const grid = [0, lMax / 2, lMax].map(v => {
     const y = ly(v).toFixed(1)
-    return `<line x1="${PDL}" y1="${y}" x2="${W - PDR}" y2="${y}" stroke="#f2f2f7" stroke-width="1"/>` +
+    return `<line x1="${PDL}" y1="${y}" x2="${W - PDR}" y2="${y}" stroke="var(--chart-grid)" stroke-width="1"/>` +
       `<text x="${PDL - 6}" y="${y}" font-size="${AXIS_FS}" fill="#aeaeb2" text-anchor="end" dominant-baseline="middle">${fmtN(v)}</text>`
   }).join('')
   const sTicks = sv.length ? [sMn, sMn + sRng / 2, sMn + sRng].map(v =>
@@ -442,7 +445,7 @@ export function loadHrvChart(days, sessions, series, layout = TL, sport = 'all')
   const dots = next.map((p, i) => {
     if (!p) return ''
     const m = hrvNormMark(series, p.date, 'sdnn', p.v)
-    return `<circle class="hrv-next" cx="${px(i).toFixed(1)}" cy="${sy(p.v).toFixed(1)}" r="${DOT_R}" fill="${m.color}" stroke="#fff" stroke-width="1.5"><title>${fmtDate(p.date)} (next day): Day HRV ${m.arrow}${fmtN(p.v)} ms</title></circle>`
+    return `<circle class="hrv-next" cx="${px(i).toFixed(1)}" cy="${sy(p.v).toFixed(1)}" r="${DOT_R}" fill="${m.color}" stroke="var(--color-card)" stroke-width="1.5"><title>${fmtDate(p.date)} (next day): Day HRV ${m.arrow}${fmtN(p.v)} ms</title></circle>`
   }).join('')
 
   return `
@@ -467,7 +470,7 @@ export function rpeHrScatter(sessions, layout = TL, sport = 'all') {
 
   const yTicks = [1, 4, 7, 10].map(v => {
     const y = py(v).toFixed(1)
-    return `<line x1="${PDL}" y1="${y}" x2="${W - PDR}" y2="${y}" stroke="#f2f2f7" stroke-width="1"/>` +
+    return `<line x1="${PDL}" y1="${y}" x2="${W - PDR}" y2="${y}" stroke="var(--chart-grid)" stroke-width="1"/>` +
       `<text x="${PDL - 6}" y="${y}" font-size="${AXIS_FS}" fill="#aeaeb2" text-anchor="end" dominant-baseline="middle">${v}</text>`
   }).join('')
   const xTicks = []
@@ -486,7 +489,7 @@ export function rpeHrScatter(sessions, layout = TL, sport = 'all') {
   }
 
   const dots = pts.map(s =>
-    `<circle class="rpe-dot" cx="${px(s.avgHr).toFixed(1)}" cy="${py(s.rpe).toFixed(1)}" r="${DOT_R}" fill="${SPORT_COLORS[s.sport]}" opacity="0.85" stroke="#fff" stroke-width="1.5"><title>${fmtDate(s.date)}: ${SPORT_LABELS[s.sport]}, ${fmtN(s.avgHr)} bpm, RPE ${s.rpe}</title></circle>`).join('')
+    `<circle class="rpe-dot" cx="${px(s.avgHr).toFixed(1)}" cy="${py(s.rpe).toFixed(1)}" r="${DOT_R}" fill="${SPORT_COLORS[s.sport]}" opacity="0.85" stroke="var(--color-card)" stroke-width="1.5"><title>${fmtDate(s.date)}: ${SPORT_LABELS[s.sport]}, ${fmtN(s.avgHr)} bpm, RPE ${s.rpe}</title></circle>`).join('')
 
   return `
     ${legend(sportLegend(pts))}
@@ -520,7 +523,7 @@ export function zoneWeeksChart(sessions, today, weeks = 12, layout = TL, sport =
 
   const grid = [0, yMax / 2, yMax].map(v => {
     const y = py(v).toFixed(1)
-    return `<line x1="${PDL}" y1="${y}" x2="${W - PDR}" y2="${y}" stroke="#f2f2f7" stroke-width="1"/>` +
+    return `<line x1="${PDL}" y1="${y}" x2="${W - PDR}" y2="${y}" stroke="var(--chart-grid)" stroke-width="1"/>` +
       `<text x="${PDL - 6}" y="${y}" font-size="${AXIS_FS}" fill="#aeaeb2" text-anchor="end" dominant-baseline="middle">${fmtN(v / 60, v % 60 ? 1 : 0)} h</text>`
   }).join('')
 
@@ -536,7 +539,7 @@ export function zoneWeeksChart(sessions, today, weeks = 12, layout = TL, sport =
     const pct = w.total ? Math.round(w.easy / w.total * 100) + ' %' : '–'
     const tip = `Week of ${fmtDate(w.start)}: ` + (w.total ? ZONES.map(([z, label]) => `${label} ${fmtN(w[z])} min`).join(', ') : 'no zone data')
     return `<g class="week"><title>${tip}</title>${rects}` +
-      `<text x="${cx.toFixed(1)}" y="${(py(w.total) - 6).toFixed(1)}" font-size="${AXIS_FS}" font-weight="600" fill="${w.total ? '#3a3a3c' : '#c7c7cc'}" text-anchor="middle">${pct}</text>` +
+      `<text x="${cx.toFixed(1)}" y="${(py(w.total) - 6).toFixed(1)}" font-size="${AXIS_FS}" font-weight="600" fill="${w.total ? 'var(--color-text)' : 'var(--color-muted)'}" text-anchor="middle">${pct}</text>` +
       `<text x="${cx.toFixed(1)}" y="${H + axH - 3}" font-size="${AXIS_FS}" fill="#aeaeb2" text-anchor="middle">${fmtDM(w.start)}</text></g>`
   }).join('')
 
@@ -567,7 +570,7 @@ export function fitnessCheckinChart(series, layout = TL) {
 
   const yTicks = [mn, 0, mx].map(v => {
     const y = py(v).toFixed(1)
-    return `<line x1="${PDL}" y1="${y}" x2="${W - PDR}" y2="${y}" stroke="${v === 0 ? '#d1d1d6' : '#f2f2f7'}" stroke-width="${v === 0 ? 1.5 : 1}"/>` +
+    return `<line x1="${PDL}" y1="${y}" x2="${W - PDR}" y2="${y}" stroke="${v === 0 ? 'var(--chart-rule)' : 'var(--chart-grid)'}" stroke-width="${v === 0 ? 1.5 : 1}"/>` +
       `<text x="${PDL - 6}" y="${y}" font-size="${AXIS_FS}" fill="#aeaeb2" text-anchor="end" dominant-baseline="middle">${Math.round(v)}</text>`
   }).join('')
 
@@ -579,7 +582,7 @@ export function fitnessCheckinChart(series, layout = TL) {
   const moodDots = days.map((d, i) => {
     if (d.mood == null || d.ctl == null) return ''
     const col = CHECKIN_COLORS[d.mood] ?? '#8e8e93'
-    return `<circle cx="${px(i).toFixed(1)}" cy="${py(d.ctl).toFixed(1)}" r="4" fill="${col}" stroke="#fff" stroke-width="1.2"><title>${fmtDate(d.date)}: CTL=${fmtN(d.ctl)}, Mood=${WELLNESS.mood.labels[d.mood - 1] ?? d.mood}</title></circle>`
+    return `<circle cx="${px(i).toFixed(1)}" cy="${py(d.ctl).toFixed(1)}" r="4" fill="${col}" stroke="var(--color-card)" stroke-width="1.2"><title>${fmtDate(d.date)}: CTL=${fmtN(d.ctl)}, Mood=${WELLNESS.mood.labels[d.mood - 1] ?? d.mood}</title></circle>`
   }).join('')
 
   const xl = timelineLabels(days, H + axH - 3, layout)
@@ -611,7 +614,7 @@ export function sportFitnessChart(sportSeries, layout = TL) {
 
   const xl = timelineLabels(days, H + axH - 3, layout)
   return `<div class="chart-wrap"><svg viewBox="0 0 ${W} ${H + axH}" width="100%" style="overflow:visible">
-    <line x1="${PDL}" y1="${py(0).toFixed(1)}" x2="${W - PDR}" y2="${py(0).toFixed(1)}" stroke="#d1d1d6" stroke-width="1"/>
+    <line x1="${PDL}" y1="${py(0).toFixed(1)}" x2="${W - PDR}" y2="${py(0).toFixed(1)}" stroke="var(--chart-rule)" stroke-width="1"/>
     ${makeLine('ctl', '#007aff')}${makeLine('atl', '#ff9f0a')}${makeLine('tsb', '#30d158')}${xl}
   </svg></div>`
 }
@@ -630,16 +633,16 @@ export function tsbMoodScatter(series, layout = TL) {
 
   const yTicks = [1, 2, 3, 4].map(v => {
     const y = py(v).toFixed(1), lbl = WELLNESS.mood.labels[v - 1]
-    return `<line x1="${PDL}" y1="${y}" x2="${W - PDR}" y2="${y}" stroke="#f2f2f7"/>` +
+    return `<line x1="${PDL}" y1="${y}" x2="${W - PDR}" y2="${y}" stroke="var(--chart-grid)"/>` +
       `<text x="${PDL - 6}" y="${y}" font-size="${AXIS_FS}" fill="#aeaeb2" text-anchor="end" dominant-baseline="middle">${lbl}</text>`
   }).join('')
   const xLabels = [xMn, 0, xMx].map(v =>
     `<text x="${px(v).toFixed(1)}" y="${H + axH - 4}" font-size="${AXIS_FS}" fill="#aeaeb2" text-anchor="middle">${fmtN(v)}</text>`
   ).join('')
-  const zeroline = `<line x1="${px(0).toFixed(1)}" y1="${PDY}" x2="${px(0).toFixed(1)}" y2="${H - PDY}" stroke="#d1d1d6" stroke-width="1" stroke-dasharray="4 3"/>`
+  const zeroline = `<line x1="${px(0).toFixed(1)}" y1="${PDY}" x2="${px(0).toFixed(1)}" y2="${H - PDY}" stroke="var(--chart-rule)" stroke-width="1" stroke-dasharray="4 3"/>`
 
   const dots = pts.map(d =>
-    `<circle cx="${px(d.tsb).toFixed(1)}" cy="${py(d.mood).toFixed(1)}" r="${DOT_R}" fill="${CHECKIN_COLORS[d.mood]}" opacity="0.8" stroke="#fff" stroke-width="1.5"><title>${fmtDate(d.date)}: TSB=${fmtN(d.tsb, 1)}, Mood=${WELLNESS.mood.labels[d.mood - 1]}</title></circle>`
+    `<circle cx="${px(d.tsb).toFixed(1)}" cy="${py(d.mood).toFixed(1)}" r="${DOT_R}" fill="${CHECKIN_COLORS[d.mood]}" opacity="0.8" stroke="var(--color-card)" stroke-width="1.5"><title>${fmtDate(d.date)}: TSB=${fmtN(d.tsb, 1)}, Mood=${WELLNESS.mood.labels[d.mood - 1]}</title></circle>`
   ).join('')
 
   return `<div class="chart-wrap"><svg viewBox="0 0 ${W} ${H + axH}" width="100%" style="overflow:visible">
@@ -662,7 +665,7 @@ export function sleepMoodScatter(series, layout = TL) {
 
   const yTicks = [1, 2, 3, 4].map(v => {
     const y = py(v).toFixed(1), lbl = WELLNESS.mood.labels[v - 1]
-    return `<line x1="${PDL}" y1="${y}" x2="${W - PDR}" y2="${y}" stroke="#f2f2f7"/>` +
+    return `<line x1="${PDL}" y1="${y}" x2="${W - PDR}" y2="${y}" stroke="var(--chart-grid)"/>` +
       `<text x="${PDL - 6}" y="${y}" font-size="${AXIS_FS}" fill="#aeaeb2" text-anchor="end" dominant-baseline="middle">${lbl}</text>`
   }).join('')
   const xLabels = [xMn, Math.round((xMn + xMx) / 2), xMx].map(v =>
@@ -670,7 +673,7 @@ export function sleepMoodScatter(series, layout = TL) {
   ).join('')
 
   const dots = pts.map(d =>
-    `<circle cx="${px(d.sleep).toFixed(1)}" cy="${py(d.mood).toFixed(1)}" r="${DOT_R}" fill="${CHECKIN_COLORS[d.mood]}" opacity="0.8" stroke="#fff" stroke-width="1.5"><title>${fmtDate(d.date)}: Sleep=${fmtN(d.sleep, 1)}h, Mood=${WELLNESS.mood.labels[d.mood - 1]}</title></circle>`
+    `<circle cx="${px(d.sleep).toFixed(1)}" cy="${py(d.mood).toFixed(1)}" r="${DOT_R}" fill="${CHECKIN_COLORS[d.mood]}" opacity="0.8" stroke="var(--color-card)" stroke-width="1.5"><title>${fmtDate(d.date)}: Sleep=${fmtN(d.sleep, 1)}h, Mood=${WELLNESS.mood.labels[d.mood - 1]}</title></circle>`
   ).join('')
 
   return `<div class="chart-wrap"><svg viewBox="0 0 ${W} ${H + axH}" width="100%" style="overflow:visible">
@@ -705,10 +708,10 @@ export function checkinTable(series, days = 21) {
     <td>${d.sleep != null ? fmtN(d.sleep, 1) + 'h' : '–'}</td>
     <td>${fmtN(d.ctl)}</td>
     <td>${fmtN(d.tsb, 1)}</td>
-    <td style="max-width:140px;white-space:normal;font-size:11px;color:#3a3a3c">${d.comments ?? ''}</td>
+    <td style="max-width:140px;white-space:normal;font-size:11px;color:var(--color-text)">${d.comments ?? ''}</td>
   </tr>`).join('')
 
-  return `<table class="checkin-tbl"><style>.checkin-tbl{width:100%;border-collapse:collapse;font-size:12px}.checkin-tbl th,.checkin-tbl td{padding:5px 8px;border-bottom:1px solid #f2f2f7;text-align:left;white-space:nowrap}.checkin-tbl th{font-size:10px;font-weight:700;color:#8e8e93;text-transform:uppercase;letter-spacing:0.4px}</style>${thead}<tbody>${tbody}</tbody></table>`
+  return `<table class="checkin-tbl"><style>.checkin-tbl{width:100%;border-collapse:collapse;font-size:12px}.checkin-tbl th,.checkin-tbl td{padding:5px 8px;border-bottom:1px solid var(--chart-grid);text-align:left;white-space:nowrap}.checkin-tbl th{font-size:10px;font-weight:700;color:#8e8e93;text-transform:uppercase;letter-spacing:0.4px}</style>${thead}<tbody>${tbody}</tbody></table>`
 }
 
 // ── Computed insights ─────────────────────────────────────────────────────
@@ -739,7 +742,7 @@ export function computeInsights(series) {
     lines.push(`<li>Sleep ↔ Mood: <strong>${strength} ${dir} correlation</strong> (r = ${r.toFixed(2)}, n = ${spPts.length} days). ${r > 0.3 ? 'More sleep tends to mean better mood.' : 'No clear sleep–mood pattern yet.'}</li>`)
   }
 
-  return `<ul style="font-size:14px;line-height:1.7;padding-left:18px;color:#1c1c1e">${lines.join('')}</ul>`
+  return `<ul style="font-size:14px;line-height:1.7;padding-left:18px;color:var(--color-text)">${lines.join('')}</ul>`
 }
 
 // ── Calendar load & SDNN ──────────────────────────────────────────────────
@@ -780,7 +783,7 @@ export function calendarLoadChart(series, layout = TL) {
     const sdMx = Math.ceil(Math.max(...sdVals) / 10) * 10 || sdMn + 10
     const sdRng = sdMx - sdMn || 10
     const pySd = v => PDY + (1 - (v - sdMn) / sdRng) * (H_cal - 2 * PDY)
-    sdDots = sdnnDays.map(d => `<circle cx="${px(d.i).toFixed(1)}" cy="${pySd(d.sdnn).toFixed(1)}" r="${DOT_R_S}" fill="#1c1c1e" opacity="0.8" stroke="#fff" stroke-width="1.5"><title>${fmtDate(d.date)}: SDNN next morning = ${d.sdnn} ms</title></circle>`).join('')
+    sdDots = sdnnDays.map(d => `<circle cx="${px(d.i).toFixed(1)}" cy="${pySd(d.sdnn).toFixed(1)}" r="${DOT_R_S}" fill="var(--color-text)" opacity="0.8" stroke="var(--color-card)" stroke-width="1.5"><title>${fmtDate(d.date)}: SDNN next morning = ${d.sdnn} ms</title></circle>`).join('')
   }
 
   const stressBars = days.map((d, i) => {
@@ -795,11 +798,11 @@ export function calendarLoadChart(series, layout = TL) {
     `<text x="${px(i).toFixed(1)}" y="${totalH - 3}" font-size="${AXIS_FS}" fill="#aeaeb2" text-anchor="middle">${fmtDM(d.date)}</text>`
   ).join('')
 
-  const leg = `<div class="legend">${CAT_KEYS.map(k => legendItem(CAT_META[k].color, CAT_META[k].label)).join('')}${legendItem('#1c1c1e', 'SDNN next morning')}</div>`
+  const leg = `<div class="legend">${CAT_KEYS.map(k => legendItem(CAT_META[k].color, CAT_META[k].label)).join('')}${legendItem('var(--color-text)', 'SDNN next morning')}</div>`
 
   return `${leg}<div class="chart-wrap"><svg viewBox="0 0 ${W} ${totalH}" width="100%" style="overflow:visible">
     ${bars}${sdDots}
-    <line x1="${PDL}" y1="${divY}" x2="${PDL + plotW}" y2="${divY}" stroke="#e5e5ea" stroke-width="1"/>
+    <line x1="${PDL}" y1="${divY}" x2="${PDL + plotW}" y2="${divY}" stroke="var(--color-border)" stroke-width="1"/>
     <text x="12" y="${(divY + H_stress/2).toFixed(1)}" font-size="${AXIS_FS}" fill="#8e8e93" text-anchor="middle" transform="rotate(-90 12 ${(divY + H_stress/2).toFixed(1)})">Stress</text>
     ${stressBars}${xLabels}
   </svg></div>`

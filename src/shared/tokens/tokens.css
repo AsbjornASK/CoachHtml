@@ -20,6 +20,18 @@
   --tint-purple-bg: #f3e8ff; --tint-purple-fg: #7a1fa2;
   --tint-blue-bg: #e8f1ff;   --tint-blue-fg: #0051d4;
 
+  /* Recessed surface inside a card (inputs, inset tiles) */
+  --color-inset: #f2f2f7;
+
+  /* Segmented control */
+  --seg-track: rgba(118, 118, 128, 0.12);
+  --seg-active: #ffffff;
+
+  /* Chart furniture */
+  --chart-grid: #f2f2f7;
+  --chart-band: #f9f9fb;
+  --chart-rule: #d1d1d6;
+
   /* Shadows */
   --shadow-card: 0 1px 3px rgba(0,0,0,0.08), 0 0 0 0.5px rgba(0,0,0,0.04);
 
@@ -67,7 +79,15 @@
     --tint-purple-bg: #2a1438; --tint-purple-fg: #da8fff;
     --tint-blue-bg: #001a4d;   --tint-blue-fg: #64acff;
 
+    --color-inset: #2c2c2e;
+    --seg-track: rgba(118, 118, 128, 0.24);
+    --seg-active: #636366;
+    --chart-grid: #2c2c2e;
+    --chart-band: rgba(255, 255, 255, 0.04);
+    --chart-rule: #48484a;
+
     --shadow-card:      none;
+    color-scheme: dark;
   }
 }
 

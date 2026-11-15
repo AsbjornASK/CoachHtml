@@ -59,7 +59,7 @@
 .testBtn {
   margin-top: 12px;
   padding: 10px 16px;
-  background: var(--color-bg);
+  background: var(--color-inset);
   border: 1.5px solid var(--color-border);
   border-radius: 10px;
   font-size: var(--font-size-base);

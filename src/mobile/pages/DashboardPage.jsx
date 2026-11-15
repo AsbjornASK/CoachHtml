@@ -4,7 +4,6 @@ import { MobileLayout } from '../components/MobileLayout'
 import { Card } from '../../shared/components/Card'
 import { EmptyState } from '../../shared/components/EmptyState'
 import { useDashboard } from '../../shared/hooks/useDashboard'
-import { useSportLoad } from '../../shared/hooks/useSportLoad'
 import {
   hrvCalStressChart,
   hrvCheckinChart,
@@ -17,11 +16,74 @@ import {
 } from '../../shared/charts/charts'
 import styles from './DashboardPage.module.css'
 
-const TIMELINE_DAYS = 10
+const WEEK_DAYS = 7          // swimlane on a phone: one column per day stays readable
+const WEEK_DAYS_WIDE = 10    // swimlane on desktop
+const TREND_DAYS = 14
+const PARTNER_DAYS = 21
 const WEIGHT_WINDOW = 21
 const VO2_WINDOW = 30
 
-function HtmlCard({ title, html, badge, badgeVariant = 'neutral' }) {
+// Phone-width chart geometry: drawn close to 1:1 so axis text stays ~11px
+const PHONE_TL = { W: 340, PDL: 40, PDR: 10, compact: true }
+
+const mean = arr => arr.length ? arr.reduce((s, v) => s + v, 0) / arr.length : null
+const valuesOf = (days, key) => days.map(d => d[key]).filter(v => v != null)
+
+// Headline value, its distance from the 4-week norm before this week, and a sparkline.
+function buildStat(series, today, key, { latest = false, sparkDays = 14 } = {}) {
+  const baseline = mean(valuesOf(lastDays(series, today, 35).slice(0, 28), key))
+  const value = latest
+    ? ([...series].reverse().find(d => d[key] != null)?.[key] ?? null)
+    : mean(valuesOf(lastDays(series, today, 7), key))
+  return {
+    value,
+    delta: value != null && baseline != null ? value - baseline : null,
+    spark: lastDays(series, today, sparkDays).map(d => d[key] ?? null),
+  }
+}
+
+function Spark({ values }) {
+  const pts = values.map((v, i) => (v != null ? { i, v } : null)).filter(Boolean)
+  if (pts.length < 2) return <div className={styles.spark} />
+  const vs = pts.map(p => p.v)
+  const mn = Math.min(...vs), rng = (Math.max(...vs) - mn) || 1
+  const W = 100, H = 28, pd = 3
+  const x = i => (i / (values.length - 1)) * W
+  const y = v => pd + (1 - (v - mn) / rng) * (H - 2 * pd)
+  const line = pts.map(p => `${x(p.i).toFixed(1)},${y(p.v).toFixed(1)}`).join(' ')
+  const area = `${x(pts[0].i).toFixed(1)},${H} ${line} ${x(pts[pts.length - 1].i).toFixed(1)},${H}`
+  return (
+    <svg className={styles.spark} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" aria-hidden="true">
+      <polygon className={styles.sparkArea} points={area} />
+      <polyline className={styles.sparkLine} points={line} vectorEffect="non-scaling-stroke" />
+    </svg>
+  )
+}
+
+// goodWhen: 'up' | 'down' colours the change; null keeps it neutral (e.g. weight).
+function StatTile({ label, unit, dec = 0, stat, goodWhen = null }) {
+  const { value, delta, spark } = stat
+  const flat = delta == null || Math.abs(delta) < (dec ? 0.05 : 0.5)
+  const tone = flat || !goodWhen ? 'Flat' : (delta > 0) === (goodWhen === 'up') ? 'Good' : 'Bad'
+  const deltaText = delta == null
+    ? 'No norm yet'
+    : flat
+      ? 'Level with your norm'
+      : `${delta > 0 ? '▲' : '▼'} ${fmtN(Math.abs(delta), dec)} ${unit} vs norm`
+  return (
+    <div className={styles.tile}>
+      <div className={styles.tileLabel}>{label}</div>
+      <div className={styles.tileValue}>
+        {fmtN(value, dec)}
+        {value != null && <span className={styles.tileUnit}> {unit}</span>}
+      </div>
+      <div className={`${styles.tileDelta} ${styles['tileDelta' + tone]}`}>{deltaText}</div>
+      <Spark values={spark} />
+    </div>
+  )
+}
+
+function ChartCard({ title, sub, html }) {
   const ref = useRef(null)
   useEffect(() => {
     if (ref.current) ref.current.innerHTML = html ?? ''
@@ -29,38 +91,11 @@ function HtmlCard({ title, html, badge, badgeVariant = 'neutral' }) {
   return (
     <Card>
       <div className={styles.cardHead}>
-        <span className={styles.cardTitle}>{title}</span>
-        {badge && <span className={`${styles.badge} ${styles['badge' + badgeVariant]}`}>{badge}</span>}
+        <div className={styles.cardTitle}>{title}</div>
+        {sub && <div className={styles.cardSub}>{sub}</div>}
       </div>
       <div ref={ref} className={styles.chartContainer} />
     </Card>
-  )
-}
-
-function SummaryStrip({ series, today }) {
-  const recent = series ? [...series].reverse().find(d => d.hrv != null) : null
-  const recentSleep = series ? [...series].reverse().find(d => d.sleepSecs != null || d.sleepHours != null) : null
-  const recentVo2 = series ? [...series].reverse().find(d => d.vo2max != null || d.vo2Max != null) : null
-
-  const hrv = recent?.hrv ?? null
-  const sleep = recentSleep ? (recentSleep.sleepSecs != null ? recentSleep.sleepSecs / 3600 : recentSleep.sleepHours) : null
-  const vo2 = recentVo2 ? (recentVo2.vo2max ?? recentVo2.vo2Max) : null
-
-  return (
-    <div className={styles.summaryStrip}>
-      <div className={styles.statCell}>
-        <span className={styles.statVal}>{hrv != null ? Math.round(hrv) : '–'}<span className={styles.statUnit}> ms</span></span>
-        <span className={styles.statLabel}>HRV</span>
-      </div>
-      <div className={styles.statCell}>
-        <span className={styles.statVal}>{sleep != null ? sleep.toFixed(1).replace('.', ',') : '–'}<span className={styles.statUnit}> h</span></span>
-        <span className={styles.statLabel}>Sleep</span>
-      </div>
-      <div className={styles.statCell}>
-        <span className={styles.statVal}>{vo2 != null ? fmtN(vo2, 1) : '–'}</span>
-        <span className={styles.statLabel}>VO₂ max</span>
-      </div>
-    </div>
   )
 }
 
@@ -70,61 +105,64 @@ function SectionHeader({ children }) {
 
 export function DashboardPage({ desktop = false }) {
   const { data: dashData, loading, error, refetch } = useDashboard()
-  const { data: loadData } = useSportLoad()
 
   let content
   if (loading) {
     content = (
       <>
-        <div className={`${styles.skeleton} ${styles.skelStrip}`} />
-        <div className={`${styles.skeleton} ${styles.skelCard}`} />
+        <div className={`${styles.skeleton} ${styles.skelTiles}`} />
         <div className={`${styles.skeleton} ${styles.skelCard}`} />
         <div className={`${styles.skeleton} ${styles.skelCard}`} />
       </>
     )
   } else if (error) {
     content = <Card><EmptyState body="Configure your Intervals.icu API credentials to view your dashboard." /></Card>
+  } else if (!dashData?.series?.length) {
+    content = <Card><EmptyState icon="📭" title="No data" body="No dashboard data available yet." /></Card>
   } else {
-    const series = dashData?.series ?? []
-    const today = dashData?.today ?? new Date().toISOString().slice(0, 10)
-    const bands = dashData?.hrvBands
+    const series = dashData.series
+    const today = dashData.today ?? new Date().toISOString().slice(0, 10)
+    const bands = dashData.hrvBands
 
-    const tl10 = lastDays(series, today, TIMELINE_DAYS)
-    const tl21 = lastDays(series, today, WEIGHT_WINDOW)
+    const week = lastDays(series, today, desktop ? WEEK_DAYS_WIDE : WEEK_DAYS)
+    const trend = lastDays(series, today, TREND_DAYS)
+    const partnerDays = lastDays(series, today, PARTNER_DAYS)
 
-    const hrvCalHtml = hrvCalStressChart(tl10, series, bands)
-    const hrvHtml = hrvCheckinChart(tl21)
-    const sleepHtml = sleepMoodChart(tl21)
-    const partnerHtml = partnerCompare(series, tl21)
-    const weightHtml = trendGraph(series, today, { field: 'weight', days: WEIGHT_WINDOW, range: null, W: 320, empty: 'Too few weight entries' })
-    const vo2Html = vo2Summary(series, today, VO2_WINDOW) + trendGraph(series, today, { field: 'vo2max', days: VO2_WINDOW, range: null, color: '#007aff', W: 320, empty: 'Too few VO₂ max values' })
+    const weekHtml = hrvCalStressChart(week, series, bands, desktop ? 1024 : 375)
+    const hrvHtml = hrvCheckinChart(trend, PHONE_TL)
+    const sleepHtml = sleepMoodChart(trend, PHONE_TL)
+    const partnerHtml = partnerCompare(series, partnerDays, desktop ? undefined : PHONE_TL)
+    const weightHtml = trendGraph(series, today, { field: 'weight', days: WEIGHT_WINDOW, range: null, W: 340, empty: 'Too few weight entries' })
+    const vo2Html = vo2Summary(series, today, VO2_WINDOW) + trendGraph(series, today, { field: 'vo2max', days: VO2_WINDOW, range: null, color: '#007aff', W: 340, empty: 'Too few VO₂ max values' })
 
     content = (
       <>
-        <SummaryStrip series={series} today={today} />
-
-        <SectionHeader>Recovery</SectionHeader>
-        <div className="card-grid">
-          <HtmlCard title="HRV · Calendar · Stress" html={hrvCalHtml} />
-          <HtmlCard title="HRV × Fatigue" html={hrvHtml} />
+        <p className={styles.lede}>Your last 7 days against your 4-week norm.</p>
+        <div className={styles.tiles}>
+          <StatTile label="Night HRV" unit="ms" stat={buildStat(series, today, 'hrv')} goodWhen="up" />
+          <StatTile label="Resting HR" unit="bpm" stat={buildStat(series, today, 'rhr')} goodWhen="down" />
+          <StatTile label="Sleep" unit="h" dec={1} stat={buildStat(series, today, 'sleep')} goodWhen="up" />
+          <StatTile label="Weight" unit="kg" dec={1} stat={buildStat(series, today, 'weight', { latest: true, sparkDays: 60 })} />
         </div>
 
-        <SectionHeader>Sleep & mood</SectionHeader>
-        <HtmlCard title="Sleep × Mood" html={sleepHtml} />
+        <SectionHeader>This week</SectionHeader>
+        <ChartCard
+          title="HRV, calendar and stress"
+          sub="Night and day HRV, what was on, and how stressed you felt."
+          html={weekHtml}
+        />
 
-        <SectionHeader>Training</SectionHeader>
-        <HtmlCard title="Partner vs. alone" html={partnerHtml} />
+        <SectionHeader>Recovery and sleep</SectionHeader>
+        <div className="card-grid">
+          <ChartCard title="HRV × Fatigue" sub={`Last ${TREND_DAYS} days. Dot colour is how tired you felt.`} html={hrvHtml} />
+          <ChartCard title="Sleep × Mood" sub={`Last ${TREND_DAYS} days. Dot colour is your mood.`} html={sleepHtml} />
+        </div>
+        <ChartCard title="Partner vs. alone" html={partnerHtml} />
 
         <SectionHeader>Body</SectionHeader>
-        <div className={styles.bodyRow}>
-          <Card>
-            <div className={styles.cardHead}><span className={styles.cardTitle}>Weight</span></div>
-            <div className={styles.chartContainer} dangerouslySetInnerHTML={{ __html: weightHtml }} />
-          </Card>
-          <Card>
-            <div className={styles.cardHead}><span className={styles.cardTitle}>VO₂ max</span></div>
-            <div className={styles.chartContainer} dangerouslySetInnerHTML={{ __html: vo2Html }} />
-          </Card>
+        <div className="card-grid">
+          <ChartCard title="Weight" sub={`Last ${WEIGHT_WINDOW} days`} html={weightHtml} />
+          <ChartCard title="VO₂ max" sub={`Last ${VO2_WINDOW} days`} html={vo2Html} />
         </div>
 
         <Link to="/data" className={styles.moreLink}>

@@ -10,7 +10,7 @@
   align-items: center;
   gap: 5px;
   font-size: 11px;
-  color: #8e8e93;
+  color: var(--color-secondary);
 }
 .legend-dot {
   width: 9px;
@@ -20,7 +20,7 @@
 }
 .legend-title {
   font-size: 11px;
-  color: #8e8e93;
+  color: var(--color-secondary);
 }
 
 /* Status chips */
@@ -32,3 +32,15 @@
 
 /* Chart SVG overflow */
 .chart-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+/* Explanatory line inside a chart card */
+.card-subtitle { font-size: 12px; color: var(--color-secondary); line-height: 1.4; }
+
+/* Partner vs. alone: average tiles and per-metric chart labels */
+.pc-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+.pc-tile { background: var(--color-inset); border-radius: 10px; padding: 10px; min-width: 0; }
+.pc-label, .pc-chart-label { font-size: 11px; font-weight: 600; color: var(--color-secondary); }
+.pc-chart-label { margin: 12px 0 2px; }
+.pc-vals { font-size: 17px; font-weight: 700; margin-top: 4px; display: flex; align-items: baseline; gap: 4px; flex-wrap: wrap; }
+.pc-vs, .pc-unit { font-size: 11px; font-weight: 500; color: var(--color-muted); }
+.pc-diff { font-size: 11px; font-weight: 600; margin-top: 2px; }
