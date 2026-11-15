@@ -155,7 +155,15 @@ function TlrCard({ tsb, title, zones = TLR_ZONES, pos = null, note = null }) {
   )
 }
 
-function SessionsCard({ cal }) {
+function inferSport(title) {
+  const t = (title ?? '').toLowerCase()
+  if (t.includes('run') || t.includes('løb')) return 'run'
+  if (t.includes('bike') || t.includes('ride') || t.includes('cykel') || t.includes('cycling')) return 'ride'
+  if (t.includes('strength') || t.includes('styrke') || t.includes('weight') || t.includes('gym')) return 'strength'
+  return null
+}
+
+function SessionsCard({ cal, sportSessions }) {
   const today = cal?.today ?? []
   if (!today.length) {
     return (
@@ -167,17 +175,26 @@ function SessionsCard({ cal }) {
   }
   const training = today.filter(e => e.category === 'training' || !e.category)
   const sessions = training.length ? training : today
+  const doneSports = new Set((sportSessions ?? []).map(s => s.sport).filter(Boolean))
   return (
     <Card>
       <div className={styles.cardTitle}>Today's sessions</div>
-      {sessions.map((e, i) => (
-        <div key={i} className={styles.workoutRow}>
-          <div>
-            <div className={styles.workoutTitle}>{e.title}</div>
-            <div className={styles.workoutTime}>{e.timeStart ?? ''}{e.timeEnd ? '–' + e.timeEnd : ''}</div>
+      {sessions.map((e, i) => {
+        const sport = inferSport(e.title)
+        const done = sport ? doneSports.has(sport) : false
+        return (
+          <div key={i} className={styles.workoutRow}>
+            <div>
+              <div className={styles.workoutTitle}>{e.title}</div>
+              <div className={styles.workoutTime}>{e.timeStart ?? ''}{e.timeEnd ? '–' + e.timeEnd : ''}</div>
+            </div>
+            {done
+              ? <span className={styles.sessionBadgeDone}>Done</span>
+              : <span className={styles.sessionBadgePlanned}>Planned</span>
+            }
           </div>
-        </div>
-      ))}
+        )
+      })}
     </Card>
   )
 }
@@ -375,6 +392,17 @@ export function HomePage({ desktop = false }) {
     if (!checkedIn) navigate('/checkin')
   }, [vitalsData, desktop, navigate])
 
+  // Auto-select sport tab based on today's completed activities
+  useEffect(() => {
+    if (fitTab !== null) return
+    if (!sportLoad?.sessions) return
+    const today = new Date().toISOString().slice(0, 10)
+    const todaySports = sportLoad.sessions.filter(s => s.date === today).map(s => s.sport)
+    const order = ['run', 'ride', 'strength']
+    const found = order.find(sp => todaySports.includes(sp))
+    if (found) setFitTab(found)
+  }, [sportLoad, fitTab])
+
   let content
   if (loadingCoach) {
     content = (
@@ -516,7 +544,7 @@ export function HomePage({ desktop = false }) {
         {tlrCard}
 
         <div className={styles.sectionHeader}>Today</div>
-        <SessionsCard cal={cal} />
+        <SessionsCard cal={cal} sportSessions={sportLoad?.sessions?.filter(s => s.date === new Date().toISOString().slice(0, 10))} />
         {cal?.upcoming?.length > 0 && <UpcomingCard upcoming={cal.upcoming} />}
 
         {subjective && <SubjGrid subjective={subjective} />}

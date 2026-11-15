@@ -1,3 +1,20 @@
+.lateWarning {
+  background: #fff8ec;
+  color: #b86e00;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  margin-bottom: 10px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .lateWarning {
+    background: #2b1f00;
+    color: #ffd60a;
+  }
+}
+
 .section {
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);

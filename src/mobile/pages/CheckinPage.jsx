@@ -190,13 +190,28 @@ function InBodyCard({ todayWeight, onSaved }) {
   )
 }
 
+const DRAFT_KEY = 'checkin_draft'
+
+function loadDraft() {
+  try { return JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null') } catch { return null }
+}
+
+function saveDraft(fields, weight, notes) {
+  try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ fields, weight, notes })) } catch {}
+}
+
+function clearDraft() {
+  try { localStorage.removeItem(DRAFT_KEY) } catch {}
+}
+
 export function CheckinPage({ desktop = false }) {
   const navigate = useNavigate()
   const { submit, loading, error, success } = useWellness()
   const { data: vitalsData, error: vitalsError, refetch } = useFetch('/api/get-vitals')
-  const [fields, setFields] = useState({})
-  const [weight, setWeight] = useState('')
-  const [notes, setNotes] = useState('')
+  const draft = loadDraft()
+  const [fields, setFields] = useState(draft?.fields ?? {})
+  const [weight, setWeight] = useState(draft?.weight ?? '')
+  const [notes, setNotes] = useState(draft?.notes ?? '')
   const notesTimer = useRef(null)
 
   const todayWellness = vitalsData?.todayWellness ?? null
@@ -224,10 +239,14 @@ export function CheckinPage({ desktop = false }) {
 
   useEffect(() => () => clearTimeout(notesTimer.current), [])
 
-  const setField = (field, val) => setFields(prev => ({ ...prev, [field]: val }))
+  const setField = (field, val) => {
+    const next = { ...fields, [field]: val }
+    setFields(next)
+    saveDraft(next, weight, notes)
+  }
 
   useEffect(() => {
-    if (success) navigate('/')
+    if (success) { clearDraft(); navigate('/') }
   }, [success, navigate])
 
   const handleSubmit = async (e) => {
@@ -237,6 +256,8 @@ export function CheckinPage({ desktop = false }) {
     if (notes.trim()) payload.notes = notes.trim()
     await submit(payload)
   }
+
+  const isLate = !checkedInToday && new Date().getHours() >= 14
 
   const checkinForm = (
     <form onSubmit={handleSubmit}>
@@ -266,7 +287,7 @@ export function CheckinPage({ desktop = false }) {
             step="0.1"
             className={styles.weightInput}
             value={weight}
-            onChange={e => setWeight(e.target.value)}
+            onChange={e => { setWeight(e.target.value); saveDraft(fields, e.target.value, notes) }}
             placeholder="–"
           />
         </div>
@@ -274,11 +295,12 @@ export function CheckinPage({ desktop = false }) {
           className={styles.notes}
           placeholder="Notes…"
           value={notes}
-          onChange={e => setNotes(e.target.value)}
+          onChange={e => { setNotes(e.target.value); saveDraft(fields, weight, e.target.value) }}
           rows={3}
         />
       </Card>
 
+      {isLate && <div className={styles.lateWarning}>Late check-in — logging today's data now.</div>}
       {error && <div className={styles.errMsg}>{error}</div>}
       {success && <div className={styles.okMsg}>Saved to Intervals ✓</div>}
 

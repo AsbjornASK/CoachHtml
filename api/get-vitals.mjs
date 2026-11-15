@@ -42,7 +42,7 @@ export async function GET() {
   const toInBody = e => {
     if (!e) return null;
     const fp = e.bodyFat ?? null;
-    return { date: e.date, weight: r1(e.weight), fatPct: r1(fp), fatMass: (e.weight && fp) ? r1(e.weight * fp / 100) : null, bmi: r1(e.weight / (HEIGHT * HEIGHT)) };
+    return { date: e.date, weight: r1(e.weight), fatPct: r1(fp), fatMass: (e.weight && fp) ? r1(e.weight * fp / 100) : null, bmi: r1(e.weight / (HEIGHT * HEIGHT)), height: HEIGHT };
   };
 
   return json({

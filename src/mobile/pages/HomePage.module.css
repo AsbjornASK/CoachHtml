@@ -214,6 +214,8 @@
 .workoutRow:last-child { border-bottom: none; }
 .workoutTitle { font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold); color: var(--color-text); }
 .workoutTime  { font-size: var(--font-size-base); color: var(--color-secondary); }
+.sessionBadgeDone    { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 20px; background: #edfaf1; color: #1a7a33; white-space: nowrap; flex-shrink: 0; }
+.sessionBadgePlanned { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 20px; background: var(--color-background); color: var(--color-secondary); white-space: nowrap; flex-shrink: 0; border: 1px solid var(--color-border); }
 
 /* Upcoming */
 .upcomingRow {

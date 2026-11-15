@@ -246,6 +246,7 @@ export function VitalsPage({ desktop = false }) {
                 </div>
               )}
               <div className={styles.grid1}>
+                {inBody.height != null && <MetricRow label="Height" value={Math.round(inBody.height * 100)} unit="cm" />}
                 <MetricRow label="Weight" value={fmtN(inBody.weight)} unit="kg" badge={inBody.prev ? deltaBadgeFor(inBody.weight, inBody.prev.weight, 'kg', true) : null} />
                 <MetricRow label="Fat %" value={fmtN(inBody.fatPct)} unit="%" colorClass={''} badge={inBody.prev ? deltaBadgeFor(inBody.fatPct, inBody.prev.fatPct, '%', true) : null} />
                 <MetricRow label="Fat mass" value={fmtN(inBody.fatMass)} unit="kg" badge={inBody.prev ? deltaBadgeFor(inBody.fatMass, inBody.prev.fatMass, 'kg', true) : null} />
