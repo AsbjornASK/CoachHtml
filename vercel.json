@@ -1,7 +1,10 @@
 {
+  "installCommand": "npm install",
+  "buildCommand": "npm run build",
+  "devCommand": "vite --port $PORT",
   "outputDirectory": "dist",
   "rewrites": [
-    { "source": "/((?!api/).*)", "destination": "/index.html" }
+    { "source": "/((?!api/|@|src/|node_modules/).*)", "destination": "/index.html" }
   ],
   "functions": {
     "api/cron-morning.mjs": {

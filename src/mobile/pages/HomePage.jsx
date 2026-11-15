@@ -384,6 +384,8 @@ export function HomePage({ desktop = false }) {
     )
   } else if (errorCoach) {
     content = <div className={styles.error}>Could not load data: {errorCoach}</div>
+  } else if (!data) {
+    content = <div className={styles.error}>No data available</div>
   } else {
     const { latest, trends, sleep8, subjective, fitnessHistory } = data
     const dashSeries = dashData?.series ?? []
