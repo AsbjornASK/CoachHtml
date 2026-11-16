@@ -158,7 +158,7 @@ export function DataPage({ desktop = false }) {
         <HtmlCard title="HRV · Calendar · Stress" html={hrvCalStressChart(t14, series, bands)} />
         <HtmlCard title="HRV × Fatigue" html={hrvCheckinChart(t30)} />
         <HtmlCard title="Sleep × Mood" html={sleepMoodChart(t30)} />
-        <HtmlCard title="Partner vs. alone" html={partnerCompare(series, t30)} />
+        <HtmlCard title="Partner vs. alone" html={partnerCompare(series, [], undefined, { charts: false })} />
       </>
     )
 
