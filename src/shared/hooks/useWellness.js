@@ -21,7 +21,9 @@ export function useWellness() {
         })
         if (!res.ok) {
           const body = await res.json().catch(() => ({}))
-          throw new Error(body.error ?? `HTTP ${res.status}`)
+          // Keep Intervals' own explanation: without it a rejected save can't be diagnosed
+          const details = typeof body.details === 'string' ? body.details.slice(0, 300) : ''
+          throw new Error([`${body.error ?? 'Save failed'} (HTTP ${res.status}, ${payload.date ?? 'no date'})`, details].filter(Boolean).join(': '))
         }
       }
       setSuccess(true)
