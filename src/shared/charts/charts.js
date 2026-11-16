@@ -279,7 +279,8 @@ export const PARTNER_METRICS = [
   { key: 'sleep', label: 'Sleep',     unit: 'h',   dec: 1, higherIsBetter: true  },
 ]
 
-export function partnerCompare(series, days, layout = TL) {
+// charts: false gives only the average tiles, without the per-night dot charts.
+export function partnerCompare(series, days, layout = TL, { charts: withCharts = true } = {}) {
   const nights = series.filter(d => d.partner === 1 || d.partner === 2)
   const withP = nights.filter(d => d.partner === 1), alone = nights.filter(d => d.partner === 2)
   if (!withP.length || !alone.length)
@@ -300,6 +301,12 @@ export function partnerCompare(series, days, layout = TL) {
       <div class="pc-diff" style="color:${diffCol}">${diff == null ? '–' : (diff > 0 ? '+' : '') + fmtN(diff, m.dec) + ' ' + m.unit} with partner</div>
     </div>`
   }).join('')
+
+  if (!withCharts) {
+    return `
+    <div class="card-subtitle" style="margin-bottom:12px">Averages of all logged nights: <span style="color:${PARTNER_COL};font-weight:600">with partner</span> (${withP.length} nights) vs. <span style="color:${ALONE_COL};font-weight:600">alone</span> (${alone.length} nights).</div>
+    <div class="pc-tiles" style="margin-bottom:0">${tiles}</div>`
+  }
 
   const charts = PARTNER_METRICS.map(m => {
     const shown = days.map((d, i) => ({ d, i })).filter(({ d }) => (d.partner === 1 || d.partner === 2) && d[m.key] != null)

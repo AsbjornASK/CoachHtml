@@ -5,11 +5,16 @@ import { fmt, daysAgo } from './util.mjs';
 const TZ = 'Europe/Copenhagen';
 
 const CAL_SOURCES = [
-  { cat: 'training', env: 'CAL_TRAINING_ICS_URL', fallback: 'FYSISK_HELBRED_ICS_URL' },
+  { cat: 'training',     env: 'CAL_TRAINING_ICS_URL',     fallback: 'FYSISK_HELBRED_ICS_URL' },
+  { cat: 'work',         env: 'CAL_WORK_ICS_URL' },
+  { cat: 'social',       env: 'CAL_SOCIAL_ICS_URL' },
+  { cat: 'relationship', env: 'CAL_RELATIONSHIP_ICS_URL' },
+  { cat: 'interests',    env: 'CAL_INTERESTS_ICS_URL' },
 ];
 
-export function activeCalendars() {
-  return CAL_SOURCES.map(s => ({
+// Configured feeds; pass `cats` to keep only some categories (default: all).
+export function activeCalendars(cats = null) {
+  return CAL_SOURCES.filter(s => !cats || cats.includes(s.cat)).map(s => ({
     cat: s.cat,
     url: process.env[s.env] || (s.fallback ? process.env[s.fallback] : null),
   })).filter(s => s.url);
@@ -23,9 +28,11 @@ export async function fetchCalendarEvents(sources) {
   return sources.flatMap((s, i) => parseICS(texts[i]).map(ev => ({ ...ev, category: s.cat })));
 }
 
-// Today's and the next 14 days' events from all calendars, sorted; null when none are configured.
+// Today's and the next 14 days' training sessions, sorted; null when no training calendar is configured.
+// Training only: this feeds "Today's sessions" and the morning message. The Dashboard reads every
+// category itself through activeCalendars().
 export async function calendarEvents(today = new Date()) {
-  const sources = activeCalendars();
+  const sources = activeCalendars(['training']);
   if (!sources.length) return null;
 
   const todayStr = fmt(today);

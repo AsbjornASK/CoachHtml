@@ -19,7 +19,6 @@ import styles from './DashboardPage.module.css'
 const WEEK_DAYS = 7          // swimlane on a phone: one column per day stays readable
 const WEEK_DAYS_WIDE = 10    // swimlane on desktop
 const TREND_DAYS = 14
-const PARTNER_DAYS = 21
 const WEIGHT_WINDOW = 21
 const VO2_WINDOW = 30
 
@@ -126,12 +125,11 @@ export function DashboardPage({ desktop = false }) {
 
     const week = lastDays(series, today, desktop ? WEEK_DAYS_WIDE : WEEK_DAYS)
     const trend = lastDays(series, today, TREND_DAYS)
-    const partnerDays = lastDays(series, today, PARTNER_DAYS)
 
     const weekHtml = hrvCalStressChart(week, series, bands, desktop ? 1024 : 375)
     const hrvHtml = hrvCheckinChart(trend, PHONE_TL)
     const sleepHtml = sleepMoodChart(trend, PHONE_TL)
-    const partnerHtml = partnerCompare(series, partnerDays, desktop ? undefined : PHONE_TL)
+    const partnerHtml = partnerCompare(series, [], undefined, { charts: false })
     const weightHtml = trendGraph(series, today, { field: 'weight', days: WEIGHT_WINDOW, range: null, W: 340, empty: 'Too few weight entries' })
     const vo2Html = vo2Summary(series, today, VO2_WINDOW) + trendGraph(series, today, { field: 'vo2max', days: VO2_WINDOW, range: null, color: '#007aff', W: 340, empty: 'Too few VO₂ max values' })
 
