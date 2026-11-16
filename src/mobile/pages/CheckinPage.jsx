@@ -6,6 +6,7 @@ import { EmptyState } from '../../shared/components/EmptyState'
 import { useWellness } from '../../shared/hooks/useWellness'
 import { useFetch } from '../../shared/hooks/useFetch'
 import { WELLNESS, WELLNESS_COLORS } from '../../shared/charts/wellness-labels'
+import { buildCheckinPayloads } from '../../shared/utils/checkinPayload'
 import styles from './CheckinPage.module.css'
 
 // Today: soreness, fatigue, injury, motivation, Partner (custom YES/NO field)
@@ -257,10 +258,7 @@ export function CheckinPage({ desktop = false }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    const payload = { ...fields }
-    if (weight) payload.weight = parseFloat(weight.replace(',', '.'))
-    if (notes.trim()) payload.notes = notes.trim()
-    await submit(payload)
+    await submit(buildCheckinPayloads({ fields, weight, notes }))
   }
 
   const isLate = !checkedInToday && new Date().getHours() >= 14

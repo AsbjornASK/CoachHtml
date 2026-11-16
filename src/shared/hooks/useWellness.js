@@ -1,25 +1,28 @@
 import { useState, useCallback } from 'react'
 
-// Submits a wellness check-in to /api/update-wellness (POST).
+// Submits wellness updates to /api/update-wellness (POST). Each payload needs a `date`.
 // Returns { submit, loading, error, success }.
 export function useWellness() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(false)
 
-  const submit = useCallback(async (payload) => {
+  // Accepts one payload or a list; a list is sent in order and succeeds only if all do.
+  const submit = useCallback(async (payloads) => {
     setLoading(true)
     setError(null)
     setSuccess(false)
     try {
-      const res = await fetch('/api/update-wellness', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}))
-        throw new Error(body.error ?? `HTTP ${res.status}`)
+      for (const payload of [].concat(payloads)) {
+        const res = await fetch('/api/update-wellness', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}))
+          throw new Error(body.error ?? `HTTP ${res.status}`)
+        }
       }
       setSuccess(true)
     } catch (err) {
