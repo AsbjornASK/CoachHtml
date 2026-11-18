@@ -14,13 +14,19 @@ export function intervalsClient() {
   const base = `https://intervals.icu/api/v1/athlete/${athleteId}`;
   const auth = 'Basic ' + btoa('API_KEY:' + apiKey);
 
+  // Paths starting with '~' are relative to /api/v1 instead of the athlete (e.g. '~/activity/i123').
+  const request = (method, path, body) => fetch(
+    path.startsWith('~') ? 'https://intervals.icu/api/v1' + path.slice(1) : base + path,
+    {
+      method,
+      headers: { Authorization: auth, ...(body !== undefined && { 'Content-Type': 'application/json' }) },
+      ...(body !== undefined && { body: JSON.stringify(body) }),
+    });
+
   return {
-    get: path => fetch(base + path, { headers: { Authorization: auth } }),
-    put: (path, body) => fetch(base + path, {
-      method:  'PUT',
-      headers: { 'Content-Type': 'application/json', Authorization: auth },
-      body:    JSON.stringify(body),
-    }),
+    request,
+    get: path => request('GET', path),
+    put: (path, body) => request('PUT', path, body),
   };
 }
 
