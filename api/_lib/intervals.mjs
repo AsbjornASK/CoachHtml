@@ -5,6 +5,8 @@ import { json, r1 } from './util.mjs';
 // Resting HR at or above this is treated as a measurement artifact.
 const RHR_MAX = 65;
 
+const RETRY_MAX_SECS = 5;
+
 // Returns { get, put } bound to the configured athlete, or null if env vars are missing.
 export function intervalsClient() {
   const apiKey    = process.env.INTERVALS_API_KEY;
@@ -15,13 +17,21 @@ export function intervalsClient() {
   const auth = 'Basic ' + btoa('API_KEY:' + apiKey);
 
   // Paths starting with '~' are relative to /api/v1 instead of the athlete (e.g. '~/activity/i123').
-  const request = (method, path, body) => fetch(
-    path.startsWith('~') ? 'https://intervals.icu/api/v1' + path.slice(1) : base + path,
-    {
-      method,
-      headers: { Authorization: auth, ...(body !== undefined && { 'Content-Type': 'application/json' }) },
-      ...(body !== undefined && { body: JSON.stringify(body) }),
-    });
+  // A 429 is retried once after Retry-After (at most RETRY_MAX_SECS).
+  const request = async (method, path, body) => {
+    const send = () => fetch(
+      path.startsWith('~') ? 'https://intervals.icu/api/v1' + path.slice(1) : base + path,
+      {
+        method,
+        headers: { Authorization: auth, ...(body !== undefined && { 'Content-Type': 'application/json' }) },
+        ...(body !== undefined && { body: JSON.stringify(body) }),
+      });
+    const res = await send();
+    if (res.status !== 429) return res;
+    const wait = Math.min(Number(res.headers.get('retry-after')) || 2, RETRY_MAX_SECS);
+    await new Promise(r => setTimeout(r, wait * 1000));
+    return send();
+  };
 
   return {
     request,
